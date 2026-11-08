@@ -1,866 +1,3 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Campus Chat</title>
-
-  <style>
-    :root {
-      --purple: #6846e8;
-      --ink: #1d1830;
-      --bg: #f7f6fc;
-      --line: #e8e5f0;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-    }
-
-    header {
-      height: 68px;
-      background: #fff;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 max(20px, 5vw);
-    }
-
-    .brand {
-      font-weight: 800;
-      font-size: 21px;
-    }
-
-    .brand b { color: var(--purple); }
-
-    button, input, textarea { font: inherit; }
-    button { cursor: pointer; }
-
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.55;
-    }
-
-    .primary {
-      background: var(--purple);
-      color: white;
-      border: 0;
-      border-radius: 12px;
-      padding: 14px 20px;
-      font-weight: 700;
-    }
-
-    .outline {
-      background: white;
-      border: 1px solid #dcd7e8;
-      border-radius: 12px;
-      padding: 12px 16px;
-    }
-
-    .page { display: none; }
-    .page.active { display: block; }
-
-    /* Homepage */
-    .hero {
-      max-width: 850px;
-      margin: auto;
-      padding: 100px 24px 70px;
-      text-align: center;
-    }
-
-    .tag {
-      font-size: 13px;
-      font-weight: bold;
-      color: var(--purple);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    h1 {
-      font-size: 58px;
-      line-height: 1.02;
-      letter-spacing: -2px;
-      margin: 12px 0 18px;
-    }
-
-    .lead {
-      font-size: 18px;
-      line-height: 1.55;
-      color: #665f76;
-    }
-
-    .hero .lead {
-      max-width: 620px;
-      margin: 0 auto 28px;
-    }
-
-    .agreement {
-      max-width: 520px;
-      margin: 0 auto 20px;
-      padding: 15px 18px;
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      text-align: left;
-    }
-
-    .agreement label {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      cursor: pointer;
-      font-size: 13px;
-      line-height: 1.5;
-      color: #665f76;
-    }
-
-    .agreement input[type="checkbox"] {
-      width: 17px;
-      height: 17px;
-      margin-top: 2px;
-      flex-shrink: 0;
-      accent-color: var(--purple);
-      cursor: pointer;
-    }
-
-    .terms-link {
-      color: var(--purple);
-      font-weight: 700;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    .features {
-      max-width: 1000px;
-      margin: auto;
-      padding: 0 24px 60px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-    }
-
-    .feature {
-      background: white;
-      border: 1px solid var(--line);
-      padding: 19px;
-      border-radius: 17px;
-      text-align: center;
-    }
-
-    .feature b {
-      display: block;
-      margin: 9px 0;
-    }
-
-    /* Cards and setup */
-    .card {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 24px;
-      box-shadow: 0 16px 45px #2d21610d;
-    }
-
-    .note {
-      font-size: 12px;
-      color: #817a8d;
-      line-height: 1.5;
-    }
-
-    .setup {
-      max-width: 510px;
-      margin: 65px auto;
-      padding: 0 20px;
-    }
-
-    .field-label {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      margin: 20px 0 7px;
-    }
-
-    .text-input {
-      width: 100%;
-      padding: 13px 14px;
-      border: 1px solid #ddd8e8;
-      border-radius: 11px;
-      outline: none;
-    }
-
-    .text-input:focus {
-      border-color: var(--purple);
-      box-shadow: 0 0 0 3px #6846e81a;
-    }
-
-    /* Searchable school selector */
-    .school-picker {
-      position: relative;
-    }
-
-    .school-results {
-      display: none;
-      position: absolute;
-      z-index: 20;
-      width: 100%;
-      max-height: 250px;
-      overflow-y: auto;
-      background: white;
-      border: 1px solid #ddd8e8;
-      border-radius: 11px;
-      margin-top: 5px;
-      box-shadow: 0 12px 30px #2d21611a;
-    }
-
-    .school-results.show {
-      display: block;
-    }
-
-    .school-option {
-      padding: 12px 14px;
-      cursor: pointer;
-      font-size: 14px;
-      border-bottom: 1px solid #f0edf5;
-    }
-
-    .school-option:hover {
-      background: #f4f1ff;
-    }
-
-    .school-region {
-      padding: 9px 14px;
-      font-size: 11px;
-      font-weight: bold;
-      color: var(--purple);
-      text-transform: uppercase;
-      background: #faf9fd;
-    }
-
-    /* Matching screen */
-    .loading-wrap {
-      max-width: 600px;
-      margin: 80px auto;
-      padding: 0 20px;
-      text-align: center;
-    }
-
-    .loading-card {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 40px 28px;
-    }
-
-    .spinner {
-      width: 42px;
-      height: 42px;
-      margin: 0 auto 20px;
-      border: 4px solid #ece8fa;
-      border-top-color: var(--purple);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .ad-box {
-      margin-top: 28px;
-      border: 1px dashed #cfc8dd;
-      border-radius: 15px;
-      padding: 24px 18px;
-      background: #faf9fd;
-      color: #817a8d;
-    }
-
-    .ad-label {
-      display: block;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 10px;
-    }
-
-    /* Chat */
-    .chat-wrap {
-      max-width: 1080px;
-      margin: auto;
-      padding: 25px;
-      display: grid;
-      grid-template-columns: 1fr 280px;
-      gap: 18px;
-    }
-
-    .chat {
-      height: 620px;
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .chathead {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .person {
-      display: flex;
-      gap: 11px;
-      align-items: center;
-    }
-
-    .avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: #eee9ff;
-      color: var(--purple);
-      display: grid;
-      place-items: center;
-      font-weight: bold;
-    }
-
-    .person small {
-      display: block;
-      color: #817a8d;
-      margin-top: 3px;
-    }
-
-    .badge {
-      font-size: 11px;
-      background: #f0edff;
-      color: #5e3ed3;
-      padding: 5px 8px;
-      border-radius: 99px;
-    }
-
-    .messages {
-      flex: 1;
-      padding: 22px;
-      overflow-y: auto;
-    }
-
-    .system {
-      text-align: center;
-      font-size: 12px;
-      color: #958e9e;
-      margin: 12px;
-    }
-
-    .msg {
-      max-width: 76%;
-      padding: 11px 14px;
-      border-radius: 16px;
-      margin: 12px 0;
-      line-height: 1.4;
-      word-wrap: break-word;
-    }
-
-    .them {
-      background: #f0edff;
-      border-bottom-left-radius: 4px;
-    }
-
-    .me {
-      background: var(--purple);
-      color: white;
-      margin-left: auto;
-      border-bottom-right-radius: 4px;
-    }
-
-    .composer {
-      padding: 14px;
-      border-top: 1px solid var(--line);
-      display: flex;
-      gap: 8px;
-    }
-
-    .composer input {
-      flex: 1;
-      border: 1px solid #ddd8e8;
-      border-radius: 11px;
-      padding: 13px;
-    }
-
-    .composer button {
-      border: 0;
-      background: var(--purple);
-      color: white;
-      border-radius: 11px;
-      padding: 0 16px;
-      font-weight: bold;
-    }
-
-    .side {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 20px;
-      height: max-content;
-    }
-
-    .next {
-      width: 100%;
-      border: 0;
-      background: #ffc44d;
-      padding: 12px;
-      border-radius: 11px;
-      font-weight: bold;
-      margin: 12px 0;
-    }
-
-    .speaker {
-      background: #f1eeff;
-      padding: 16px;
-      border-radius: 15px;
-      margin-top: 18px;
-    }
-
-    .speaker button {
-      width: 100%;
-      margin-top: 8px;
-    }
-
-    /* Ditched screen */
-    .ditched-wrap {
-      max-width: 600px;
-      margin: 70px auto;
-      padding: 0 20px;
-      text-align: center;
-    }
-
-    .ditched-card {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 45px 28px;
-      box-shadow: 0 16px 45px #2d21610d;
-    }
-
-    .escape-scene {
-      height: 110px;
-      font-size: 64px;
-      padding-top: 15px;
-      animation: runAway 2.5s ease-in infinite;
-    }
-
-    @keyframes runAway {
-      0%, 30% { transform: translateX(0); }
-      80%, 100% { transform: translateX(180%); opacity: 0; }
-    }
-
-    .sad-face {
-      font-size: 45px;
-      display: inline-block;
-      animation: sadBounce 2s ease-in-out infinite;
-    }
-
-    @keyframes sadBounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(7px); }
-    }
-
-    /* Modal */
-    .modalbg {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: #17122188;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      z-index: 100;
-    }
-
-    .modalbg.show { display: flex; }
-
-    .modal {
-      background: white;
-      width: min(500px, 100%);
-      padding: 25px;
-      border-radius: 22px;
-      max-height: 85vh;
-      overflow-y: auto;
-    }
-
-    .modal textarea {
-      width: 100%;
-      height: 115px;
-      border: 1px solid #ddd8e8;
-      border-radius: 11px;
-      padding: 12px;
-      resize: vertical;
-    }
-
-    .terms-modal {
-      width: min(650px, 100%);
-    }
-
-    .terms-content h3 {
-      margin: 20px 0 7px;
-      font-size: 16px;
-    }
-
-    .terms-content p {
-      font-size: 13px;
-      line-height: 1.6;
-      color: #665f76;
-      margin: 0 0 10px;
-    }
-
-    @media(max-width: 760px) {
-      .hero {
-        padding-top: 65px;
-      }
-
-      h1 {
-        font-size: 44px;
-      }
-
-      .features {
-        grid-template-columns: 1fr;
-      }
-
-      .chat-wrap {
-        grid-template-columns: 1fr;
-        padding: 12px;
-      }
-
-      .side {
-        order: -1;
-      }
-
-      .chat {
-        height: 570px;
-      }
-    }
-  </style>
-</head>
-
-<body>
-
-<header>
-  <div class="brand">Campus<b>Chat</b></div>
-  <button class="outline" onclick="speaker()">📣 Speaker</button>
-</header>
-
-<!-- HOME -->
-<section id="home" class="page active">
-  <div class="hero">
-    <div class="tag">For Filipino college students</div>
-    <h1>Meet someone.<br>Start a conversation.</h1>
-
-    <p class="lead">
-      A simple place to have random conversations with fellow college students
-      in the Philippines.
-    </p>
-
-    <div class="agreement">
-      <label>
-        <input
-          type="checkbox"
-          id="termsAgreement"
-          onchange="toggleStartButton()"
-        >
-        <span>
-          I confirm that I am <b>18 years old or above</b> and I have read and
-          agree to the
-          <span class="terms-link" onclick="openTerms(event)">
-            Terms & Conditions and Disclaimer of Liability
-          </span>.
-        </span>
-      </label>
-    </div>
-
-    <button
-      id="startButton"
-      class="primary"
-      onclick="goToSetup()"
-      disabled
-    >
-      🎲 Start Chatting
-    </button>
-  </div>
-
-  <div class="features">
-    <div class="feature">
-      🎲
-      <b>Random chat</b>
-      <span class="note">Meet someone new.</span>
-    </div>
-
-    <div class="feature">
-      🎭
-      <b>Your identity, your choice</b>
-      <span class="note">Use an alias and optionally show your school.</span>
-    </div>
-
-    <div class="feature">
-      📣
-      <b>Speaker</b>
-      <span class="note">Promoted announcements for the community.</span>
-    </div>
-  </div>
-</section>
-
-<!-- SETUP -->
-<section id="setup" class="page">
-  <div class="setup">
-    <div class="card">
-      <div class="tag">Optional setup</div>
-      <h2>Before we find someone...</h2>
-      <p class="note">
-        You can stay anonymous or add a nickname and school for your chat partner to see.
-      </p>
-
-      <label class="field-label">
-        🎭 Nickname / Alias <span class="note">(Optional)</span>
-      </label>
-
-      <input
-        id="nicknameInput"
-        class="text-input"
-        maxlength="30"
-        placeholder="Example: CoffeeLover23"
-        autocomplete="off"
-      >
-
-      <label class="field-label">
-        🎓 School <span class="note">(Optional)</span>
-      </label>
-
-      <div class="school-picker">
-        <input
-          id="schoolInput"
-          class="text-input"
-          placeholder="🔍 Search your school or university..."
-          autocomplete="off"
-          oninput="filterSchools()"
-          onfocus="filterSchools()"
-        >
-        <div id="schoolResults" class="school-results"></div>
-      </div>
-
-      <button
-        class="primary"
-        style="width:100%; margin-top:24px"
-        onclick="startChat()"
-      >
-        Find someone →
-      </button>
-    </div>
-  </div>
-</section>
-
-<!-- MATCHING -->
-<section id="matching" class="page">
-  <div class="loading-wrap">
-    <div class="loading-card">
-      <div class="spinner"></div>
-      <div class="tag">Campus Chat</div>
-
-      <h2 id="matchingTitle">Finding someone to chat with...</h2>
-
-      <p class="note" id="matchingText">
-        Hang tight while we look for another student.
-      </p>
-
-      <div class="ad-box">
-        <span class="ad-label">Advertisement</span>
-        <b>Your ad could appear here.</b>
-        <p class="note">
-          This space can later be used for ads, sponsored announcements,
-          or Speaker promotions.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- DITCHED -->
-<section id="ditched" class="page">
-  <div class="ditched-wrap">
-    <div class="ditched-card">
-      <div class="escape-scene">🏃💨</div>
-      <div class="sad-face">🥲</div>
-
-      <div class="tag">Connection ended</div>
-      <h2>Well... they ditched you.</h2>
-
-      <p class="lead" style="font-size:16px">
-        Don't take it personally. Maybe their mom called them for dinner. 🍗😂
-      </p>
-
-      <button class="primary" onclick="findSomeoneElse()">
-        🎲 Find someone else
-      </button>
-    </div>
-  </div>
-</section>
-
-<!-- CHAT -->
-<section id="chat" class="page">
-  <div class="chat-wrap">
-    <main class="chat">
-      <div class="chathead">
-        <div class="person">
-          <div class="avatar" id="avatar">?</div>
-
-          <div>
-            <b id="partnerName">Anonymous Student</b>
-            <small id="schoolBadge">Anonymous</small>
-          </div>
-        </div>
-
-        <span class="badge" id="statusBadge">Waiting</span>
-      </div>
-
-      <div id="msgs" class="messages">
-        <div class="system">Looking for someone to chat with... 🔎</div>
-      </div>
-
-      <div class="composer">
-        <input
-          id="input"
-          placeholder="Type a message..."
-          disabled
-          onkeydown="if(event.key==='Enter')send()"
-        >
-        <button id="sendButton" onclick="send()" disabled>
-          Send
-        </button>
-      </div>
-    </main>
-
-    <aside class="side">
-      <b>Keep it friendly ✨</b>
-      <p class="note">
-        Be respectful and don't share sensitive information.
-      </p>
-
-      <button class="next" onclick="nextPerson()">
-        ⏭ Next person
-      </button>
-
-      <button
-        class="outline"
-        style="width:100%"
-        onclick="reportUser()"
-      >
-        🚩 Report
-      </button>
-
-      <div class="speaker">
-        <b>📣 Have an announcement?</b>
-        <p class="note">
-          Create a promoted message for the community.
-        </p>
-        <button class="primary" onclick="speaker()">
-          Become a Speaker
-        </button>
-      </div>
-    </aside>
-  </div>
-</section>
-
-<!-- SPEAKER MODAL -->
-<div id="modal" class="modalbg">
-  <div class="modal">
-    <h2>📣 Become a Speaker</h2>
-    <p class="note">
-      Speaker payments and approval will be added after the chat system.
-    </p>
-
-    <textarea
-      id="announcement"
-      placeholder="Write your announcement..."
-    ></textarea>
-
-    <div style="text-align:right; margin-top:12px">
-      <button class="outline" onclick="closeSpeaker()">
-        Cancel
-      </button>
-      <button class="primary" onclick="submitSpeaker()">
-        Continue →
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- TERMS AND CONDITIONS MODAL -->
-<div id="termsModal" class="modalbg">
-  <div class="modal terms-modal">
-    <h2>Terms & Conditions</h2>
-
-    <div class="terms-content">
-      <h3>1. Age Requirement</h3>
-      <p>
-        Campus Chat is intended only for users who are 18 years old or above.
-        By using this platform, you confirm that you meet this age requirement.
-      </p>
-
-      <h3>2. User Conduct</h3>
-      <p>
-        You agree to communicate respectfully and not use the platform to
-        harass, threaten, exploit, impersonate, or harm other users. Illegal,
-        abusive, or inappropriate behavior may result in removal from the
-        platform.
-      </p>
-
-      <h3>3. Your Privacy</h3>
-      <p>
-        Do not share sensitive personal information such as passwords, bank
-        details, home addresses, or other private information with strangers.
-        You are responsible for the information you choose to share during a
-        conversation.
-      </p>
-
-      <h3>4. Disclaimer of Liability</h3>
-      <p>
-        Campus Chat provides a platform for users to have conversations with
-        other users. We do not guarantee the identity, intentions, accuracy, or
-        behavior of any user you may encounter.
-      </p>
-
-      <p>
-        To the extent permitted by applicable law, Campus Chat and its
-        operators are not liable for personal interactions, conversations,
-        information shared, or actions taken by users while using the platform.
-        Users participate in conversations at their own discretion and
-        responsibility.
-      </p>
-
-      <h3>5. Reporting and Safety</h3>
-      <p>
-        If another user behaves inappropriately, you may end the conversation
-        and submit a report. Reports may be reviewed to help maintain a safer
-        community.
-      </p>
-    </div>
-
-    <div style="text-align:right; margin-top:20px">
-      <button class="primary" onclick="closeTerms()">
-        I Understand
-      </button>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
   const SUPABASE_URL = 'https://ygnftivolxzznwdztccp.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_7zC9r6QUPYfP3A9uvmNPog_cFTXdG7K';
@@ -936,6 +73,60 @@
   let messageTimer = null;
   let matchTimer = null;
   let roomStatusTimer = null;
+
+  /*
+    This page session is intentionally NOT restored after a refresh.
+    A user must actively start matching again.
+  */
+  const PAGE_SESSION_KEY = 'campusChatPageSession';
+  const ACTIVE_ROOM_KEY = 'campusChatActiveRoom';
+
+  /*
+    Give every page load its own session ID.
+    If the page is refreshed, the old session is treated as disconnected.
+  */
+  const previousSession = sessionStorage.getItem(PAGE_SESSION_KEY);
+  const pageSessionId =
+    Date.now().toString() + '-' + Math.random().toString(36).slice(2);
+
+  sessionStorage.setItem(PAGE_SESSION_KEY, pageSessionId);
+
+  /*
+    IMPORTANT:
+    If an old active room exists from a previous page load, end it.
+    This prevents a refreshed user from remaining connected.
+  */
+  async function cleanUpOldSession() {
+    const savedRoom = localStorage.getItem(ACTIVE_ROOM_KEY);
+
+    if (savedRoom && profileId) {
+      await supabaseClient
+        .from('chat_rooms')
+        .update({ status: 'ended' })
+        .eq('id', savedRoom)
+        .eq('status', 'active');
+    }
+
+    localStorage.removeItem(ACTIVE_ROOM_KEY);
+
+    /*
+      Also remove the user from the waiting list on every fresh page load.
+      They should only be added again when they actively start matching.
+    */
+    if (profileId) {
+      await supabaseClient
+        .from('waiting_users')
+        .delete()
+        .eq('profile_id', profileId);
+    }
+  }
+
+  /*
+    Run cleanup immediately when the page opens.
+    The app starts at the homepage/setup flow instead of restoring
+    an old waiting or chat connection.
+  */
+  cleanUpOldSession();
 
   function show(id) {
     document.querySelectorAll('.page').forEach(page => {
@@ -1115,7 +306,17 @@
     if (!profileId) return;
 
     currentRoom = null;
+    localStorage.removeItem(ACTIVE_ROOM_KEY);
     clearTimers();
+
+    /*
+      Remove any old waiting entry first.
+      The user is only considered waiting after this function is intentionally called.
+    */
+    await supabaseClient
+      .from('waiting_users')
+      .delete()
+      .eq('profile_id', profileId);
 
     const { data: waiting, error } = await supabaseClient
       .from('waiting_users')
@@ -1173,6 +374,11 @@
 
       currentRoom = room.id;
 
+      /*
+        Save the active room so a refresh/close can terminate it.
+      */
+      localStorage.setItem(ACTIVE_ROOM_KEY, currentRoom);
+
       await loadPartnerInfo(otherUser.profile_id);
       matched();
       return;
@@ -1223,6 +429,11 @@
         room.user_one === profileId ? room.user_two : room.user_one;
 
       currentRoom = room.id;
+
+      /*
+        Save this room immediately.
+      */
+      localStorage.setItem(ACTIVE_ROOM_KEY, currentRoom);
 
       await supabaseClient
         .from('waiting_users')
@@ -1301,6 +512,7 @@
 
     if (room.status === 'ended' && currentRoom === roomId) {
       currentRoom = null;
+      localStorage.removeItem(ACTIVE_ROOM_KEY);
       clearTimers();
 
       document.getElementById('statusBadge').textContent = 'Disconnected';
@@ -1381,6 +593,12 @@
     document.getElementById('input').disabled = true;
     document.getElementById('sendButton').disabled = true;
 
+    /*
+      Remove the saved room BEFORE ending it.
+      This prevents the next page action from trying to clean it up again.
+    */
+    localStorage.removeItem(ACTIVE_ROOM_KEY);
+
     if (oldRoom) {
       await supabaseClient
         .from('chat_rooms')
@@ -1415,6 +633,14 @@
   }
 
   async function findSomeoneElse() {
+    currentRoom = null;
+    localStorage.removeItem(ACTIVE_ROOM_KEY);
+
+    await supabaseClient
+      .from('waiting_users')
+      .delete()
+      .eq('profile_id', profileId);
+
     document.getElementById('msgs').innerHTML =
       '<div class="system">Finding someone to chat with... 🔎</div>';
 
@@ -1467,6 +693,52 @@
     roomStatusTimer = null;
   }
 
+  /*
+    Disconnect when the user refreshes, closes the tab,
+    or leaves the page.
+
+    sendBeacon is used because normal async requests are often cancelled
+    while a page is closing. The localStorage cleanup on the next page
+    load is an additional fallback.
+  */
+  window.addEventListener('pagehide', () => {
+    const roomId = currentRoom;
+
+    if (!roomId) return;
+
+    /*
+      Store the room ID. If the request below is interrupted,
+      the next page load will still end the old room.
+    */
+    localStorage.setItem(ACTIVE_ROOM_KEY, roomId);
+
+    /*
+      Try to end the room before the page disappears.
+      Supabase's REST API accepts this PATCH request.
+    */
+    const url =
+      SUPABASE_URL +
+      '/rest/v1/chat_rooms?id=eq.' +
+      encodeURIComponent(roomId) +
+      '&status=eq.active';
+
+    const body = JSON.stringify({
+      status: 'ended'
+    });
+
+    const blob = new Blob([body], {
+      type: 'application/json'
+    });
+
+    navigator.sendBeacon(url, blob);
+
+    /*
+      Also stop this page from considering itself connected.
+    */
+    currentRoom = null;
+    clearTimers();
+  });
+
   function speaker() {
     document.getElementById('modal').classList.add('show');
   }
@@ -1491,6 +763,3 @@
     closeSpeaker();
   }
 </script>
-
-</body>
-</html>
