@@ -4,7 +4,712 @@
 
   const supabaseClient = supabase.createClient(
     SUPABASE_URL,
+    SUPABASE_KEY<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL = 'https://ygnftivolxzznwdztccp.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_7zC9r6QUPYfP3A9uvmNPog_cFTXdG7K';
+
+  const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
     SUPABASE_KEY
+  );
+
+  const schools = [
+    { name: 'University of the Philippines Diliman', region: 'Metro Manila' },
+    { name: 'University of the Philippines Manila', region: 'Metro Manila' },
+    { name: 'Ateneo de Manila University', region: 'Metro Manila' },
+    { name: 'De La Salle University', region: 'Metro Manila' },
+    { name: 'University of Santo Tomas', region: 'Metro Manila' },
+    { name: 'Polytechnic University of the Philippines', region: 'Metro Manila' },
+    { name: 'Far Eastern University', region: 'Metro Manila' },
+    { name: 'University of the East', region: 'Metro Manila' },
+    { name: 'Mapúa University', region: 'Metro Manila' },
+    { name: 'Adamson University', region: 'Metro Manila' },
+    { name: 'National University', region: 'Metro Manila' },
+    { name: 'Technological University of the Philippines', region: 'Metro Manila' },
+    { name: 'Centro Escolar University', region: 'Metro Manila' },
+    { name: 'University of Makati', region: 'Metro Manila' },
+    { name: 'Technological Institute of the Philippines', region: 'Metro Manila' },
+
+    { name: 'University of the Philippines Baguio', region: 'Luzon' },
+    { name: 'Saint Louis University', region: 'Luzon' },
+    { name: 'University of Baguio', region: 'Luzon' },
+    { name: 'University of the Philippines Los Baños', region: 'Luzon' },
+    { name: 'Cavite State University', region: 'Luzon' },
+    { name: 'De La Salle University – Dasmariñas', region: 'Luzon' },
+    { name: 'Laguna State Polytechnic University', region: 'Luzon' },
+    { name: 'Batangas State University', region: 'Luzon' },
+    { name: 'Bulacan State University', region: 'Luzon' },
+    { name: 'Tarlac State University', region: 'Luzon' },
+    { name: 'Holy Angel University', region: 'Luzon' },
+    { name: 'Bicol University', region: 'Luzon' },
+    { name: 'Ateneo de Naga University', region: 'Luzon' },
+    { name: 'Mariano Marcos State University', region: 'Luzon' },
+
+    { name: 'University of the Philippines Visayas', region: 'Visayas' },
+    { name: 'University of San Carlos', region: 'Visayas' },
+    { name: 'University of San Jose–Recoletos', region: 'Visayas' },
+    { name: 'University of Cebu', region: 'Visayas' },
+    { name: 'University of the Visayas', region: 'Visayas' },
+    { name: 'Cebu Technological University', region: 'Visayas' },
+    { name: 'Cebu Normal University', region: 'Visayas' },
+    { name: 'West Visayas State University', region: 'Visayas' },
+    { name: 'Central Philippine University', region: 'Visayas' },
+    { name: 'University of San Agustin', region: 'Visayas' },
+    { name: 'University of St. La Salle', region: 'Visayas' },
+    { name: 'Silliman University', region: 'Visayas' },
+    { name: 'Eastern Visayas State University', region: 'Visayas' },
+    { name: 'Leyte Normal University', region: 'Visayas' },
+
+    { name: 'Ateneo de Davao University', region: 'Mindanao' },
+    { name: 'University of Mindanao', region: 'Mindanao' },
+    { name: 'University of Southeastern Philippines', region: 'Mindanao' },
+    { name: 'University of the Philippines Mindanao', region: 'Mindanao' },
+    { name: 'Mindanao State University', region: 'Mindanao' },
+    { name: 'Mindanao State University – Iligan Institute of Technology', region: 'Mindanao' },
+    { name: 'Xavier University – Ateneo de Cagayan', region: 'Mindanao' },
+    { name: 'Central Mindanao University', region: 'Mindanao' },
+    { name: 'Caraga State University', region: 'Mindanao' },
+    { name: 'Western Mindanao State University', region: 'Mindanao' }
+  ];
+
+  let school = '';
+  let nickname = '';
+  let profileId = localStorage.getItem('campusChatProfileId');
+  let currentRoom = null;
+  let messageTimer = null;
+  let matchTimer = null;
+  let roomStatusTimer = null;
+
+  /*
+    This key remembers the current room only long enough
+    to disconnect it if the user refreshes the page.
+  */
+  const ACTIVE_ROOM_KEY = 'campusChatActiveRoom';
+
+  /*
+    On every new page load, clean up any old room and
+    waiting-list entry. The user will NOT automatically
+    be put back into the queue.
+  */
+  async function cleanUpPreviousConnection() {
+    const oldRoom = localStorage.getItem(ACTIVE_ROOM_KEY);
+
+    if (oldRoom) {
+      const { error } = await supabaseClient
+        .from('chat_rooms')
+        .update({ status: 'ended' })
+        .eq('id', oldRoom)
+        .eq('status', 'active');
+
+      if (error) {
+        console.error('Could not clean up old room:', error);
+      }
+    }
+
+    localStorage.removeItem(ACTIVE_ROOM_KEY);
+
+    if (profileId) {
+      const { error } = await supabaseClient
+        .from('waiting_users')
+        .delete()
+        .eq('profile_id', profileId);
+
+      if (error) {
+        console.error('Could not remove old waiting entry:', error);
+      }
+    }
+  }
+
+  /*
+    Run the cleanup after the page has loaded.
+    This prevents an old connection from being restored.
+  */
+  window.addEventListener('load', () => {
+    cleanUpPreviousConnection();
+  });
+
+  function show(id) {
+    document.querySelectorAll('.page').forEach(page => {
+      page.classList.remove('active');
+    });
+
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function toggleStartButton() {
+    const agreed = document.getElementById('termsAgreement').checked;
+    document.getElementById('startButton').disabled = !agreed;
+  }
+
+  function goToSetup() {
+    if (!document.getElementById('termsAgreement').checked) {
+      alert('Please confirm that you are 18 or older and agree to the Terms & Conditions.');
+      return;
+    }
+
+    show('setup');
+  }
+
+  function openTerms(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    document.getElementById('termsModal').classList.add('show');
+  }
+
+  function closeTerms() {
+    document.getElementById('termsModal').classList.remove('show');
+  }
+
+  function filterSchools() {
+    const input = document.getElementById('schoolInput');
+    const results = document.getElementById('schoolResults');
+    const query = input.value.trim().toLowerCase();
+
+    results.innerHTML = '';
+
+    const matches = schools.filter(item =>
+      item.name.toLowerCase().includes(query)
+    );
+
+    if (query) {
+      matches.slice(0, 20).forEach(item => {
+        addSchoolOption(item.name);
+      });
+
+      if (!matches.some(item => item.name.toLowerCase() === query)) {
+        const custom = document.createElement('div');
+        custom.className = 'school-option';
+        custom.textContent = 'Use "' + input.value.trim() + '"';
+        custom.onclick = () => selectSchool(input.value.trim());
+        results.appendChild(custom);
+      }
+    } else {
+      const grouped = {};
+
+      schools.forEach(item => {
+        if (!grouped[item.region]) {
+          grouped[item.region] = [];
+        }
+
+        grouped[item.region].push(item);
+      });
+
+      Object.keys(grouped).forEach(region => {
+        const label = document.createElement('div');
+        label.className = 'school-region';
+        label.textContent = region;
+        results.appendChild(label);
+
+        grouped[region].forEach(item => {
+          addSchoolOption(item.name);
+        });
+      });
+    }
+
+    results.classList.add('show');
+  }
+
+  function addSchoolOption(schoolName) {
+    const results = document.getElementById('schoolResults');
+    const option = document.createElement('div');
+
+    option.className = 'school-option';
+    option.textContent = schoolName;
+    option.onclick = () => selectSchool(schoolName);
+
+    results.appendChild(option);
+  }
+
+  function selectSchool(schoolName) {
+    document.getElementById('schoolInput').value = schoolName;
+    document.getElementById('schoolResults').classList.remove('show');
+  }
+
+  document.addEventListener('click', event => {
+    const picker = document.querySelector('.school-picker');
+
+    if (picker && !picker.contains(event.target)) {
+      document.getElementById('schoolResults').classList.remove('show');
+    }
+  });
+
+  async function startChat() {
+    nickname = document.getElementById('nicknameInput').value.trim();
+    school = document.getElementById('schoolInput').value.trim();
+
+    showMatching(
+      'Finding someone to chat with...',
+      'Hang tight while we look for another student.'
+    );
+
+    const profileCreated = await createOrUpdateProfile();
+
+    if (profileCreated) {
+      await findMatch();
+    }
+  }
+
+  async function createOrUpdateProfile() {
+    if (!profileId) {
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .insert({
+          school: school || null,
+          nickname: nickname || null
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error(error);
+        alert('Connection error. Please refresh and try again.');
+        show('setup');
+        return false;
+      }
+
+      profileId = data.id;
+      localStorage.setItem('campusChatProfileId', profileId);
+      return true;
+    }
+
+    const { error } = await supabaseClient
+      .from('profiles')
+      .update({
+        school: school || null,
+        nickname: nickname || null
+      })
+      .eq('id', profileId);
+
+    if (error) {
+      console.error(error);
+      alert('Connection error. Please refresh and try again.');
+      show('setup');
+      return false;
+    }
+
+    return true;
+  }
+
+  function showMatching(title, text) {
+    document.getElementById('matchingTitle').textContent = title;
+    document.getElementById('matchingText').textContent = text;
+    show('matching');
+  }
+
+  async function findMatch() {
+    if (!profileId) return;
+
+    currentRoom = null;
+    localStorage.removeItem(ACTIVE_ROOM_KEY);
+    clearTimers();
+
+    await supabaseClient
+      .from('waiting_users')
+      .delete()
+      .eq('profile_id', profileId);
+
+    const { data: waiting, error } = await supabaseClient
+      .from('waiting_users')
+      .select('*')
+      .neq('profile_id', profileId)
+      .order('joined_at', { ascending: true })
+      .limit(1);
+
+    if (error) {
+      console.error(error);
+      show('setup');
+      alert('Unable to search for a match. Please try again.');
+      return;
+    }
+
+    if (waiting && waiting.length > 0) {
+      const otherUser = waiting[0];
+
+      const { data: claimedUser, error: claimError } = await supabaseClient
+        .from('waiting_users')
+        .delete()
+        .eq('profile_id', otherUser.profile_id)
+        .select()
+        .maybeSingle();
+
+      if (claimError || !claimedUser) {
+        setTimeout(findMatch, 500);
+        return;
+      }
+
+      const { data: room, error: roomError } = await supabaseClient
+        .from('chat_rooms')
+        .insert({
+          user_one: profileId,
+          user_two: otherUser.profile_id,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (roomError || !room) {
+        console.error(roomError);
+
+        await supabaseClient
+          .from('waiting_users')
+          .upsert({
+            profile_id: otherUser.profile_id,
+            school: otherUser.school || null,
+            joined_at: otherUser.joined_at
+          });
+
+        setTimeout(findMatch, 1000);
+        return;
+      }
+
+      currentRoom = room.id;
+      localStorage.setItem(ACTIVE_ROOM_KEY, currentRoom);
+
+      await loadPartnerInfo(otherUser.profile_id);
+      matched();
+      return;
+    }
+
+    const { error: waitError } = await supabaseClient
+      .from('waiting_users')
+      .upsert({
+        profile_id: profileId,
+        school: school || null,
+        joined_at: new Date().toISOString()
+      });
+
+    if (waitError) {
+      console.error(waitError);
+      show('setup');
+      alert('Unable to join the matching queue.');
+      return;
+    }
+
+    matchTimer = setInterval(checkForRoom, 2000);
+  }
+
+  async function checkForRoom() {
+    if (!profileId || currentRoom) return;
+
+    const { data: rooms, error } = await supabaseClient
+      .from('chat_rooms')
+      .select('*')
+      .eq('status', 'active')
+      .or(`user_one.eq.${profileId},user_two.eq.${profileId}`)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    if (rooms && rooms.length > 0) {
+      const room = rooms[0];
+
+      if (room.user_one === room.user_two) return;
+
+      const partnerId =
+        room.user_one === profileId
+          ? room.user_two
+          : room.user_one;
+
+      currentRoom = room.id;
+      localStorage.setItem(ACTIVE_ROOM_KEY, currentRoom);
+
+      await supabaseClient
+        .from('waiting_users')
+        .delete()
+        .eq('profile_id', profileId);
+
+      await loadPartnerInfo(partnerId);
+      matched();
+    }
+  }
+
+  async function loadPartnerInfo(partnerId) {
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('nickname, school')
+      .eq('id', partnerId)
+      .single();
+
+    if (error || !data) {
+      document.getElementById('partnerName').textContent =
+        'Anonymous Student';
+      document.getElementById('schoolBadge').textContent =
+        '● Anonymous';
+      document.getElementById('avatar').textContent = '?';
+      return;
+    }
+
+    const partnerName =
+      data.nickname && data.nickname.trim()
+        ? data.nickname.trim()
+        : 'Anonymous Student';
+
+    document.getElementById('partnerName').textContent = partnerName;
+    document.getElementById('schoolBadge').textContent =
+      data.school ? '🎓 ' + data.school : '● Anonymous';
+
+    document.getElementById('avatar').textContent =
+      data.nickname && data.nickname.trim()
+        ? data.nickname.trim().charAt(0).toUpperCase()
+        : '?';
+  }
+
+  function matched() {
+    clearInterval(matchTimer);
+    matchTimer = null;
+
+    show('chat');
+
+    document.getElementById('statusBadge').textContent = 'Connected';
+    document.getElementById('input').disabled = false;
+    document.getElementById('sendButton').disabled = false;
+
+    loadMessages();
+
+    messageTimer = setInterval(loadMessages, 1500);
+    roomStatusTimer = setInterval(checkRoomStatus, 2000);
+  }
+
+  async function checkRoomStatus() {
+    if (!currentRoom) return;
+
+    const roomId = currentRoom;
+
+    const { data: room, error } = await supabaseClient
+      .from('chat_rooms')
+      .select('status')
+      .eq('id', roomId)
+      .single();
+
+    if (error || !room) return;
+
+    if (room.status === 'ended' && currentRoom === roomId) {
+      currentRoom = null;
+      localStorage.removeItem(ACTIVE_ROOM_KEY);
+      clearTimers();
+
+      document.getElementById('statusBadge').textContent = 'Disconnected';
+      document.getElementById('input').disabled = true;
+      document.getElementById('sendButton').disabled = true;
+
+      show('ditched');
+    }
+  }
+
+  async function loadMessages() {
+    if (!currentRoom) return;
+
+    const { data, error } = await supabaseClient
+      .from('messages')
+      .select('*')
+      .eq('room_id', currentRoom)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const container = document.getElementById('msgs');
+    container.innerHTML = '';
+
+    if (!data || data.length === 0) {
+      container.innerHTML =
+        '<div class="system">You are connected! Say hello 👋</div>';
+    } else {
+      data.forEach(message => {
+        const div = document.createElement('div');
+
+        div.className =
+          message.sender_id === profileId
+            ? 'msg me'
+            : 'msg them';
+
+        div.textContent = message.content;
+        container.appendChild(div);
+      });
+    }
+
+    container.scrollTop = container.scrollHeight;
+  }
+
+  async function send() {
+    const input = document.getElementById('input');
+    const content = input.value.trim();
+
+    if (!content || !currentRoom) return;
+
+    input.value = '';
+
+    const { error } = await supabaseClient
+      .from('messages')
+      .insert({
+        room_id: currentRoom,
+        sender_id: profileId,
+        content: content
+      });
+
+    if (error) {
+      console.error(error);
+      alert('Your message could not be sent.');
+      return;
+    }
+
+    loadMessages();
+  }
+
+  async function nextPerson() {
+    const oldRoom = currentRoom;
+
+    clearTimers();
+
+    document.getElementById('input').disabled = true;
+    document.getElementById('sendButton').disabled = true;
+
+    localStorage.removeItem(ACTIVE_ROOM_KEY);
+
+    if (oldRoom) {
+      await supabaseClient
+        .from('chat_rooms')
+        .update({ status: 'ended' })
+        .eq('id', oldRoom);
+    }
+
+    await supabaseClient
+      .from('waiting_users')
+      .delete()
+      .eq('profile_id', profileId);
+
+    currentRoom = null;
+
+    document.getElementById('msgs').innerHTML =
+      '<div class="system">Finding someone to chat with... 🔎</div>';
+
+    document.getElementById('partnerName').textContent =
+      'Anonymous Student';
+
+    document.getElementById('schoolBadge').textContent =
+      'Looking for someone...';
+
+    document.getElementById('avatar').textContent = '?';
+
+    showMatching(
+      'Finding someone new...',
+      'Hopefully this one sticks around. 😅'
+    );
+
+    setTimeout(findMatch, 700);
+  }
+
+  async function findSomeoneElse() {
+    currentRoom = null;
+    localStorage.removeItem(ACTIVE_ROOM_KEY);
+
+    await supabaseClient
+      .from('waiting_users')
+      .delete()
+      .eq('profile_id', profileId);
+
+    document.getElementById('msgs').innerHTML =
+      '<div class="system">Finding someone to chat with... 🔎</div>';
+
+    document.getElementById('statusBadge').textContent = 'Waiting';
+
+    showMatching(
+      'Finding someone new...',
+      'Hopefully this one sticks around. 😅'
+    );
+
+    await findMatch();
+  }
+
+  async function reportUser() {
+    if (!currentRoom) {
+      alert('You need to be in a chat before reporting someone.');
+      return;
+    }
+
+    const reason = prompt(
+      'Briefly tell us why you are reporting this user:'
+    );
+
+    if (!reason) return;
+
+    const { error } = await supabaseClient
+      .from('reports')
+      .insert({
+        reporter_id: profileId,
+        room_id: currentRoom,
+        reason: reason
+      });
+
+    if (error) {
+      console.error(error);
+      alert('The report could not be submitted.');
+      return;
+    }
+
+    alert('Thank you. Your report has been submitted.');
+  }
+
+  function clearTimers() {
+    if (messageTimer) clearInterval(messageTimer);
+    if (matchTimer) clearInterval(matchTimer);
+    if (roomStatusTimer) clearInterval(roomStatusTimer);
+
+    messageTimer = null;
+    matchTimer = null;
+    roomStatusTimer = null;
+  }
+
+  /*
+    When leaving or refreshing the page, remember the room.
+    On the next page load, cleanUpPreviousConnection() will
+    safely end it and remove the user from the waiting list.
+  */
+  window.addEventListener('pagehide', () => {
+    if (currentRoom) {
+      localStorage.setItem(ACTIVE_ROOM_KEY, currentRoom);
+    }
+
+    currentRoom = null;
+    clearTimers();
+  });
+
+  function speaker() {
+    document.getElementById('modal').classList.add('show');
+  }
+
+  function closeSpeaker() {
+    document.getElementById('modal').classList.remove('show');
+  }
+
+  function submitSpeaker() {
+    const announcement =
+      document.getElementById('announcement').value.trim();
+
+    if (!announcement) {
+      alert('Please write an announcement first.');
+      return;
+    }
+
+    alert(
+      'Speaker submissions will be connected to payment and moderation next.'
+    );
+
+    closeSpeaker();
+  }
+</script>
   );
 
   const schools = [
