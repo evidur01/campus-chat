@@ -510,8 +510,40 @@
       margin: 0 0 10px;
     }
 
-    .brand { cursor: pointer; }
-    .header-actions { display:flex; align-items:center; gap:10px; }
+    .brand { cursor: pointer; }.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.header-actions .primary,
+.header-actions .outline {
+  padding: 9px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  header {
+    padding: 0 12px;
+  }
+
+  .brand {
+    font-size: 18px;
+  }
+
+  .header-actions {
+    gap: 5px;
+  }
+
+  .header-actions .primary,
+  .header-actions .outline {
+    padding: 8px 9px;
+    font-size: 11px;
+  }
+}
     .admin-wrap { max-width: 1050px; margin: 45px auto; padding: 0 20px 60px; }
     .admin-toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:18px; }
     .admin-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:18px 0; }
@@ -1904,35 +1936,71 @@
     }
 
     async function submitSpeaker() {
-      const announcement = document.getElementById('announcement').value.trim();
-      const contactMethod = document.getElementById('speakerContactMethod').value;
-      const contactValue = document.getElementById('speakerContactValue').value.trim();
-      const button = document.getElementById('speakerSubmitButton');
-      if (!announcement) { alert('Please write your announcement first.'); return; }
-      if (!contactValue) { alert('Please enter contact details so we can reach you.'); return; }
-      button.disabled = true;
-      button.textContent = 'Submitting...';
-      const { data, error } = await supabaseClient.from('speaker_requests').insert({
+  const announcement = document.getElementById('announcement').value.trim();
+  const contactMethod = document.getElementById('speakerContactMethod').value;
+  const contactValue = document.getElementById('speakerContactValue').value.trim();
+  const button = document.getElementById('speakerSubmitButton');
+
+  if (!announcement) {
+    alert('Please write your announcement first.');
+    return;
+  }
+
+  if (!contactValue) {
+    alert('Please enter contact details so we can reach you.');
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Submitting...';
+
+  try {
+    const { error } = await supabaseClient
+      .from('speaker_requests')
+      .insert({
         profile_id: profileId || null,
         nickname: nickname || document.getElementById('nicknameInput').value.trim() || null,
         school: school || document.getElementById('schoolInput').value.trim() || null,
         contact_method: contactMethod,
         contact_value: contactValue,
-        announcement,
+        announcement: announcement,
         status: 'pending_review'
-      }).select('id').maybeSingle();
-      button.disabled = false;
-      button.textContent = 'Submit for review →';
-      if (error) {
-        console.error('Speaker request submission failed:', error);
-        alert('We could not submit your request. Please try again later. If this continues, check the speaker_requests table permissions and RLS policies in Supabase.');
-        return;
-      }
-      document.getElementById('announcement').value = '';
-      document.getElementById('speakerContactValue').value = '';
-      closeSpeaker();
-      alert('Your Speaker request has been submitted for review. We will contact you using the details you provided to discuss manual payment if your request is accepted.');
+      });
+
+    if (error) {
+      console.error('Speaker request submission failed:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+
+      alert(
+        'We could not submit your request.\n\n' +
+        'Error: ' + error.message +
+        (error.details ? '\nDetails: ' + error.details : '')
+      );
+      return;
     }
+
+    document.getElementById('announcement').value = '';
+    document.getElementById('speakerContactValue').value = '';
+
+    closeSpeaker();
+
+    alert(
+      'Your Speaker request has been submitted for review. ' +
+      'We will contact you using the details you provided.'
+    );
+
+  } catch (error) {
+    console.error('Unexpected Speaker submission error:', error);
+    alert('Something went wrong. Please try again.');
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Submit for review →';
+  }
+}
 
     // ==========================================
     // SUGGESTIONS
