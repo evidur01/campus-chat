@@ -1,270 +1,1176 @@
-<script>
-  const SUPABASE_URL = 'https://ygnftivolxzznwdztccp.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_7zC9r6QUPYfP3A9uvmNPog_cFTXdG7K';
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Campus Chat</title>
 
-  const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --purple: #6846e8;
+      --ink: #1d1830;
+      --bg: #f7f6fc;
+      --line: #e8e5f0;
+    }
 
-<script>
-  const SUPABASE_URL = 'https://ygnftivolxzznwdztccp.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_7zC9r6QUPYfP3A9uvmNPog_cFTXdG7K';
+    * {
+      box-sizing: border-box;
+    }
 
-  const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
 
-  const schools = [
-    { name: 'University of the Philippines Diliman', region: 'Metro Manila' },
-    { name: 'University of the Philippines Manila', region: 'Metro Manila' },
-    { name: 'Ateneo de Manila University', region: 'Metro Manila' },
-    { name: 'De La Salle University', region: 'Metro Manila' },
-    { name: 'University of Santo Tomas', region: 'Metro Manila' },
-    { name: 'Polytechnic University of the Philippines', region: 'Metro Manila' },
-    { name: 'Far Eastern University', region: 'Metro Manila' },
-    { name: 'University of the East', region: 'Metro Manila' },
-    { name: 'Mapúa University', region: 'Metro Manila' },
-    { name: 'Adamson University', region: 'Metro Manila' },
-    { name: 'National University', region: 'Metro Manila' },
-    { name: 'Technological University of the Philippines', region: 'Metro Manila' },
-    { name: 'Centro Escolar University', region: 'Metro Manila' },
-    { name: 'University of Makati', region: 'Metro Manila' },
-    { name: 'Technological Institute of the Philippines', region: 'Metro Manila' },
+    header {
+      height: 68px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 max(20px, 5vw);
+    }
 
-    { name: 'University of the Philippines Baguio', region: 'Luzon' },
-    { name: 'Saint Louis University', region: 'Luzon' },
-    { name: 'University of Baguio', region: 'Luzon' },
-    { name: 'University of the Philippines Los Baños', region: 'Luzon' },
-    { name: 'Cavite State University', region: 'Luzon' },
-    { name: 'De La Salle University – Dasmariñas', region: 'Luzon' },
-    { name: 'Laguna State Polytechnic University', region: 'Luzon' },
-    { name: 'Batangas State University', region: 'Luzon' },
-    { name: 'Bulacan State University', region: 'Luzon' },
-    { name: 'Tarlac State University', region: 'Luzon' },
-    { name: 'Holy Angel University', region: 'Luzon' },
-    { name: 'Bicol University', region: 'Luzon' },
-    { name: 'Ateneo de Naga University', region: 'Luzon' },
-    { name: 'Mariano Marcos State University', region: 'Luzon' },
+    .brand {
+      font-weight: 800;
+      font-size: 21px;
+    }
 
-    { name: 'University of the Philippines Visayas', region: 'Visayas' },
-    { name: 'University of San Carlos', region: 'Visayas' },
-    { name: 'University of San Jose–Recoletos', region: 'Visayas' },
-    { name: 'University of Cebu', region: 'Visayas' },
-    { name: 'University of the Visayas', region: 'Visayas' },
-    { name: 'Cebu Technological University', region: 'Visayas' },
-    { name: 'Cebu Normal University', region: 'Visayas' },
-    { name: 'West Visayas State University', region: 'Visayas' },
-    { name: 'Central Philippine University', region: 'Visayas' },
-    { name: 'University of San Agustin', region: 'Visayas' },
-    { name: 'University of St. La Salle', region: 'Visayas' },
-    { name: 'Silliman University', region: 'Visayas' },
-    { name: 'Eastern Visayas State University', region: 'Visayas' },
-    { name: 'Leyte Normal University', region: 'Visayas' },
+    .brand b {
+      color: var(--purple);
+    }
 
-    { name: 'Ateneo de Davao University', region: 'Mindanao' },
-    { name: 'University of Mindanao', region: 'Mindanao' },
-    { name: 'University of Southeastern Philippines', region: 'Mindanao' },
-    { name: 'University of the Philippines Mindanao', region: 'Mindanao' },
-    { name: 'Mindanao State University', region: 'Mindanao' },
-    { name: 'Mindanao State University – Iligan Institute of Technology', region: 'Mindanao' },
-    { name: 'Xavier University – Ateneo de Cagayan', region: 'Mindanao' },
-    { name: 'Central Mindanao University', region: 'Mindanao' },
-    { name: 'Caraga State University', region: 'Mindanao' },
-    { name: 'Western Mindanao State University', region: 'Mindanao' }
-  ];
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
 
-  let school = '';
-  let nickname = '';
-  let profileId = localStorage.getItem('campusChatProfileId');
-  let currentRoom = null;
-  let messageTimer = null;
-  let matchTimer = null;
-  let roomStatusTimer = null;
+    button {
+      cursor: pointer;
+    }
 
-  /*
-    This key remembers the current room only long enough
-    to disconnect it if the user refreshes the page.
-  */
-  const ACTIVE_ROOM_KEY = 'campusChatActiveRoom';
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
 
-  /*
-    On every new page load, clean up any old room and
-    waiting-list entry. The user will NOT automatically
-    be put back into the queue.
-  */
-  async function cleanUpPreviousConnection() {
-    const oldRoom = localStorage.getItem(ACTIVE_ROOM_KEY);
+    .primary {
+      background: var(--purple);
+      color: white;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-weight: 700;
+    }
 
-    if (oldRoom) {
-      const { error } = await supabaseClient
-        .from('chat_rooms')
-        .update({ status: 'ended' })
-        .eq('id', oldRoom)
-        .eq('status', 'active');
+    .outline {
+      background: white;
+      border: 1px solid #dcd7e8;
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
 
-      if (error) {
-        console.error('Could not clean up old room:', error);
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* Homepage */
+
+    .hero {
+      max-width: 850px;
+      margin: auto;
+      padding: 100px 24px 70px;
+      text-align: center;
+    }
+
+    .tag {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      font-size: 58px;
+      line-height: 1.02;
+      letter-spacing: -2px;
+      margin: 12px 0 18px;
+    }
+
+    .lead {
+      font-size: 18px;
+      line-height: 1.55;
+      color: #665f76;
+    }
+
+    .hero .lead {
+      max-width: 620px;
+      margin: 0 auto 28px;
+    }
+
+    .agreement {
+      max-width: 520px;
+      margin: 0 auto 20px;
+      padding: 15px 18px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      text-align: left;
+    }
+
+    .agreement label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #665f76;
+    }
+
+    .agreement input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      margin-top: 2px;
+      flex-shrink: 0;
+      accent-color: var(--purple);
+      cursor: pointer;
+    }
+
+    .terms-link {
+      color: var(--purple);
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .features {
+      max-width: 1000px;
+      margin: auto;
+      padding: 0 24px 60px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .feature {
+      background: white;
+      border: 1px solid var(--line);
+      padding: 19px;
+      border-radius: 17px;
+      text-align: center;
+    }
+
+    .feature b {
+      display: block;
+      margin: 9px 0;
+    }
+
+    /* Cards and setup */
+
+    .card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 16px 45px #2d21610d;
+    }
+
+    .note {
+      font-size: 12px;
+      color: #817a8d;
+      line-height: 1.5;
+    }
+
+    .setup {
+      max-width: 510px;
+      margin: 65px auto;
+      padding: 0 20px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin: 20px 0 7px;
+    }
+
+    .text-input {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid #ddd8e8;
+      border-radius: 11px;
+      outline: none;
+    }
+
+    .text-input:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px #6846e81a;
+    }
+
+    /* Searchable school selector */
+
+    .school-picker {
+      position: relative;
+    }
+
+    .school-results {
+      display: none;
+      position: absolute;
+      z-index: 20;
+      width: 100%;
+      max-height: 250px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #ddd8e8;
+      border-radius: 11px;
+      margin-top: 5px;
+      box-shadow: 0 12px 30px #2d21611a;
+    }
+
+    .school-results.show {
+      display: block;
+    }
+
+    .school-option {
+      padding: 12px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      border-bottom: 1px solid #f0edf5;
+    }
+
+    .school-option:hover {
+      background: #f4f1ff;
+    }
+
+    .school-region {
+      padding: 9px 14px;
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--purple);
+      text-transform: uppercase;
+      background: #faf9fd;
+    }
+
+    /* Matching screen */
+
+    .loading-wrap {
+      max-width: 600px;
+      margin: 80px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .loading-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 40px 28px;
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 20px;
+      border: 4px solid #ece8fa;
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
       }
     }
 
-    localStorage.removeItem(ACTIVE_ROOM_KEY);
+    .ad-box {
+      margin-top: 28px;
+      border: 1px dashed #cfc8dd;
+      border-radius: 15px;
+      padding: 24px 18px;
+      background: #faf9fd;
+      color: #817a8d;
+    }
 
-    if (profileId) {
-      const { error } = await supabaseClient
-        .from('waiting_users')
-        .delete()
-        .eq('profile_id', profileId);
+    .ad-label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
 
-      if (error) {
-        console.error('Could not remove old waiting entry:', error);
+    /* Chat */
+
+    .chat-wrap {
+      max-width: 1080px;
+      margin: auto;
+      padding: 25px;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 18px;
+    }
+
+    .chat {
+      height: 620px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chathead {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .person {
+      display: flex;
+      gap: 11px;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #eee9ff;
+      color: var(--purple);
+      display: grid;
+      place-items: center;
+      font-weight: bold;
+    }
+
+    .person small {
+      display: block;
+      color: #817a8d;
+      margin-top: 3px;
+    }
+
+    .badge {
+      font-size: 11px;
+      background: #f0edff;
+      color: #5e3ed3;
+      padding: 5px 8px;
+      border-radius: 99px;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 22px;
+      overflow-y: auto;
+    }
+
+    .system {
+      text-align: center;
+      font-size: 12px;
+      color: #958e9e;
+      margin: 12px;
+    }
+
+    .msg {
+      max-width: 76%;
+      padding: 11px 14px;
+      border-radius: 16px;
+      margin: 12px 0;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .them {
+      background: #f0edff;
+      border-bottom-left-radius: 4px;
+    }
+
+    .me {
+      background: var(--purple);
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .composer {
+      padding: 14px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 8px;
+    }
+
+    .composer input {
+      flex: 1;
+      border: 1px solid #ddd8e8;
+      border-radius: 11px;
+      padding: 13px;
+    }
+
+    .composer button {
+      border: 0;
+      background: var(--purple);
+      color: white;
+      border-radius: 11px;
+      padding: 0 16px;
+      font-weight: bold;
+    }
+
+    .side {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      height: max-content;
+    }
+
+    .next {
+      width: 100%;
+      border: 0;
+      background: #ffc44d;
+      padding: 12px;
+      border-radius: 11px;
+      font-weight: bold;
+      margin: 12px 0;
+    }
+
+    .speaker {
+      background: #f1eeff;
+      padding: 16px;
+      border-radius: 15px;
+      margin-top: 18px;
+    }
+
+    .speaker button {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    /* Ditched screen */
+
+    .ditched-wrap {
+      max-width: 600px;
+      margin: 70px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .ditched-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 45px 28px;
+      box-shadow: 0 16px 45px #2d21610d;
+    }
+
+    .escape-scene {
+      height: 110px;
+      font-size: 64px;
+      padding-top: 15px;
+      animation: runAway 2.5s ease-in infinite;
+    }
+
+    @keyframes runAway {
+      0%, 30% {
+        transform: translateX(0);
+      }
+
+      80%, 100% {
+        transform: translateX(180%);
+        opacity: 0;
       }
     }
-  }
 
-  /*
-    Run the cleanup after the page has loaded.
-    This prevents an old connection from being restored.
-  */
-  window.addEventListener('load', () => {
-    cleanUpPreviousConnection();
-  });
-
-  function show(id) {
-    document.querySelectorAll('.page').forEach(page => {
-      page.classList.remove('active');
-    });
-
-    document.getElementById(id).classList.add('active');
-    window.scrollTo(0, 0);
-  }
-
-  function toggleStartButton() {
-    const agreed = document.getElementById('termsAgreement').checked;
-    document.getElementById('startButton').disabled = !agreed;
-  }
-
-  function goToSetup() {
-    if (!document.getElementById('termsAgreement').checked) {
-      alert('Please confirm that you are 18 or older and agree to the Terms & Conditions.');
-      return;
+    .sad-face {
+      font-size: 45px;
+      display: inline-block;
+      animation: sadBounce 2s ease-in-out infinite;
     }
 
-    show('setup');
-  }
+    @keyframes sadBounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
 
-  function openTerms(event) {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
+      50% {
+        transform: translateY(7px);
+      }
     }
 
-    document.getElementById('termsModal').classList.add('show');
-  }
+    /* Modal */
 
-  function closeTerms() {
-    document.getElementById('termsModal').classList.remove('show');
-  }
+    .modalbg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #17122188;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
 
-  function filterSchools() {
-    const input = document.getElementById('schoolInput');
-    const results = document.getElementById('schoolResults');
-    const query = input.value.trim().toLowerCase();
+    .modalbg.show {
+      display: flex;
+    }
 
-    results.innerHTML = '';
+    .modal {
+      background: white;
+      width: min(500px, 100%);
+      padding: 25px;
+      border-radius: 22px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
 
-    const matches = schools.filter(item =>
-      item.name.toLowerCase().includes(query)
+    .modal textarea {
+      width: 100%;
+      height: 115px;
+      border: 1px solid #ddd8e8;
+      border-radius: 11px;
+      padding: 12px;
+      resize: vertical;
+    }
+
+    .terms-modal {
+      width: min(650px, 100%);
+    }
+
+    .terms-content h3 {
+      margin: 20px 0 7px;
+      font-size: 16px;
+    }
+
+    .terms-content p {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #665f76;
+      margin: 0 0 10px;
+    }
+
+    @media (max-width: 760px) {
+      .hero {
+        padding-top: 65px;
+      }
+
+      h1 {
+        font-size: 44px;
+      }
+
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+      .chat-wrap {
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+
+      .side {
+        order: -1;
+      }
+
+      .chat {
+        height: 570px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="brand">Campus<b>Chat</b></div>
+    <button class="outline" onclick="speaker()">📣 Speaker</button>
+  </header>
+
+  <!-- HOME -->
+
+  <section id="home" class="page active">
+    <div class="hero">
+      <div class="tag">For Filipino college students</div>
+
+      <h1>Meet someone.<br>Start a conversation.</h1>
+
+      <p class="lead">
+        A simple place to have random conversations with fellow college students
+        in the Philippines.
+      </p>
+
+      <div class="agreement">
+        <label>
+          <input
+            type="checkbox"
+            id="termsAgreement"
+            onchange="toggleStartButton()"
+          >
+
+          <span>
+            I confirm that I am <b>18 years old or above</b> and I have read and
+            agree to the
+            <span class="terms-link" onclick="openTerms(event)">
+              Terms & Conditions and Disclaimer of Liability
+            </span>.
+          </span>
+        </label>
+      </div>
+
+      <button
+        id="startButton"
+        class="primary"
+        onclick="goToSetup()"
+        disabled
+      >
+        🎲 Start Chatting
+      </button>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        🎲
+        <b>Random chat</b>
+        <span class="note">Meet someone new.</span>
+      </div>
+
+      <div class="feature">
+        🎭
+        <b>Your identity, your choice</b>
+        <span class="note">Use an alias and optionally show your school.</span>
+      </div>
+
+      <div class="feature">
+        📣
+        <b>Speaker</b>
+        <span class="note">Promoted announcements for the community.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETUP -->
+
+  <section id="setup" class="page">
+    <div class="setup">
+      <div class="card">
+        <div class="tag">Optional setup</div>
+
+        <h2>Before we find someone...</h2>
+
+        <p class="note">
+          You can stay anonymous or add a nickname and school for your chat
+          partner to see.
+        </p>
+
+        <label class="field-label">
+          🎭 Nickname / Alias <span class="note">(Optional)</span>
+        </label>
+
+        <input
+          id="nicknameInput"
+          class="text-input"
+          maxlength="30"
+          placeholder="Example: CoffeeLover23"
+          autocomplete="off"
+        >
+
+        <label class="field-label">
+          🎓 School <span class="note">(Optional)</span>
+        </label>
+
+        <div class="school-picker">
+          <input
+            id="schoolInput"
+            class="text-input"
+            placeholder="🔍 Search your school or university..."
+            autocomplete="off"
+            oninput="filterSchools()"
+            onfocus="filterSchools()"
+          >
+
+          <div id="schoolResults" class="school-results"></div>
+        </div>
+
+        <button
+          class="primary"
+          style="width:100%; margin-top:24px"
+          onclick="startChat()"
+        >
+          Find someone →
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MATCHING -->
+
+  <section id="matching" class="page">
+    <div class="loading-wrap">
+      <div class="loading-card">
+        <div class="spinner"></div>
+
+        <div class="tag">Campus Chat</div>
+
+        <h2 id="matchingTitle">Finding someone to chat with...</h2>
+
+        <p class="note" id="matchingText">
+          Hang tight while we look for another student.
+        </p>
+
+        <div class="ad-box">
+          <span class="ad-label">Advertisement</span>
+
+          <b>Your ad could appear here.</b>
+
+          <p class="note">
+            This space can later be used for ads, sponsored announcements,
+            or Speaker promotions.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DITCHED -->
+
+  <section id="ditched" class="page">
+    <div class="ditched-wrap">
+      <div class="ditched-card">
+        <div class="escape-scene">🏃💨</div>
+        <div class="sad-face">🥲</div>
+
+        <div class="tag">Connection ended</div>
+
+        <h2>Well... they ditched you.</h2>
+
+        <p class="lead" style="font-size:16px">
+          Don't take it personally. Maybe their mom called them for dinner. 🍗😂
+        </p>
+
+        <button class="primary" onclick="findSomeoneElse()">
+          🎲 Find someone else
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHAT -->
+
+  <section id="chat" class="page">
+    <div class="chat-wrap">
+      <main class="chat">
+        <div class="chathead">
+          <div class="person">
+            <div class="avatar" id="avatar">?</div>
+
+            <div>
+              <b id="partnerName">Anonymous Student</b>
+              <small id="schoolBadge">Anonymous</small>
+            </div>
+          </div>
+
+          <span class="badge" id="statusBadge">Waiting</span>
+        </div>
+
+        <div id="msgs" class="messages">
+          <div class="system">Looking for someone to chat with... 🔎</div>
+        </div>
+
+        <div class="composer">
+          <input
+            id="input"
+            placeholder="Type a message..."
+            disabled
+            onkeydown="if(event.key==='Enter')send()"
+          >
+
+          <button id="sendButton" onclick="send()" disabled>
+            Send
+          </button>
+        </div>
+      </main>
+
+      <aside class="side">
+        <b>Keep it friendly ✨</b>
+
+        <p class="note">
+          Be respectful and don't share sensitive information.
+        </p>
+
+        <button class="next" onclick="nextPerson()">
+          ⏭ Next person
+        </button>
+
+        <button
+          class="outline"
+          style="width:100%"
+          onclick="reportUser()"
+        >
+          🚩 Report
+        </button>
+
+        <div class="speaker">
+          <b>📣 Have an announcement?</b>
+
+          <p class="note">
+            Create a promoted message for the community.
+          </p>
+
+          <button class="primary" onclick="speaker()">
+            Become a Speaker
+          </button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- SPEAKER MODAL -->
+
+  <div id="modal" class="modalbg">
+    <div class="modal">
+      <h2>📣 Become a Speaker</h2>
+
+      <p class="note">
+        Speaker payments and approval will be added after the chat system.
+      </p>
+
+      <textarea
+        id="announcement"
+        placeholder="Write your announcement..."
+      ></textarea>
+
+      <div style="text-align:right; margin-top:12px">
+        <button class="outline" onclick="closeSpeaker()">
+          Cancel
+        </button>
+
+        <button class="primary" onclick="submitSpeaker()">
+          Continue →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TERMS MODAL -->
+
+  <div id="termsModal" class="modalbg">
+    <div class="modal terms-modal">
+      <h2>Terms & Conditions</h2>
+
+      <div class="terms-content">
+        <h3>1. Age Requirement</h3>
+        <p>
+          Campus Chat is intended only for users who are 18 years old or above.
+          By using this platform, you confirm that you meet this age requirement.
+        </p>
+
+        <h3>2. User Conduct</h3>
+        <p>
+          You agree to communicate respectfully and not use the platform to
+          harass, threaten, exploit, impersonate, or harm other users. Illegal,
+          abusive, or inappropriate behavior may result in removal from the
+          platform.
+        </p>
+
+        <h3>3. Your Privacy</h3>
+        <p>
+          Do not share sensitive personal information such as passwords, bank
+          details, home addresses, or other private information with strangers.
+          You are responsible for the information you choose to share during a
+          conversation.
+        </p>
+
+        <h3>4. Disclaimer of Liability</h3>
+        <p>
+          Campus Chat provides a platform for users to have conversations with
+          other users. We do not guarantee the identity, intentions, accuracy,
+          or behavior of any user you may encounter.
+        </p>
+
+        <p>
+          To the extent permitted by applicable law, Campus Chat and its
+          operators are not liable for personal interactions, conversations,
+          information shared, or actions taken by users while using the platform.
+          Users participate in conversations at their own discretion and
+          responsibility.
+        </p>
+
+        <h3>5. Reporting and Safety</h3>
+        <p>
+          If another user behaves inappropriately, you may end the conversation
+          and submit a report. Reports may be reviewed to help maintain a safer
+          community.
+        </p>
+      </div>
+
+      <div style="text-align:right; margin-top:20px">
+        <button class="primary" onclick="closeTerms()">
+          I Understand
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUPABASE -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    const SUPABASE_URL = 'https://ygnftivolxzznwdztccp.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_7zC9r6QUPYfP3A9uvmNPog_cFTXdG7K';
+
+    const supabaseClient = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
     );
 
-    if (query) {
-      matches.slice(0, 20).forEach(item => {
-        addSchoolOption(item.name);
+    const schools = [
+      { name: 'University of the Philippines Diliman', region: 'Metro Manila' },
+      { name: 'University of the Philippines Manila', region: 'Metro Manila' },
+      { name: 'Ateneo de Manila University', region: 'Metro Manila' },
+      { name: 'De La Salle University', region: 'Metro Manila' },
+      { name: 'University of Santo Tomas', region: 'Metro Manila' },
+      { name: 'Polytechnic University of the Philippines', region: 'Metro Manila' },
+      { name: 'Far Eastern University', region: 'Metro Manila' },
+      { name: 'University of the East', region: 'Metro Manila' },
+      { name: 'Mapúa University', region: 'Metro Manila' },
+      { name: 'Adamson University', region: 'Metro Manila' },
+      { name: 'National University', region: 'Metro Manila' },
+      { name: 'Technological University of the Philippines', region: 'Metro Manila' },
+      { name: 'Centro Escolar University', region: 'Metro Manila' },
+      { name: 'University of Makati', region: 'Metro Manila' },
+      { name: 'Technological Institute of the Philippines', region: 'Metro Manila' },
+
+      { name: 'University of the Philippines Baguio', region: 'Luzon' },
+      { name: 'Saint Louis University', region: 'Luzon' },
+      { name: 'University of Baguio', region: 'Luzon' },
+      { name: 'University of the Philippines Los Baños', region: 'Luzon' },
+      { name: 'Cavite State University', region: 'Luzon' },
+      { name: 'De La Salle University – Dasmariñas', region: 'Luzon' },
+      { name: 'Laguna State Polytechnic University', region: 'Luzon' },
+      { name: 'Batangas State University', region: 'Luzon' },
+      { name: 'Bulacan State University', region: 'Luzon' },
+      { name: 'Tarlac State University', region: 'Luzon' },
+      { name: 'Holy Angel University', region: 'Luzon' },
+      { name: 'Bicol University', region: 'Luzon' },
+      { name: 'Ateneo de Naga University', region: 'Luzon' },
+      { name: 'Mariano Marcos State University', region: 'Luzon' },
+
+      { name: 'University of the Philippines Visayas', region: 'Visayas' },
+      { name: 'University of San Carlos', region: 'Visayas' },
+      { name: 'University of San Jose–Recoletos', region: 'Visayas' },
+      { name: 'University of Cebu', region: 'Visayas' },
+      { name: 'University of the Visayas', region: 'Visayas' },
+      { name: 'Cebu Technological University', region: 'Visayas' },
+      { name: 'Cebu Normal University', region: 'Visayas' },
+      { name: 'West Visayas State University', region: 'Visayas' },
+      { name: 'Central Philippine University', region: 'Visayas' },
+      { name: 'University of San Agustin', region: 'Visayas' },
+      { name: 'University of St. La Salle', region: 'Visayas' },
+      { name: 'Silliman University', region: 'Visayas' },
+      { name: 'Eastern Visayas State University', region: 'Visayas' },
+      { name: 'Leyte Normal University', region: 'Visayas' },
+
+      { name: 'Ateneo de Davao University', region: 'Mindanao' },
+      { name: 'University of Mindanao', region: 'Mindanao' },
+      { name: 'University of Southeastern Philippines', region: 'Mindanao' },
+      { name: 'University of the Philippines Mindanao', region: 'Mindanao' },
+      { name: 'Mindanao State University', region: 'Mindanao' },
+      { name: 'Mindanao State University – Iligan Institute of Technology', region: 'Mindanao' },
+      { name: 'Xavier University – Ateneo de Cagayan', region: 'Mindanao' },
+      { name: 'Central Mindanao University', region: 'Mindanao' },
+      { name: 'Caraga State University', region: 'Mindanao' },
+      { name: 'Western Mindanao State University', region: 'Mindanao' }
+    ];
+
+    let school = '';
+    let nickname = '';
+    let profileId = localStorage.getItem('campusChatProfileId');
+
+    let currentRoom = null;
+    let messageTimer = null;
+    let matchTimer = null;
+    let roomStatusTimer = null;
+
+    function show(id) {
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
       });
 
-      if (!matches.some(item => item.name.toLowerCase() === query)) {
-        const custom = document.createElement('div');
-        custom.className = 'school-option';
-        custom.textContent = 'Use "' + input.value.trim() + '"';
-        custom.onclick = () => selectSchool(input.value.trim());
-        results.appendChild(custom);
+      document.getElementById(id).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    /* First-page agreement */
+
+    function toggleStartButton() {
+      const agreed = document.getElementById('termsAgreement').checked;
+      document.getElementById('startButton').disabled = !agreed;
+    }
+
+    function goToSetup() {
+      if (!document.getElementById('termsAgreement').checked) {
+        alert(
+          'Please confirm that you are 18 or older and agree to the Terms & Conditions.'
+        );
+        return;
       }
-    } else {
-      const grouped = {};
 
-      schools.forEach(item => {
-        if (!grouped[item.region]) {
-          grouped[item.region] = [];
-        }
+      show('setup');
+    }
 
-        grouped[item.region].push(item);
-      });
+    function openTerms(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
 
-      Object.keys(grouped).forEach(region => {
-        const label = document.createElement('div');
-        label.className = 'school-region';
-        label.textContent = region;
-        results.appendChild(label);
+      document.getElementById('termsModal').classList.add('show');
+    }
 
-        grouped[region].forEach(item => {
+    function closeTerms() {
+      document.getElementById('termsModal').classList.remove('show');
+    }
+
+    /* School search */
+
+    function filterSchools() {
+      const input = document.getElementById('schoolInput');
+      const results = document.getElementById('schoolResults');
+      const query = input.value.trim().toLowerCase();
+
+      results.innerHTML = '';
+
+      const matches = schools.filter(item =>
+        item.name.toLowerCase().includes(query)
+      );
+
+      if (query) {
+        matches.slice(0, 20).forEach(item => {
           addSchoolOption(item.name);
         });
-      });
+
+        if (!matches.some(item => item.name.toLowerCase() === query)) {
+          const custom = document.createElement('div');
+
+          custom.className = 'school-option';
+          custom.textContent = 'Use "' + input.value.trim() + '"';
+          custom.onclick = () => selectSchool(input.value.trim());
+
+          results.appendChild(custom);
+        }
+      } else {
+        const grouped = {};
+
+        schools.forEach(item => {
+          if (!grouped[item.region]) {
+            grouped[item.region] = [];
+          }
+
+          grouped[item.region].push(item);
+        });
+
+        Object.keys(grouped).forEach(region => {
+          const label = document.createElement('div');
+
+          label.className = 'school-region';
+          label.textContent = region;
+
+          results.appendChild(label);
+
+          grouped[region].forEach(item => {
+            addSchoolOption(item.name);
+          });
+        });
+      }
+
+      results.classList.add('show');
     }
 
-    results.classList.add('show');
-  }
+    function addSchoolOption(schoolName) {
+      const results = document.getElementById('schoolResults');
+      const option = document.createElement('div');
 
-  function addSchoolOption(schoolName) {
-    const results = document.getElementById('schoolResults');
-    const option = document.createElement('div');
+      option.className = 'school-option';
+      option.textContent = schoolName;
+      option.onclick = () => selectSchool(schoolName);
 
-    option.className = 'school-option';
-    option.textContent = schoolName;
-    option.onclick = () => selectSchool(schoolName);
+      results.appendChild(option);
+    }
 
-    results.appendChild(option);
-  }
-
-  function selectSchool(schoolName) {
-    document.getElementById('schoolInput').value = schoolName;
-    document.getElementById('schoolResults').classList.remove('show');
-  }
-
-  document.addEventListener('click', event => {
-    const picker = document.querySelector('.school-picker');
-
-    if (picker && !picker.contains(event.target)) {
+    function selectSchool(schoolName) {
+      document.getElementById('schoolInput').value = schoolName;
       document.getElementById('schoolResults').classList.remove('show');
     }
-  });
 
-  async function startChat() {
-    nickname = document.getElementById('nicknameInput').value.trim();
-    school = document.getElementById('schoolInput').value.trim();
+    document.addEventListener('click', event => {
+      const picker = document.querySelector('.school-picker');
 
-    showMatching(
-      'Finding someone to chat with...',
-      'Hang tight while we look for another student.'
-    );
+      if (picker && !picker.contains(event.target)) {
+        document
+          .getElementById('schoolResults')
+          .classList.remove('show');
+      }
+    });
 
-    const profileCreated = await createOrUpdateProfile();
+    /* Start chat */
 
-    if (profileCreated) {
-      await findMatch();
+    async function startChat() {
+      nickname = document.getElementById('nicknameInput').value.trim();
+      school = document.getElementById('schoolInput').value.trim();
+
+      showMatching(
+        'Finding someone to chat with...',
+        'Hang tight while we look for another student.'
+      );
+
+      const profileCreated = await createOrUpdateProfile();
+
+      if (profileCreated) {
+        await findMatch();
+      }
     }
-  }
 
-  async function createOrUpdateProfile() {
-    if (!profileId) {
-      const { data, error } = await supabaseClient
+    async function createOrUpdateProfile() {
+      if (!profileId) {
+        const { data, error } = await supabaseClient
+          .from('profiles')
+          .insert({
+            school: school || null,
+            nickname: nickname || null
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error(error);
+          alert('Connection error. Please refresh and try again.');
+          show('setup');
+          return false;
+        }
+
+        profileId = data.id;
+        localStorage.setItem('campusChatProfileId', profileId);
+
+        return true;
+      }
+
+      const { error } = await supabaseClient
         .from('profiles')
-        .insert({
+        .update({
           school: school || null,
           nickname: nickname || null
         })
-        .select()
-        .single();
+        .eq('id', profileId);
 
       if (error) {
         console.error(error);
@@ -273,1198 +1179,479 @@
         return false;
       }
 
-      profileId = data.id;
-      localStorage.setItem('campusChatProfileId', profileId);
       return true;
     }
 
-    const { error } = await supabaseClient
-      .from('profiles')
-      .update({
-        school: school || null,
-        nickname: nickname || null
-      })
-      .eq('id', profileId);
+    function showMatching(title, text) {
+      document.getElementById('matchingTitle').textContent = title;
+      document.getElementById('matchingText').textContent = text;
 
-    if (error) {
-      console.error(error);
-      alert('Connection error. Please refresh and try again.');
-      show('setup');
-      return false;
+      show('matching');
     }
 
-    return true;
-  }
+    /* Matching */
 
-  function showMatching(title, text) {
-    document.getElementById('matchingTitle').textContent = title;
-    document.getElementById('matchingText').textContent = text;
-    show('matching');
-  }
+    async function findMatch() {
+      if (!profileId) return;
 
-  async function findMatch() {
-    if (!profileId) return;
-
-    currentRoom = null;
-    localStorage.removeItem(ACTIVE_ROOM_KEY);
-    clearTimers();
-
-    await supabaseClient
-      .from('waiting_users')
-      .delete()
-      .eq('profile_id', profileId);
-
-    const { data: waiting, error } = await supabaseClient
-      .from('waiting_users')
-      .select('*')
-      .neq('profile_id', profileId)
-      .order('joined_at', { ascending: true })
-      .limit(1);
-
-    if (error) {
-      console.error(error);
-      show('setup');
-      alert('Unable to search for a match. Please try again.');
-      return;
-    }
-
-    if (waiting && waiting.length > 0) {
-      const otherUser = waiting[0];
-
-      const { data: claimedUser, error: claimError } = await supabaseClient
-        .from('waiting_users')
-        .delete()
-        .eq('profile_id', otherUser.profile_id)
-        .select()
-        .maybeSingle();
-
-      if (claimError || !claimedUser) {
-        setTimeout(findMatch, 500);
-        return;
-      }
-
-      const { data: room, error: roomError } = await supabaseClient
-        .from('chat_rooms')
-        .insert({
-          user_one: profileId,
-          user_two: otherUser.profile_id,
-          status: 'active'
-        })
-        .select()
-        .single();
-
-      if (roomError || !room) {
-        console.error(roomError);
-
-        await supabaseClient
-          .from('waiting_users')
-          .upsert({
-            profile_id: otherUser.profile_id,
-            school: otherUser.school || null,
-            joined_at: otherUser.joined_at
-          });
-
-        setTimeout(findMatch, 1000);
-        return;
-      }
-
-      currentRoom = room.id;
-      localStorage.setItem(ACTIVE_ROOM_KEY, currentRoom);
-
-      await loadPartnerInfo(otherUser.profile_id);
-      matched();
-      return;
-    }
-
-    const { error: waitError } = await supabaseClient
-      .from('waiting_users')
-      .upsert({
-        profile_id: profileId,
-        school: school || null,
-        joined_at: new Date().toISOString()
-      });
-
-    if (waitError) {
-      console.error(waitError);
-      show('setup');
-      alert('Unable to join the matching queue.');
-      return;
-    }
-
-    matchTimer = setInterval(checkForRoom, 2000);
-  }
-
-  async function checkForRoom() {
-    if (!profileId || currentRoom) return;
-
-    const { data: rooms, error } = await supabaseClient
-      .from('chat_rooms')
-      .select('*')
-      .eq('status', 'active')
-      .or(`user_one.eq.${profileId},user_two.eq.${profileId}`)
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    if (rooms && rooms.length > 0) {
-      const room = rooms[0];
-
-      if (room.user_one === room.user_two) return;
-
-      const partnerId =
-        room.user_one === profileId
-          ? room.user_two
-          : room.user_one;
-
-      currentRoom = room.id;
-      localStorage.setItem(ACTIVE_ROOM_KEY, currentRoom);
-
-      await supabaseClient
-        .from('waiting_users')
-        .delete()
-        .eq('profile_id', profileId);
-
-      await loadPartnerInfo(partnerId);
-      matched();
-    }
-  }
-
-  async function loadPartnerInfo(partnerId) {
-    const { data, error } = await supabaseClient
-      .from('profiles')
-      .select('nickname, school')
-      .eq('id', partnerId)
-      .single();
-
-    if (error || !data) {
-      document.getElementById('partnerName').textContent =
-        'Anonymous Student';
-      document.getElementById('schoolBadge').textContent =
-        '● Anonymous';
-      document.getElementById('avatar').textContent = '?';
-      return;
-    }
-
-    const partnerName =
-      data.nickname && data.nickname.trim()
-        ? data.nickname.trim()
-        : 'Anonymous Student';
-
-    document.getElementById('partnerName').textContent = partnerName;
-    document.getElementById('schoolBadge').textContent =
-      data.school ? '🎓 ' + data.school : '● Anonymous';
-
-    document.getElementById('avatar').textContent =
-      data.nickname && data.nickname.trim()
-        ? data.nickname.trim().charAt(0).toUpperCase()
-        : '?';
-  }
-
-  function matched() {
-    clearInterval(matchTimer);
-    matchTimer = null;
-
-    show('chat');
-
-    document.getElementById('statusBadge').textContent = 'Connected';
-    document.getElementById('input').disabled = false;
-    document.getElementById('sendButton').disabled = false;
-
-    loadMessages();
-
-    messageTimer = setInterval(loadMessages, 1500);
-    roomStatusTimer = setInterval(checkRoomStatus, 2000);
-  }
-
-  async function checkRoomStatus() {
-    if (!currentRoom) return;
-
-    const roomId = currentRoom;
-
-    const { data: room, error } = await supabaseClient
-      .from('chat_rooms')
-      .select('status')
-      .eq('id', roomId)
-      .single();
-
-    if (error || !room) return;
-
-    if (room.status === 'ended' && currentRoom === roomId) {
       currentRoom = null;
-      localStorage.removeItem(ACTIVE_ROOM_KEY);
       clearTimers();
 
-      document.getElementById('statusBadge').textContent = 'Disconnected';
-      document.getElementById('input').disabled = true;
-      document.getElementById('sendButton').disabled = true;
-
-      show('ditched');
-    }
-  }
-
-  async function loadMessages() {
-    if (!currentRoom) return;
-
-    const { data, error } = await supabaseClient
-      .from('messages')
-      .select('*')
-      .eq('room_id', currentRoom)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    const container = document.getElementById('msgs');
-    container.innerHTML = '';
-
-    if (!data || data.length === 0) {
-      container.innerHTML =
-        '<div class="system">You are connected! Say hello 👋</div>';
-    } else {
-      data.forEach(message => {
-        const div = document.createElement('div');
-
-        div.className =
-          message.sender_id === profileId
-            ? 'msg me'
-            : 'msg them';
-
-        div.textContent = message.content;
-        container.appendChild(div);
-      });
-    }
-
-    container.scrollTop = container.scrollHeight;
-  }
-
-  async function send() {
-    const input = document.getElementById('input');
-    const content = input.value.trim();
-
-    if (!content || !currentRoom) return;
-
-    input.value = '';
-
-    const { error } = await supabaseClient
-      .from('messages')
-      .insert({
-        room_id: currentRoom,
-        sender_id: profileId,
-        content: content
-      });
-
-    if (error) {
-      console.error(error);
-      alert('Your message could not be sent.');
-      return;
-    }
-
-    loadMessages();
-  }
-
-  async function nextPerson() {
-    const oldRoom = currentRoom;
-
-    clearTimers();
-
-    document.getElementById('input').disabled = true;
-    document.getElementById('sendButton').disabled = true;
-
-    localStorage.removeItem(ACTIVE_ROOM_KEY);
-
-    if (oldRoom) {
-      await supabaseClient
-        .from('chat_rooms')
-        .update({ status: 'ended' })
-        .eq('id', oldRoom);
-    }
-
-    await supabaseClient
-      .from('waiting_users')
-      .delete()
-      .eq('profile_id', profileId);
-
-    currentRoom = null;
-
-    document.getElementById('msgs').innerHTML =
-      '<div class="system">Finding someone to chat with... 🔎</div>';
-
-    document.getElementById('partnerName').textContent =
-      'Anonymous Student';
-
-    document.getElementById('schoolBadge').textContent =
-      'Looking for someone...';
-
-    document.getElementById('avatar').textContent = '?';
-
-    showMatching(
-      'Finding someone new...',
-      'Hopefully this one sticks around. 😅'
-    );
-
-    setTimeout(findMatch, 700);
-  }
-
-  async function findSomeoneElse() {
-    currentRoom = null;
-    localStorage.removeItem(ACTIVE_ROOM_KEY);
-
-    await supabaseClient
-      .from('waiting_users')
-      .delete()
-      .eq('profile_id', profileId);
-
-    document.getElementById('msgs').innerHTML =
-      '<div class="system">Finding someone to chat with... 🔎</div>';
-
-    document.getElementById('statusBadge').textContent = 'Waiting';
-
-    showMatching(
-      'Finding someone new...',
-      'Hopefully this one sticks around. 😅'
-    );
-
-    await findMatch();
-  }
-
-  async function reportUser() {
-    if (!currentRoom) {
-      alert('You need to be in a chat before reporting someone.');
-      return;
-    }
-
-    const reason = prompt(
-      'Briefly tell us why you are reporting this user:'
-    );
-
-    if (!reason) return;
-
-    const { error } = await supabaseClient
-      .from('reports')
-      .insert({
-        reporter_id: profileId,
-        room_id: currentRoom,
-        reason: reason
-      });
-
-    if (error) {
-      console.error(error);
-      alert('The report could not be submitted.');
-      return;
-    }
-
-    alert('Thank you. Your report has been submitted.');
-  }
-
-  function clearTimers() {
-    if (messageTimer) clearInterval(messageTimer);
-    if (matchTimer) clearInterval(matchTimer);
-    if (roomStatusTimer) clearInterval(roomStatusTimer);
-
-    messageTimer = null;
-    matchTimer = null;
-    roomStatusTimer = null;
-  }
-
-  /*
-    When leaving or refreshing the page, remember the room.
-    On the next page load, cleanUpPreviousConnection() will
-    safely end it and remove the user from the waiting list.
-  */
-  window.addEventListener('pagehide', () => {
-    if (currentRoom) {
-      localStorage.setItem(ACTIVE_ROOM_KEY, currentRoom);
-    }
-
-    currentRoom = null;
-    clearTimers();
-  });
-
-  function speaker() {
-    document.getElementById('modal').classList.add('show');
-  }
-
-  function closeSpeaker() {
-    document.getElementById('modal').classList.remove('show');
-  }
-
-  function submitSpeaker() {
-    const announcement =
-      document.getElementById('announcement').value.trim();
-
-    if (!announcement) {
-      alert('Please write an announcement first.');
-      return;
-    }
-
-    alert(
-      'Speaker submissions will be connected to payment and moderation next.'
-    );
-
-    closeSpeaker();
-  }
-</script>
-  );
-
-  const schools = [
-    { name: 'University of the Philippines Diliman', region: 'Metro Manila' },
-    { name: 'University of the Philippines Manila', region: 'Metro Manila' },
-    { name: 'Ateneo de Manila University', region: 'Metro Manila' },
-    { name: 'De La Salle University', region: 'Metro Manila' },
-    { name: 'University of Santo Tomas', region: 'Metro Manila' },
-    { name: 'Polytechnic University of the Philippines', region: 'Metro Manila' },
-    { name: 'Far Eastern University', region: 'Metro Manila' },
-    { name: 'University of the East', region: 'Metro Manila' },
-    { name: 'Mapúa University', region: 'Metro Manila' },
-    { name: 'Adamson University', region: 'Metro Manila' },
-    { name: 'National University', region: 'Metro Manila' },
-    { name: 'Technological University of the Philippines', region: 'Metro Manila' },
-    { name: 'Centro Escolar University', region: 'Metro Manila' },
-    { name: 'University of Makati', region: 'Metro Manila' },
-    { name: 'Technological Institute of the Philippines', region: 'Metro Manila' },
-
-    { name: 'University of the Philippines Baguio', region: 'Luzon' },
-    { name: 'Saint Louis University', region: 'Luzon' },
-    { name: 'University of Baguio', region: 'Luzon' },
-    { name: 'University of the Philippines Los Baños', region: 'Luzon' },
-    { name: 'Cavite State University', region: 'Luzon' },
-    { name: 'De La Salle University – Dasmariñas', region: 'Luzon' },
-    { name: 'Laguna State Polytechnic University', region: 'Luzon' },
-    { name: 'Batangas State University', region: 'Luzon' },
-    { name: 'Bulacan State University', region: 'Luzon' },
-    { name: 'Tarlac State University', region: 'Luzon' },
-    { name: 'Holy Angel University', region: 'Luzon' },
-    { name: 'Bicol University', region: 'Luzon' },
-    { name: 'Ateneo de Naga University', region: 'Luzon' },
-    { name: 'Mariano Marcos State University', region: 'Luzon' },
-
-    { name: 'University of the Philippines Visayas', region: 'Visayas' },
-    { name: 'University of San Carlos', region: 'Visayas' },
-    { name: 'University of San Jose–Recoletos', region: 'Visayas' },
-    { name: 'University of Cebu', region: 'Visayas' },
-    { name: 'University of the Visayas', region: 'Visayas' },
-    { name: 'Cebu Technological University', region: 'Visayas' },
-    { name: 'Cebu Normal University', region: 'Visayas' },
-    { name: 'West Visayas State University', region: 'Visayas' },
-    { name: 'Central Philippine University', region: 'Visayas' },
-    { name: 'University of San Agustin', region: 'Visayas' },
-    { name: 'University of St. La Salle', region: 'Visayas' },
-    { name: 'Silliman University', region: 'Visayas' },
-    { name: 'Eastern Visayas State University', region: 'Visayas' },
-    { name: 'Leyte Normal University', region: 'Visayas' },
-
-    { name: 'Ateneo de Davao University', region: 'Mindanao' },
-    { name: 'University of Mindanao', region: 'Mindanao' },
-    { name: 'University of Southeastern Philippines', region: 'Mindanao' },
-    { name: 'University of the Philippines Mindanao', region: 'Mindanao' },
-    { name: 'Mindanao State University', region: 'Mindanao' },
-    { name: 'Mindanao State University – Iligan Institute of Technology', region: 'Mindanao' },
-    { name: 'Xavier University – Ateneo de Cagayan', region: 'Mindanao' },
-    { name: 'Central Mindanao University', region: 'Mindanao' },
-    { name: 'Caraga State University', region: 'Mindanao' },
-    { name: 'Western Mindanao State University', region: 'Mindanao' }
-  ];
-
-  let school = '';
-  let nickname = '';
-  let profileId = localStorage.getItem('campusChatProfileId');
-  let currentRoom = null;
-  let messageTimer = null;
-  let matchTimer = null;
-  let roomStatusTimer = null;
-
-  /*
-    This page session is intentionally NOT restored after a refresh.
-    A user must actively start matching again.
-  */
-  const PAGE_SESSION_KEY = 'campusChatPageSession';
-  const ACTIVE_ROOM_KEY = 'campusChatActiveRoom';
-
-  /*
-    Give every page load its own session ID.
-    If the page is refreshed, the old session is treated as disconnected.
-  */
-  const previousSession = sessionStorage.getItem(PAGE_SESSION_KEY);
-  const pageSessionId =
-    Date.now().toString() + '-' + Math.random().toString(36).slice(2);
-
-  sessionStorage.setItem(PAGE_SESSION_KEY, pageSessionId);
-
-  /*
-    IMPORTANT:
-    If an old active room exists from a previous page load, end it.
-    This prevents a refreshed user from remaining connected.
-  */
-  async function cleanUpOldSession() {
-    const savedRoom = localStorage.getItem(ACTIVE_ROOM_KEY);
-
-    if (savedRoom && profileId) {
-      await supabaseClient
-        .from('chat_rooms')
-        .update({ status: 'ended' })
-        .eq('id', savedRoom)
-        .eq('status', 'active');
-    }
-
-    localStorage.removeItem(ACTIVE_ROOM_KEY);
-
-    /*
-      Also remove the user from the waiting list on every fresh page load.
-      They should only be added again when they actively start matching.
-    */
-    if (profileId) {
-      await supabaseClient
+      const { data: waiting, error } = await supabaseClient
         .from('waiting_users')
-        .delete()
-        .eq('profile_id', profileId);
-    }
-  }
-
-  /*
-    Run cleanup immediately when the page opens.
-    The app starts at the homepage/setup flow instead of restoring
-    an old waiting or chat connection.
-  */
-  cleanUpOldSession();
-
-  function show(id) {
-    document.querySelectorAll('.page').forEach(page => {
-      page.classList.remove('active');
-    });
-
-    document.getElementById(id).classList.add('active');
-    window.scrollTo(0, 0);
-  }
-
-  /* First-page agreement */
-  function toggleStartButton() {
-    const agreed = document.getElementById('termsAgreement').checked;
-    document.getElementById('startButton').disabled = !agreed;
-  }
-
-  function goToSetup() {
-    if (!document.getElementById('termsAgreement').checked) {
-      alert('Please confirm that you are 18 or older and agree to the Terms & Conditions.');
-      return;
-    }
-
-    show('setup');
-  }
-
-  function openTerms(event) {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-
-    document.getElementById('termsModal').classList.add('show');
-  }
-
-  function closeTerms() {
-    document.getElementById('termsModal').classList.remove('show');
-  }
-
-  /* School search */
-  function filterSchools() {
-    const input = document.getElementById('schoolInput');
-    const results = document.getElementById('schoolResults');
-    const query = input.value.trim().toLowerCase();
-
-    results.innerHTML = '';
-
-    const matches = schools.filter(item =>
-      item.name.toLowerCase().includes(query)
-    );
-
-    if (query) {
-      matches.slice(0, 20).forEach(item => {
-        addSchoolOption(item.name);
-      });
-
-      if (!matches.some(item => item.name.toLowerCase() === query)) {
-        const custom = document.createElement('div');
-        custom.className = 'school-option';
-        custom.textContent = 'Use "' + input.value.trim() + '"';
-        custom.onclick = () => selectSchool(input.value.trim());
-        results.appendChild(custom);
-      }
-    } else {
-      const grouped = {};
-
-      schools.forEach(item => {
-        if (!grouped[item.region]) {
-          grouped[item.region] = [];
-        }
-
-        grouped[item.region].push(item);
-      });
-
-      Object.keys(grouped).forEach(region => {
-        const label = document.createElement('div');
-        label.className = 'school-region';
-        label.textContent = region;
-        results.appendChild(label);
-
-        grouped[region].forEach(item => {
-          addSchoolOption(item.name);
-        });
-      });
-    }
-
-    results.classList.add('show');
-  }
-
-  function addSchoolOption(schoolName) {
-    const results = document.getElementById('schoolResults');
-    const option = document.createElement('div');
-
-    option.className = 'school-option';
-    option.textContent = schoolName;
-    option.onclick = () => selectSchool(schoolName);
-
-    results.appendChild(option);
-  }
-
-  function selectSchool(schoolName) {
-    document.getElementById('schoolInput').value = schoolName;
-    document.getElementById('schoolResults').classList.remove('show');
-  }
-
-  document.addEventListener('click', event => {
-    const picker = document.querySelector('.school-picker');
-
-    if (picker && !picker.contains(event.target)) {
-      document.getElementById('schoolResults').classList.remove('show');
-    }
-  });
-
-  async function startChat() {
-    nickname = document.getElementById('nicknameInput').value.trim();
-    school = document.getElementById('schoolInput').value.trim();
-
-    showMatching(
-      'Finding someone to chat with...',
-      'Hang tight while we look for another student.'
-    );
-
-    const profileCreated = await createOrUpdateProfile();
-
-    if (profileCreated) {
-      await findMatch();
-    }
-  }
-
-  async function createOrUpdateProfile() {
-    if (!profileId) {
-      const { data, error } = await supabaseClient
-        .from('profiles')
-        .insert({
-          school: school || null,
-          nickname: nickname || null
-        })
-        .select()
-        .single();
+        .select('*')
+        .neq('profile_id', profileId)
+        .order('joined_at', { ascending: true })
+        .limit(1);
 
       if (error) {
         console.error(error);
-        alert('Connection error. Please refresh and try again.');
         show('setup');
-        return false;
-      }
-
-      profileId = data.id;
-      localStorage.setItem('campusChatProfileId', profileId);
-      return true;
-    }
-
-    const { error } = await supabaseClient
-      .from('profiles')
-      .update({
-        school: school || null,
-        nickname: nickname || null
-      })
-      .eq('id', profileId);
-
-    if (error) {
-      console.error(error);
-      alert('Connection error. Please refresh and try again.');
-      show('setup');
-      return false;
-    }
-
-    return true;
-  }
-
-  function showMatching(title, text) {
-    document.getElementById('matchingTitle').textContent = title;
-    document.getElementById('matchingText').textContent = text;
-    show('matching');
-  }
-
-  async function findMatch() {
-    if (!profileId) return;
-
-    currentRoom = null;
-    localStorage.removeItem(ACTIVE_ROOM_KEY);
-    clearTimers();
-
-    /*
-      Remove any old waiting entry first.
-      The user is only considered waiting after this function is intentionally called.
-    */
-    await supabaseClient
-      .from('waiting_users')
-      .delete()
-      .eq('profile_id', profileId);
-
-    const { data: waiting, error } = await supabaseClient
-      .from('waiting_users')
-      .select('*')
-      .neq('profile_id', profileId)
-      .order('joined_at', { ascending: true })
-      .limit(1);
-
-    if (error) {
-      console.error(error);
-      show('setup');
-      alert('Unable to search for a match. Please try again.');
-      return;
-    }
-
-    if (waiting && waiting.length > 0) {
-      const otherUser = waiting[0];
-
-      const { data: claimedUser, error: claimError } = await supabaseClient
-        .from('waiting_users')
-        .delete()
-        .eq('profile_id', otherUser.profile_id)
-        .select()
-        .maybeSingle();
-
-      if (claimError || !claimedUser) {
-        setTimeout(findMatch, 500);
+        alert('Unable to search for a match. Please try again.');
         return;
       }
 
-      const { data: room, error: roomError } = await supabaseClient
-        .from('chat_rooms')
-        .insert({
-          user_one: profileId,
-          user_two: otherUser.profile_id,
-          status: 'active'
-        })
-        .select()
-        .single();
+      if (waiting && waiting.length > 0) {
+        const otherUser = waiting[0];
 
-      if (roomError || !room) {
-        console.error(roomError);
+        const { data: claimedUser, error: claimError } =
+          await supabaseClient
+            .from('waiting_users')
+            .delete()
+            .eq('profile_id', otherUser.profile_id)
+            .select()
+            .maybeSingle();
+
+        if (claimError || !claimedUser) {
+          setTimeout(findMatch, 500);
+          return;
+        }
+
+        const { data: room, error: roomError } = await supabaseClient
+          .from('chat_rooms')
+          .insert({
+            user_one: profileId,
+            user_two: otherUser.profile_id,
+            status: 'active'
+          })
+          .select()
+          .single();
+
+        if (roomError || !room) {
+          console.error(roomError);
+
+          await supabaseClient
+            .from('waiting_users')
+            .upsert({
+              profile_id: otherUser.profile_id,
+              school: otherUser.school || null,
+              joined_at: otherUser.joined_at
+            });
+
+          setTimeout(findMatch, 1000);
+          return;
+        }
+
+        currentRoom = room.id;
+
+        await loadPartnerInfo(otherUser.profile_id);
+        matched();
+
+        return;
+      }
+
+      const { error: waitError } = await supabaseClient
+        .from('waiting_users')
+        .upsert({
+          profile_id: profileId,
+          school: school || null,
+          joined_at: new Date().toISOString()
+        });
+
+      if (waitError) {
+        console.error(waitError);
+        show('setup');
+        alert('Unable to join the matching queue.');
+        return;
+      }
+
+      matchTimer = setInterval(checkForRoom, 2000);
+    }
+
+    async function checkForRoom() {
+      if (!profileId || currentRoom) return;
+
+      const { data: rooms, error } = await supabaseClient
+        .from('chat_rooms')
+        .select('*')
+        .eq('status', 'active')
+        .or(`user_one.eq.${profileId},user_two.eq.${profileId}`)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      if (rooms && rooms.length > 0) {
+        const room = rooms[0];
+
+        if (room.user_one === room.user_two) {
+          return;
+        }
+
+        const partnerId =
+          room.user_one === profileId
+            ? room.user_two
+            : room.user_one;
+
+        currentRoom = room.id;
 
         await supabaseClient
           .from('waiting_users')
-          .upsert({
-            profile_id: otherUser.profile_id,
-            school: otherUser.school || null,
-            joined_at: otherUser.joined_at
-          });
+          .delete()
+          .eq('profile_id', profileId);
 
-        setTimeout(findMatch, 1000);
+        await loadPartnerInfo(partnerId);
+        matched();
+      }
+    }
+
+    /* Partner information */
+
+    async function loadPartnerInfo(partnerId) {
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('nickname, school')
+        .eq('id', partnerId)
+        .single();
+
+      if (error || !data) {
+        document.getElementById('partnerName').textContent =
+          'Anonymous Student';
+
+        document.getElementById('schoolBadge').textContent =
+          '● Anonymous';
+
+        document.getElementById('avatar').textContent = '?';
+
         return;
       }
 
-      currentRoom = room.id;
+      const partnerName =
+        data.nickname && data.nickname.trim()
+          ? data.nickname.trim()
+          : 'Anonymous Student';
 
-      /*
-        Save the active room so a refresh/close can terminate it.
-      */
-      localStorage.setItem(ACTIVE_ROOM_KEY, currentRoom);
+      document.getElementById('partnerName').textContent = partnerName;
 
-      await loadPartnerInfo(otherUser.profile_id);
-      matched();
-      return;
+      document.getElementById('schoolBadge').textContent =
+        data.school
+          ? '🎓 ' + data.school
+          : '● Anonymous';
+
+      document.getElementById('avatar').textContent =
+        data.nickname && data.nickname.trim()
+          ? data.nickname.trim().charAt(0).toUpperCase()
+          : '?';
     }
 
-    const { error: waitError } = await supabaseClient
-      .from('waiting_users')
-      .upsert({
-        profile_id: profileId,
-        school: school || null,
-        joined_at: new Date().toISOString()
-      });
+    /* Connected chat */
 
-    if (waitError) {
-      console.error(waitError);
-      show('setup');
-      alert('Unable to join the matching queue.');
-      return;
+    function matched() {
+      clearInterval(matchTimer);
+      matchTimer = null;
+
+      show('chat');
+
+      document.getElementById('statusBadge').textContent = 'Connected';
+      document.getElementById('input').disabled = false;
+      document.getElementById('sendButton').disabled = false;
+
+      loadMessages();
+
+      messageTimer = setInterval(loadMessages, 1500);
+      roomStatusTimer = setInterval(checkRoomStatus, 2000);
     }
 
-    matchTimer = setInterval(checkForRoom, 2000);
-  }
+    async function checkRoomStatus() {
+      if (!currentRoom) return;
 
-  async function checkForRoom() {
-    if (!profileId || currentRoom) return;
+      const roomId = currentRoom;
 
-    const { data: rooms, error } = await supabaseClient
-      .from('chat_rooms')
-      .select('*')
-      .eq('status', 'active')
-      .or(`user_one.eq.${profileId},user_two.eq.${profileId}`)
-      .order('created_at', { ascending: false })
-      .limit(1);
+      const { data: room, error } = await supabaseClient
+        .from('chat_rooms')
+        .select('status')
+        .eq('id', roomId)
+        .single();
 
-    if (error) {
-      console.error(error);
-      return;
+      if (error || !room) return;
+
+      if (room.status === 'ended' && currentRoom === roomId) {
+        currentRoom = null;
+        clearTimers();
+
+        document.getElementById('statusBadge').textContent =
+          'Disconnected';
+
+        document.getElementById('input').disabled = true;
+        document.getElementById('sendButton').disabled = true;
+
+        show('ditched');
+      }
     }
 
-    if (rooms && rooms.length > 0) {
-      const room = rooms[0];
+    /* Messages */
 
-      if (room.user_one === room.user_two) {
+    async function loadMessages() {
+      if (!currentRoom) return;
+
+      const { data, error } = await supabaseClient
+        .from('messages')
+        .select('*')
+        .eq('room_id', currentRoom)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error(error);
         return;
       }
 
-      const partnerId =
-        room.user_one === profileId ? room.user_two : room.user_one;
+      const container = document.getElementById('msgs');
+      container.innerHTML = '';
 
-      currentRoom = room.id;
+      if (!data || data.length === 0) {
+        container.innerHTML =
+          '<div class="system">You are connected! Say hello 👋</div>';
+      } else {
+        data.forEach(message => {
+          const div = document.createElement('div');
 
-      /*
-        Save this room immediately.
-      */
-      localStorage.setItem(ACTIVE_ROOM_KEY, currentRoom);
+          div.className =
+            message.sender_id === profileId
+              ? 'msg me'
+              : 'msg them';
+
+          div.textContent = message.content;
+
+          container.appendChild(div);
+        });
+      }
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function send() {
+      const input = document.getElementById('input');
+      const content = input.value.trim();
+
+      if (!content || !currentRoom) return;
+
+      input.value = '';
+
+      const { error } = await supabaseClient
+        .from('messages')
+        .insert({
+          room_id: currentRoom,
+          sender_id: profileId,
+          content: content
+        });
+
+      if (error) {
+        console.error(error);
+        alert('Your message could not be sent.');
+        return;
+      }
+
+      loadMessages();
+    }
+
+    /* Next person */
+
+    async function nextPerson() {
+      const oldRoom = currentRoom;
+
+      clearTimers();
+
+      document.getElementById('input').disabled = true;
+      document.getElementById('sendButton').disabled = true;
+
+      if (oldRoom) {
+        await supabaseClient
+          .from('chat_rooms')
+          .update({ status: 'ended' })
+          .eq('id', oldRoom);
+      }
 
       await supabaseClient
         .from('waiting_users')
         .delete()
         .eq('profile_id', profileId);
 
-      await loadPartnerInfo(partnerId);
-      matched();
-    }
-  }
+      currentRoom = null;
 
-  async function loadPartnerInfo(partnerId) {
-    const { data, error } = await supabaseClient
-      .from('profiles')
-      .select('nickname, school')
-      .eq('id', partnerId)
-      .single();
+      document.getElementById('msgs').innerHTML =
+        '<div class="system">Finding someone to chat with... 🔎</div>';
 
-    if (error || !data) {
       document.getElementById('partnerName').textContent =
         'Anonymous Student';
 
       document.getElementById('schoolBadge').textContent =
-        '● Anonymous';
+        'Looking for someone...';
 
       document.getElementById('avatar').textContent = '?';
-      return;
+
+      showMatching(
+        'Finding someone new...',
+        'Hopefully this one sticks around. 😅'
+      );
+
+      setTimeout(findMatch, 700);
     }
 
-    const partnerName =
-      data.nickname && data.nickname.trim()
-        ? data.nickname.trim()
-        : 'Anonymous Student';
+    async function findSomeoneElse() {
+      document.getElementById('msgs').innerHTML =
+        '<div class="system">Finding someone to chat with... 🔎</div>';
 
-    document.getElementById('partnerName').textContent = partnerName;
+      document.getElementById('statusBadge').textContent = 'Waiting';
 
-    document.getElementById('schoolBadge').textContent =
-      data.school
-        ? '🎓 ' + data.school
-        : '● Anonymous';
+      showMatching(
+        'Finding someone new...',
+        'Hopefully this one sticks around. 😅'
+      );
 
-    document.getElementById('avatar').textContent =
-      data.nickname && data.nickname.trim()
-        ? data.nickname.trim().charAt(0).toUpperCase()
-        : '?';
-  }
-
-  function matched() {
-    clearInterval(matchTimer);
-    matchTimer = null;
-
-    show('chat');
-
-    document.getElementById('statusBadge').textContent = 'Connected';
-    document.getElementById('input').disabled = false;
-    document.getElementById('sendButton').disabled = false;
-
-    loadMessages();
-
-    messageTimer = setInterval(loadMessages, 1500);
-    roomStatusTimer = setInterval(checkRoomStatus, 2000);
-  }
-
-  async function checkRoomStatus() {
-    if (!currentRoom) return;
-
-    const roomId = currentRoom;
-
-    const { data: room, error } = await supabaseClient
-      .from('chat_rooms')
-      .select('status')
-      .eq('id', roomId)
-      .single();
-
-    if (error || !room) return;
-
-    if (room.status === 'ended' && currentRoom === roomId) {
-      currentRoom = null;
-      localStorage.removeItem(ACTIVE_ROOM_KEY);
-      clearTimers();
-
-      document.getElementById('statusBadge').textContent = 'Disconnected';
-      document.getElementById('input').disabled = true;
-      document.getElementById('sendButton').disabled = true;
-
-      show('ditched');
-    }
-  }
-
-  async function loadMessages() {
-    if (!currentRoom) return;
-
-    const { data, error } = await supabaseClient
-      .from('messages')
-      .select('*')
-      .eq('room_id', currentRoom)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error(error);
-      return;
+      await findMatch();
     }
 
-    const container = document.getElementById('msgs');
-    container.innerHTML = '';
+    /* Report */
 
-    if (!data || data.length === 0) {
-      container.innerHTML =
-        '<div class="system">You are connected! Say hello 👋</div>';
-    } else {
-      data.forEach(message => {
-        const div = document.createElement('div');
+    async function reportUser() {
+      if (!currentRoom) {
+        alert('You need to be in a chat before reporting someone.');
+        return;
+      }
 
-        div.className =
-          message.sender_id === profileId
-            ? 'msg me'
-            : 'msg them';
+      const reason = prompt(
+        'Briefly tell us why you are reporting this user:'
+      );
 
-        div.textContent = message.content;
-        container.appendChild(div);
-      });
+      if (!reason) return;
+
+      const { error } = await supabaseClient
+        .from('reports')
+        .insert({
+          reporter_id: profileId,
+          room_id: currentRoom,
+          reason: reason
+        });
+
+      if (error) {
+        console.error(error);
+        alert('The report could not be submitted.');
+        return;
+      }
+
+      alert('Thank you. Your report has been submitted.');
     }
 
-    container.scrollTop = container.scrollHeight;
-  }
+    /* Timers */
 
-  async function send() {
-    const input = document.getElementById('input');
-    const content = input.value.trim();
+    function clearTimers() {
+      if (messageTimer) clearInterval(messageTimer);
+      if (matchTimer) clearInterval(matchTimer);
+      if (roomStatusTimer) clearInterval(roomStatusTimer);
 
-    if (!content || !currentRoom) return;
-
-    input.value = '';
-
-    const { error } = await supabaseClient
-      .from('messages')
-      .insert({
-        room_id: currentRoom,
-        sender_id: profileId,
-        content: content
-      });
-
-    if (error) {
-      console.error(error);
-      alert('Your message could not be sent.');
-      return;
+      messageTimer = null;
+      matchTimer = null;
+      roomStatusTimer = null;
     }
 
-    loadMessages();
-  }
+    /* Speaker */
 
-  async function nextPerson() {
-    const oldRoom = currentRoom;
+    function speaker() {
+      document.getElementById('modal').classList.add('show');
+    }
 
-    clearTimers();
+    function closeSpeaker() {
+      document.getElementById('modal').classList.remove('show');
+    }
 
-    document.getElementById('input').disabled = true;
-    document.getElementById('sendButton').disabled = true;
+    function submitSpeaker() {
+      const announcement =
+        document.getElementById('announcement').value.trim();
+
+      if (!announcement) {
+        alert('Please write an announcement first.');
+        return;
+      }
+
+      alert(
+        'Speaker submissions will be connected to payment and moderation next.'
+      );
+
+      closeSpeaker();
+    }
+
+    /* REFRESH / PAGE LOAD CLEANUP
+
+       When a user reloads the website:
+       1. Any active chat connected to their profile is ended.
+       2. Their previous partner will detect the ended room and see the
+          Ditched page.
+       3. The refreshed user is removed from the waiting list.
+       4. The user will NOT automatically be placed back in the queue.
+    */
+
+    async function cleanupPreviousConnection() {
+      if (!profileId) return;
+
+      try {
+        const { error: roomError } = await supabaseClient
+          .from('chat_rooms')
+          .update({ status: 'ended' })
+          .eq('status', 'active')
+          .or(
+            `user_one.eq.${profileId},user_two.eq.${profileId}`
+          );
+
+        if (roomError) {
+          console.error(
+            'Error ending previous connection:',
+            roomError
+          );
+        }
+
+        const { error: waitingError } = await supabaseClient
+          .from('waiting_users')
+          .delete()
+          .eq('profile_id', profileId);
+
+        if (waitingError) {
+          console.error(
+            'Error removing previous waiting status:',
+            waitingError
+          );
+        }
+      } catch (error) {
+        console.error(
+          'Error cleaning up previous connection:',
+          error
+        );
+      }
+    }
 
     /*
-      Remove the saved room BEFORE ending it.
-      This prevents the next page action from trying to clean it up again.
+      Run cleanup when the page is loaded.
+
+      The user remains on the homepage and is NOT added to the
+      waiting list unless they intentionally click Find someone.
     */
-    localStorage.removeItem(ACTIVE_ROOM_KEY);
 
-    if (oldRoom) {
-      await supabaseClient
-        .from('chat_rooms')
-        .update({ status: 'ended' })
-        .eq('id', oldRoom);
-    }
-
-    await supabaseClient
-      .from('waiting_users')
-      .delete()
-      .eq('profile_id', profileId);
-
-    currentRoom = null;
-
-    document.getElementById('msgs').innerHTML =
-      '<div class="system">Finding someone to chat with... 🔎</div>';
-
-    document.getElementById('partnerName').textContent =
-      'Anonymous Student';
-
-    document.getElementById('schoolBadge').textContent =
-      'Looking for someone...';
-
-    document.getElementById('avatar').textContent = '?';
-
-    showMatching(
-      'Finding someone new...',
-      'Hopefully this one sticks around. 😅'
-    );
-
-    setTimeout(findMatch, 700);
-  }
-
-  async function findSomeoneElse() {
-    currentRoom = null;
-    localStorage.removeItem(ACTIVE_ROOM_KEY);
-
-    await supabaseClient
-      .from('waiting_users')
-      .delete()
-      .eq('profile_id', profileId);
-
-    document.getElementById('msgs').innerHTML =
-      '<div class="system">Finding someone to chat with... 🔎</div>';
-
-    document.getElementById('statusBadge').textContent = 'Waiting';
-
-    showMatching(
-      'Finding someone new...',
-      'Hopefully this one sticks around. 😅'
-    );
-
-    await findMatch();
-  }
-
-  async function reportUser() {
-    if (!currentRoom) {
-      alert('You need to be in a chat before reporting someone.');
-      return;
-    }
-
-    const reason = prompt(
-      'Briefly tell us why you are reporting this user:'
-    );
-
-    if (!reason) return;
-
-    const { error } = await supabaseClient
-      .from('reports')
-      .insert({
-        reporter_id: profileId,
-        room_id: currentRoom,
-        reason: reason
-      });
-
-    if (error) {
-      console.error(error);
-      alert('The report could not be submitted.');
-      return;
-    }
-
-    alert('Thank you. Your report has been submitted.');
-  }
-
-  function clearTimers() {
-    if (messageTimer) clearInterval(messageTimer);
-    if (matchTimer) clearInterval(matchTimer);
-    if (roomStatusTimer) clearInterval(roomStatusTimer);
-
-    messageTimer = null;
-    matchTimer = null;
-    roomStatusTimer = null;
-  }
-
-  /*
-    Disconnect when the user refreshes, closes the tab,
-    or leaves the page.
-
-    sendBeacon is used because normal async requests are often cancelled
-    while a page is closing. The localStorage cleanup on the next page
-    load is an additional fallback.
-  */
-  window.addEventListener('pagehide', () => {
-    const roomId = currentRoom;
-
-    if (!roomId) return;
-
-    /*
-      Store the room ID. If the request below is interrupted,
-      the next page load will still end the old room.
-    */
-    localStorage.setItem(ACTIVE_ROOM_KEY, roomId);
-
-    /*
-      Try to end the room before the page disappears.
-      Supabase's REST API accepts this PATCH request.
-    */
-    const url =
-      SUPABASE_URL +
-      '/rest/v1/chat_rooms?id=eq.' +
-      encodeURIComponent(roomId) +
-      '&status=eq.active';
-
-    const body = JSON.stringify({
-      status: 'ended'
+    document.addEventListener('DOMContentLoaded', async () => {
+      await cleanupPreviousConnection();
     });
+  </script>
 
-    const blob = new Blob([body], {
-      type: 'application/json'
-    });
-
-    navigator.sendBeacon(url, blob);
-
-    /*
-      Also stop this page from considering itself connected.
-    */
-    currentRoom = null;
-    clearTimers();
-  });
-
-  function speaker() {
-    document.getElementById('modal').classList.add('show');
-  }
-
-  function closeSpeaker() {
-    document.getElementById('modal').classList.remove('show');
-  }
-
-  function submitSpeaker() {
-    const announcement =
-      document.getElementById('announcement').value.trim();
-
-    if (!announcement) {
-      alert('Please write an announcement first.');
-      return;
-    }
-
-    alert(
-      'Speaker submissions will be connected to payment and moderation next.'
-    );
-
-    closeSpeaker();
-  }
-</script>
+</body>
+</html>
