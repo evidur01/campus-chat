@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -13,9 +14,7 @@
       --line: #e8e5f0;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -34,29 +33,12 @@
       padding: 0 max(20px, 5vw);
     }
 
-    .brand {
-      font-weight: 800;
-      font-size: 21px;
-    }
+    .brand { font-weight: 800; font-size: 21px; }
+    .brand b { color: var(--purple); }
 
-    .brand b {
-      color: var(--purple);
-    }
-
-    button,
-    input,
-    textarea {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.55;
-    }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.55; }
 
     .primary {
       background: var(--purple);
@@ -74,15 +56,8 @@
       padding: 12px 16px;
     }
 
-    .page {
-      display: none;
-    }
-
-    .page.active {
-      display: block;
-    }
-
-    /* Homepage */
+    .page { display: none; }
+    .page.active { display: block; }
 
     .hero {
       max-width: 850px;
@@ -170,12 +145,7 @@
       text-align: center;
     }
 
-    .feature b {
-      display: block;
-      margin: 9px 0;
-    }
-
-    /* Cards and setup */
+    .feature b { display: block; margin: 9px 0; }
 
     .card {
       background: white;
@@ -217,11 +187,7 @@
       box-shadow: 0 0 0 3px #6846e81a;
     }
 
-    /* Searchable school selector */
-
-    .school-picker {
-      position: relative;
-    }
+    .school-picker { position: relative; }
 
     .school-results {
       display: none;
@@ -237,9 +203,7 @@
       box-shadow: 0 12px 30px #2d21611a;
     }
 
-    .school-results.show {
-      display: block;
-    }
+    .school-results.show { display: block; }
 
     .school-option {
       padding: 12px 14px;
@@ -248,9 +212,7 @@
       border-bottom: 1px solid #f0edf5;
     }
 
-    .school-option:hover {
-      background: #f4f1ff;
-    }
+    .school-option:hover { background: #f4f1ff; }
 
     .school-region {
       padding: 9px 14px;
@@ -260,8 +222,6 @@
       text-transform: uppercase;
       background: #faf9fd;
     }
-
-    /* Matching screen */
 
     .loading-wrap {
       max-width: 600px;
@@ -288,9 +248,7 @@
     }
 
     @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
+      to { transform: rotate(360deg); }
     }
 
     .ad-box {
@@ -309,8 +267,6 @@
       letter-spacing: 1px;
       margin-bottom: 10px;
     }
-
-    /* Chat */
 
     .chat-wrap {
       max-width: 1080px;
@@ -339,11 +295,7 @@
       align-items: center;
     }
 
-    .person {
-      display: flex;
-      gap: 11px;
-      align-items: center;
-    }
+    .person { display: flex; gap: 11px; align-items: center; }
 
     .avatar {
       width: 42px;
@@ -457,8 +409,6 @@
       margin-top: 8px;
     }
 
-    /* Ditched screen */
-
     .ditched-wrap {
       max-width: 600px;
       margin: 70px auto;
@@ -482,14 +432,8 @@
     }
 
     @keyframes runAway {
-      0%, 30% {
-        transform: translateX(0);
-      }
-
-      80%, 100% {
-        transform: translateX(180%);
-        opacity: 0;
-      }
+      0%, 30% { transform: translateX(0); }
+      80%, 100% { transform: translateX(180%); opacity: 0; }
     }
 
     .sad-face {
@@ -499,16 +443,9 @@
     }
 
     @keyframes sadBounce {
-      0%, 100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(7px);
-      }
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(7px); }
     }
-
-    /* Modal */
 
     .modalbg {
       display: none;
@@ -521,9 +458,7 @@
       z-index: 100;
     }
 
-    .modalbg.show {
-      display: flex;
-    }
+    .modalbg.show { display: flex; }
 
     .modal {
       background: white;
@@ -543,9 +478,7 @@
       resize: vertical;
     }
 
-    .terms-modal {
-      width: min(650px, 100%);
-    }
+    .terms-modal { width: min(650px, 100%); }
 
     .terms-content h3 {
       margin: 20px 0 7px;
@@ -560,30 +493,12 @@
     }
 
     @media (max-width: 760px) {
-      .hero {
-        padding-top: 65px;
-      }
-
-      h1 {
-        font-size: 44px;
-      }
-
-      .features {
-        grid-template-columns: 1fr;
-      }
-
-      .chat-wrap {
-        grid-template-columns: 1fr;
-        padding: 12px;
-      }
-
-      .side {
-        order: -1;
-      }
-
-      .chat {
-        height: 570px;
-      }
+      .hero { padding-top: 65px; }
+      h1 { font-size: 44px; }
+      .features { grid-template-columns: 1fr; }
+      .chat-wrap { grid-template-columns: 1fr; padding: 12px; }
+      .side { order: -1; }
+      .chat { height: 570px; }
     }
   </style>
 </head>
@@ -610,12 +525,7 @@
 
       <div class="agreement">
         <label>
-          <input
-            type="checkbox"
-            id="termsAgreement"
-            onchange="toggleStartButton()"
-          >
-
+          <input type="checkbox" id="termsAgreement" onchange="toggleStartButton()">
           <span>
             I confirm that I am <b>18 years old or above</b> and I have read and
             agree to the
@@ -626,12 +536,7 @@
         </label>
       </div>
 
-      <button
-        id="startButton"
-        class="primary"
-        onclick="goToSetup()"
-        disabled
-      >
+      <button id="startButton" class="primary" onclick="goToSetup()" disabled>
         🎲 Start Chatting
       </button>
     </div>
@@ -728,7 +633,6 @@
 
         <div class="ad-box">
           <span class="ad-label">Advertisement</span>
-
           <b>Your ad could appear here.</b>
 
           <p class="note">
@@ -810,11 +714,7 @@
           ⏭ Next person
         </button>
 
-        <button
-          class="outline"
-          style="width:100%"
-          onclick="reportUser()"
-        >
+        <button class="outline" style="width:100%" onclick="reportUser()">
           🚩 Report
         </button>
 
@@ -849,13 +749,8 @@
       ></textarea>
 
       <div style="text-align:right; margin-top:12px">
-        <button class="outline" onclick="closeSpeaker()">
-          Cancel
-        </button>
-
-        <button class="primary" onclick="submitSpeaker()">
-          Continue →
-        </button>
+        <button class="outline" onclick="closeSpeaker()">Cancel</button>
+        <button class="primary" onclick="submitSpeaker()">Continue →</button>
       </div>
     </div>
   </div>
@@ -913,9 +808,7 @@
       </div>
 
       <div style="text-align:right; margin-top:20px">
-        <button class="primary" onclick="closeTerms()">
-          I Understand
-        </button>
+        <button class="primary" onclick="closeTerms()">I Understand</button>
       </div>
     </div>
   </div>
@@ -1001,6 +894,178 @@
     let matchTimer = null;
     let roomStatusTimer = null;
 
+    // ==========================================
+    // INACTIVITY SESSION MANAGEMENT
+    // ==========================================
+
+    const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+    let idleTimer = null;
+    let idleMonitorActive = false;
+    let sessionExpired = false;
+    let terminatingSession = false;
+
+    /*
+      Start monitoring when the user intentionally starts chatting.
+
+      Any interaction resets the five-minute countdown.
+    */
+
+    function startIdleMonitor() {
+      stopIdleMonitor();
+
+      sessionExpired = false;
+      terminatingSession = false;
+      idleMonitorActive = true;
+
+      resetIdleTimer();
+    }
+
+    function resetIdleTimer() {
+      if (!idleMonitorActive || sessionExpired || terminatingSession) {
+        return;
+      }
+
+      clearTimeout(idleTimer);
+
+      idleTimer = setTimeout(() => {
+        terminateIdleSession();
+      }, IDLE_TIMEOUT_MS);
+    }
+
+    function stopIdleMonitor() {
+      clearTimeout(idleTimer);
+      idleTimer = null;
+      idleMonitorActive = false;
+    }
+
+    /*
+      Activity detection.
+
+      These events count as user activity:
+      - Mouse movement
+      - Mouse clicks
+      - Keyboard input
+      - Scrolling
+      - Touch interactions
+      - Pointer interactions
+
+      Incoming messages and background polling do not
+      reset the inactivity countdown.
+    */
+
+    const activityEvents = [
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'scroll',
+      'touchstart',
+      'pointerdown',
+      'click'
+    ];
+
+    activityEvents.forEach(eventName => {
+      document.addEventListener(
+        eventName,
+        resetIdleTimer,
+        { passive: true }
+      );
+    });
+
+    /*
+      Terminate an inactive user's session.
+
+      This ends any active room and removes the user
+      from the matching queue.
+    */
+
+    async function terminateIdleSession() {
+      if (sessionExpired || terminatingSession) return;
+
+      terminatingSession = true;
+      sessionExpired = true;
+
+      stopIdleMonitor();
+      clearTimers();
+
+      // Disable chat immediately.
+      document.getElementById('input').disabled = true;
+      document.getElementById('sendButton').disabled = true;
+
+      document.getElementById('statusBadge').textContent =
+        'Session expired';
+
+      const expiredProfileId = profileId;
+
+      try {
+        if (expiredProfileId) {
+
+          // End every active room associated with this profile.
+          const { error: roomError } = await supabaseClient
+            .from('chat_rooms')
+            .update({ status: 'ended' })
+            .eq('status', 'active')
+            .or(
+              `user_one.eq.${expiredProfileId},user_two.eq.${expiredProfileId}`
+            );
+
+          if (roomError) {
+            console.error(
+              'Error ending inactive chat:',
+              roomError
+            );
+          }
+
+          // Remove the user from the matching queue.
+          const { error: waitingError } = await supabaseClient
+            .from('waiting_users')
+            .delete()
+            .eq('profile_id', expiredProfileId);
+
+          if (waitingError) {
+            console.error(
+              'Error removing inactive user from queue:',
+              waitingError
+            );
+          }
+        }
+
+      } catch (error) {
+        console.error('Inactivity cleanup error:', error);
+
+      } finally {
+        currentRoom = null;
+
+        // Reset the chat interface.
+        document.getElementById('msgs').innerHTML =
+          '<div class="system">Your previous session has expired.</div>';
+
+        document.getElementById('partnerName').textContent =
+          'Anonymous Student';
+
+        document.getElementById('schoolBadge').textContent =
+          'Anonymous';
+
+        document.getElementById('avatar').textContent = '?';
+
+        document.getElementById('statusBadge').textContent =
+          'Disconnected';
+
+        // Return to the homepage.
+        show('home');
+
+        alert(
+          'Your Campus Chat session has ended due to 5 minutes of inactivity. You have been removed from the matching queue.'
+        );
+
+        terminatingSession = false;
+      }
+    }
+
+    // ==========================================
+    // GENERAL NAVIGATION
+    // ==========================================
+
     function show(id) {
       document.querySelectorAll('.page').forEach(page => {
         page.classList.remove('active');
@@ -1041,7 +1106,9 @@
       document.getElementById('termsModal').classList.remove('show');
     }
 
-    /* School search */
+    // ==========================================
+    // SCHOOL SEARCH
+    // ==========================================
 
     function filterSchools() {
       const input = document.getElementById('schoolInput');
@@ -1068,6 +1135,7 @@
 
           results.appendChild(custom);
         }
+
       } else {
         const grouped = {};
 
@@ -1122,9 +1190,16 @@
       }
     });
 
-    /* Start chat */
+    // ==========================================
+    // START CHAT
+    // ==========================================
 
     async function startChat() {
+      if (terminatingSession) return;
+
+      // Begin the inactivity countdown.
+      startIdleMonitor();
+
       nickname = document.getElementById('nicknameInput').value.trim();
       school = document.getElementById('schoolInput').value.trim();
 
@@ -1135,12 +1210,17 @@
 
       const profileCreated = await createOrUpdateProfile();
 
+      // Prevent an expired session from continuing.
+      if (sessionExpired) return;
+
       if (profileCreated) {
         await findMatch();
       }
     }
 
     async function createOrUpdateProfile() {
+      if (sessionExpired) return false;
+
       if (!profileId) {
         const { data, error } = await supabaseClient
           .from('profiles')
@@ -1151,8 +1231,12 @@
           .select()
           .single();
 
+        if (sessionExpired) return false;
+
         if (error) {
           console.error(error);
+          stopIdleMonitor();
+
           alert('Connection error. Please refresh and try again.');
           show('setup');
           return false;
@@ -1172,8 +1256,12 @@
         })
         .eq('id', profileId);
 
+      if (sessionExpired) return false;
+
       if (error) {
         console.error(error);
+        stopIdleMonitor();
+
         alert('Connection error. Please refresh and try again.');
         show('setup');
         return false;
@@ -1189,10 +1277,12 @@
       show('matching');
     }
 
-    /* Matching */
+    // ==========================================
+    // MATCHING
+    // ==========================================
 
     async function findMatch() {
-      if (!profileId) return;
+      if (!profileId || sessionExpired || terminatingSession) return;
 
       currentRoom = null;
       clearTimers();
@@ -1204,8 +1294,12 @@
         .order('joined_at', { ascending: true })
         .limit(1);
 
+      if (sessionExpired) return;
+
       if (error) {
         console.error(error);
+        stopIdleMonitor();
+
         show('setup');
         alert('Unable to search for a match. Please try again.');
         return;
@@ -1213,6 +1307,8 @@
 
       if (waiting && waiting.length > 0) {
         const otherUser = waiting[0];
+
+        if (sessionExpired) return;
 
         const { data: claimedUser, error: claimError } =
           await supabaseClient
@@ -1222,8 +1318,12 @@
             .select()
             .maybeSingle();
 
+        if (sessionExpired) return;
+
         if (claimError || !claimedUser) {
-          setTimeout(findMatch, 500);
+          if (!sessionExpired) {
+            setTimeout(findMatch, 500);
+          }
           return;
         }
 
@@ -1237,6 +1337,18 @@
           .select()
           .single();
 
+        // If the session expired during room creation,
+        // immediately end the newly created room.
+        if (sessionExpired) {
+          if (room && room.id) {
+            await supabaseClient
+              .from('chat_rooms')
+              .update({ status: 'ended' })
+              .eq('id', room.id);
+          }
+          return;
+        }
+
         if (roomError || !room) {
           console.error(roomError);
 
@@ -1248,17 +1360,30 @@
               joined_at: otherUser.joined_at
             });
 
-          setTimeout(findMatch, 1000);
+          if (!sessionExpired) {
+            setTimeout(findMatch, 1000);
+          }
           return;
         }
 
         currentRoom = room.id;
 
         await loadPartnerInfo(otherUser.profile_id);
-        matched();
 
+        if (sessionExpired) {
+          await supabaseClient
+            .from('chat_rooms')
+            .update({ status: 'ended' })
+            .eq('id', room.id);
+
+          return;
+        }
+
+        matched();
         return;
       }
+
+      if (sessionExpired) return;
 
       const { error: waitError } = await supabaseClient
         .from('waiting_users')
@@ -1268,8 +1393,20 @@
           joined_at: new Date().toISOString()
         });
 
+      if (sessionExpired) {
+        // Remove the entry if the timeout occurred while joining.
+        await supabaseClient
+          .from('waiting_users')
+          .delete()
+          .eq('profile_id', profileId);
+
+        return;
+      }
+
       if (waitError) {
         console.error(waitError);
+        stopIdleMonitor();
+
         show('setup');
         alert('Unable to join the matching queue.');
         return;
@@ -1279,7 +1416,7 @@
     }
 
     async function checkForRoom() {
-      if (!profileId || currentRoom) return;
+      if (!profileId || currentRoom || sessionExpired) return;
 
       const { data: rooms, error } = await supabaseClient
         .from('chat_rooms')
@@ -1288,6 +1425,8 @@
         .or(`user_one.eq.${profileId},user_two.eq.${profileId}`)
         .order('created_at', { ascending: false })
         .limit(1);
+
+      if (sessionExpired) return;
 
       if (error) {
         console.error(error);
@@ -1313,12 +1452,26 @@
           .delete()
           .eq('profile_id', profileId);
 
+        if (sessionExpired) {
+          await supabaseClient
+            .from('chat_rooms')
+            .update({ status: 'ended' })
+            .eq('id', room.id);
+
+          return;
+        }
+
         await loadPartnerInfo(partnerId);
+
+        if (sessionExpired) return;
+
         matched();
       }
     }
 
-    /* Partner information */
+    // ==========================================
+    // PARTNER INFORMATION
+    // ==========================================
 
     async function loadPartnerInfo(partnerId) {
       const { data, error } = await supabaseClient
@@ -1326,6 +1479,8 @@
         .select('nickname, school')
         .eq('id', partnerId)
         .single();
+
+      if (sessionExpired) return;
 
       if (error || !data) {
         document.getElementById('partnerName').textContent =
@@ -1357,9 +1512,13 @@
           : '?';
     }
 
-    /* Connected chat */
+    // ==========================================
+    // CONNECTED CHAT
+    // ==========================================
 
     function matched() {
+      if (sessionExpired || terminatingSession) return;
+
       clearInterval(matchTimer);
       matchTimer = null;
 
@@ -1376,7 +1535,7 @@
     }
 
     async function checkRoomStatus() {
-      if (!currentRoom) return;
+      if (!currentRoom || sessionExpired) return;
 
       const roomId = currentRoom;
 
@@ -1386,9 +1545,11 @@
         .eq('id', roomId)
         .single();
 
+      if (sessionExpired || currentRoom !== roomId) return;
+
       if (error || !room) return;
 
-      if (room.status === 'ended' && currentRoom === roomId) {
+      if (room.status === 'ended') {
         currentRoom = null;
         clearTimers();
 
@@ -1402,16 +1563,22 @@
       }
     }
 
-    /* Messages */
+    // ==========================================
+    // MESSAGES
+    // ==========================================
 
     async function loadMessages() {
-      if (!currentRoom) return;
+      if (!currentRoom || sessionExpired) return;
+
+      const roomId = currentRoom;
 
       const { data, error } = await supabaseClient
         .from('messages')
         .select('*')
-        .eq('room_id', currentRoom)
+        .eq('room_id', roomId)
         .order('created_at', { ascending: true });
+
+      if (sessionExpired || currentRoom !== roomId) return;
 
       if (error) {
         console.error(error);
@@ -1443,20 +1610,26 @@
     }
 
     async function send() {
+      if (sessionExpired || terminatingSession) return;
+
       const input = document.getElementById('input');
       const content = input.value.trim();
 
       if (!content || !currentRoom) return;
+
+      const roomId = currentRoom;
 
       input.value = '';
 
       const { error } = await supabaseClient
         .from('messages')
         .insert({
-          room_id: currentRoom,
+          room_id: roomId,
           sender_id: profileId,
           content: content
         });
+
+      if (sessionExpired || currentRoom !== roomId) return;
 
       if (error) {
         console.error(error);
@@ -1467,9 +1640,13 @@
       loadMessages();
     }
 
-    /* Next person */
+    // ==========================================
+    // NEXT PERSON
+    // ==========================================
 
     async function nextPerson() {
+      if (sessionExpired || terminatingSession) return;
+
       const oldRoom = currentRoom;
 
       clearTimers();
@@ -1484,10 +1661,14 @@
           .eq('id', oldRoom);
       }
 
+      if (sessionExpired) return;
+
       await supabaseClient
         .from('waiting_users')
         .delete()
         .eq('profile_id', profileId);
+
+      if (sessionExpired) return;
 
       currentRoom = null;
 
@@ -1507,10 +1688,14 @@
         'Hopefully this one sticks around. 😅'
       );
 
-      setTimeout(findMatch, 700);
+      setTimeout(() => {
+        if (!sessionExpired) findMatch();
+      }, 700);
     }
 
     async function findSomeoneElse() {
+      if (sessionExpired || terminatingSession) return;
+
       document.getElementById('msgs').innerHTML =
         '<div class="system">Finding someone to chat with... 🔎</div>';
 
@@ -1524,10 +1709,12 @@
       await findMatch();
     }
 
-    /* Report */
+    // ==========================================
+    // REPORT
+    // ==========================================
 
     async function reportUser() {
-      if (!currentRoom) {
+      if (!currentRoom || sessionExpired) {
         alert('You need to be in a chat before reporting someone.');
         return;
       }
@@ -1538,6 +1725,8 @@
 
       if (!reason) return;
 
+      if (sessionExpired || !currentRoom) return;
+
       const { error } = await supabaseClient
         .from('reports')
         .insert({
@@ -1545,6 +1734,8 @@
           room_id: currentRoom,
           reason: reason
         });
+
+      if (sessionExpired) return;
 
       if (error) {
         console.error(error);
@@ -1555,7 +1746,9 @@
       alert('Thank you. Your report has been submitted.');
     }
 
-    /* Timers */
+    // ==========================================
+    // TIMERS
+    // ==========================================
 
     function clearTimers() {
       if (messageTimer) clearInterval(messageTimer);
@@ -1567,7 +1760,9 @@
       roomStatusTimer = null;
     }
 
-    /* Speaker */
+    // ==========================================
+    // SPEAKER
+    // ==========================================
 
     function speaker() {
       document.getElementById('modal').classList.add('show');
@@ -1593,14 +1788,19 @@
       closeSpeaker();
     }
 
-    /* REFRESH / PAGE LOAD CLEANUP
+    // ==========================================
+    // REFRESH / PAGE LOAD CLEANUP
+    // ==========================================
 
-       When a user reloads the website:
-       1. Any active chat connected to their profile is ended.
-       2. Their previous partner will detect the ended room and see the
-          Ditched page.
-       3. The refreshed user is removed from the waiting list.
-       4. The user will NOT automatically be placed back in the queue.
+    /*
+      When a user reloads the website:
+
+      1. Any active chat connected to their profile is ended.
+      2. Their previous partner detects the ended room.
+      3. The user is removed from the waiting list.
+      4. They are not automatically placed back in the queue.
+
+      The inactivity monitor is also stopped on page reload.
     */
 
     async function cleanupPreviousConnection() {
@@ -1633,6 +1833,7 @@
             waitingError
           );
         }
+
       } catch (error) {
         console.error(
           'Error cleaning up previous connection:',
@@ -1641,16 +1842,10 @@
       }
     }
 
-    /*
-      Run cleanup when the page is loaded.
-
-      The user remains on the homepage and is NOT added to the
-      waiting list unless they intentionally click Find someone.
-    */
-
     document.addEventListener('DOMContentLoaded', async () => {
       await cleanupPreviousConnection();
     });
+
   </script>
 
 </body>
