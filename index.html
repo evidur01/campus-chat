@@ -1,66 +1,817 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Campus Chat — Prototype</title>
-<style>
-:root{--purple:#6846e8;--ink:#1d1830;--bg:#f7f6fc;--line:#e8e5f0}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
-header{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 max(20px,5vw)}
-.brand{font-weight:800;font-size:21px}.brand b{color:var(--purple)}
-button,input,select,textarea{font:inherit}button{cursor:pointer}
-.primary{background:var(--purple);color:#fff;border:0;border-radius:12px;padding:14px 20px;font-weight:700}
-.outline{background:#fff;border:1px solid #dcd7e8;border-radius:12px;padding:12px 16px}
-.page{display:none}.page.active{display:block}
-.hero{max-width:1000px;margin:auto;padding:72px 24px;display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
-.tag{font-size:13px;font-weight:bold;color:var(--purple);text-transform:uppercase;letter-spacing:1px}
-h1{font-size:58px;line-height:1.02;letter-spacing:-2px;margin:12px 0 18px}.lead{font-size:18px;line-height:1.55;color:#665f76}
-.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:0 16px 45px #2d21610d}
-.card h3{margin-top:0}.card select{width:100%;padding:13px;border:1px solid #ddd8e8;border-radius:11px;margin:10px 0}
-.note{font-size:12px;color:#817a8d;line-height:1.5}
-.features{max-width:1000px;margin:auto;padding:0 24px 50px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.feature{background:#fff;border:1px solid var(--line);padding:19px;border-radius:17px}.feature b{display:block;margin:9px 0}
-.setup{max-width:510px;margin:65px auto;padding:0 20px}.setup select{width:100%;padding:14px;border-radius:11px;border:1px solid #ddd8e8;margin:12px 0}
-.chat-wrap{max-width:1080px;margin:auto;padding:25px;display:grid;grid-template-columns:1fr 280px;gap:18px}
-.chat{height:620px;background:#fff;border:1px solid var(--line);border-radius:20px;display:flex;flex-direction:column;overflow:hidden}
-.chathead{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
-.person{display:flex;gap:11px;align-items:center}.avatar{width:42px;height:42px;border-radius:50%;background:#eee9ff;color:var(--purple);display:grid;place-items:center;font-weight:bold}
-.person small{display:block;color:#817a8d;margin-top:3px}.badge{font-size:11px;background:#f0edff;color:#5e3ed3;padding:5px 8px;border-radius:99px}
-.messages{flex:1;padding:22px;overflow:auto}.system{text-align:center;font-size:12px;color:#958e9e;margin:8px}.msg{max-width:76%;padding:11px 14px;border-radius:16px;margin:12px 0;line-height:1.4}.them{background:#f0edff;border-bottom-left-radius:4px}.me{background:var(--purple);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
-.composer{padding:14px;border-top:1px solid var(--line);display:flex;gap:8px}.composer input{flex:1;border:1px solid #ddd8e8;border-radius:11px;padding:13px}.composer button{border:0;background:var(--purple);color:#fff;border-radius:11px;padding:0 16px;font-weight:bold}
-.side{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;height:max-content}.next{width:100%;border:0;background:#ffc44d;padding:12px;border-radius:11px;font-weight:bold;margin:12px 0}.speaker{background:#f1eeff;padding:16px;border-radius:15px;margin-top:18px}.speaker button{width:100%;margin-top:8px}
-.modalbg{display:none;position:fixed;inset:0;background:#17122188;align-items:center;justify-content:center;padding:20px}.modalbg.show{display:flex}.modal{background:#fff;width:min(500px,100%);padding:25px;border-radius:22px}.modal textarea{width:100%;height:115px;border:1px solid #ddd8e8;border-radius:11px;padding:12px;resize:vertical}.packs{display:flex;gap:8px;margin:12px 0}.pack{flex:1;background:#fff;border:1px solid #ddd8e8;border-radius:10px;padding:10px}.pack.selected{border:2px solid var(--purple);color:var(--purple);font-weight:bold}
-@media(max-width:760px){.hero{grid-template-columns:1fr;padding-top:45px}.hero h1{font-size:44px}.features{grid-template-columns:1fr}.chat-wrap{grid-template-columns:1fr;padding:12px}.side{order:-1}.chat{height:570px}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Campus Chat</title>
+
+  <style>
+    :root {
+      --purple: #6846e8;
+      --ink: #1d1830;
+      --bg: #f7f6fc;
+      --line: #e8e5f0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    header {
+      height: 68px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 max(20px, 5vw);
+    }
+
+    .brand { font-weight: 800; font-size: 21px; }
+    .brand b { color: var(--purple); }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .primary {
+      background: var(--purple);
+      color: white;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-weight: 700;
+    }
+
+    .outline {
+      background: white;
+      border: 1px solid #dcd7e8;
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .hero {
+      max-width: 1000px;
+      margin: auto;
+      padding: 72px 24px;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .tag {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      font-size: 58px;
+      line-height: 1.02;
+      letter-spacing: -2px;
+      margin: 12px 0 18px;
+    }
+
+    .lead {
+      font-size: 18px;
+      line-height: 1.55;
+      color: #665f76;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 16px 45px #2d21610d;
+    }
+
+    .card select, .setup select {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ddd8e8;
+      border-radius: 11px;
+      margin: 10px 0;
+    }
+
+    .note {
+      font-size: 12px;
+      color: #817a8d;
+      line-height: 1.5;
+    }
+
+    .features {
+      max-width: 1000px;
+      margin: auto;
+      padding: 0 24px 50px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .feature {
+      background: white;
+      border: 1px solid var(--line);
+      padding: 19px;
+      border-radius: 17px;
+    }
+
+    .feature b {
+      display: block;
+      margin: 9px 0;
+    }
+
+    .setup {
+      max-width: 510px;
+      margin: 65px auto;
+      padding: 0 20px;
+    }
+
+    .chat-wrap {
+      max-width: 1080px;
+      margin: auto;
+      padding: 25px;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 18px;
+    }
+
+    .chat {
+      height: 620px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chathead {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .person {
+      display: flex;
+      gap: 11px;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #eee9ff;
+      color: var(--purple);
+      display: grid;
+      place-items: center;
+      font-weight: bold;
+    }
+
+    .person small {
+      display: block;
+      color: #817a8d;
+      margin-top: 3px;
+    }
+
+    .badge {
+      font-size: 11px;
+      background: #f0edff;
+      color: #5e3ed3;
+      padding: 5px 8px;
+      border-radius: 99px;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 22px;
+      overflow-y: auto;
+    }
+
+    .system {
+      text-align: center;
+      font-size: 12px;
+      color: #958e9e;
+      margin: 12px;
+    }
+
+    .msg {
+      max-width: 76%;
+      padding: 11px 14px;
+      border-radius: 16px;
+      margin: 12px 0;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .them {
+      background: #f0edff;
+      border-bottom-left-radius: 4px;
+    }
+
+    .me {
+      background: var(--purple);
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .composer {
+      padding: 14px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 8px;
+    }
+
+    .composer input {
+      flex: 1;
+      border: 1px solid #ddd8e8;
+      border-radius: 11px;
+      padding: 13px;
+    }
+
+    .composer button {
+      border: 0;
+      background: var(--purple);
+      color: white;
+      border-radius: 11px;
+      padding: 0 16px;
+      font-weight: bold;
+    }
+
+    .side {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      height: max-content;
+    }
+
+    .next {
+      width: 100%;
+      border: 0;
+      background: #ffc44d;
+      padding: 12px;
+      border-radius: 11px;
+      font-weight: bold;
+      margin: 12px 0;
+    }
+
+    .speaker {
+      background: #f1eeff;
+      padding: 16px;
+      border-radius: 15px;
+      margin-top: 18px;
+    }
+
+    .speaker button {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .modalbg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #17122188;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modalbg.show { display: flex; }
+
+    .modal {
+      background: white;
+      width: min(500px, 100%);
+      padding: 25px;
+      border-radius: 22px;
+    }
+
+    .modal textarea {
+      width: 100%;
+      height: 115px;
+      border: 1px solid #ddd8e8;
+      border-radius: 11px;
+      padding: 12px;
+      resize: vertical;
+    }
+
+    @media(max-width: 760px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding-top: 45px;
+      }
+
+      .hero h1 { font-size: 44px; }
+      .features { grid-template-columns: 1fr; }
+      .chat-wrap {
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+
+      .side { order: -1; }
+      .chat { height: 570px; }
+    }
+  </style>
 </head>
+
 <body>
-<header><div class="brand">Campus<b>Chat</b></div><button class="outline" onclick="speaker()">📣 Speaker</button></header>
+
+<header>
+  <div class="brand">Campus<b>Chat</b></div>
+  <button class="outline" onclick="speaker()">📣 Speaker</button>
+</header>
 
 <section id="home" class="page active">
-<div class="hero">
-<div><div class="tag">For Filipino college students</div><h1>Meet someone.<br>Start a conversation.</h1><p class="lead">A simple place to have random, anonymous conversations with fellow college students in the Philippines.</p><button class="primary" onclick="show('setup')">🎲 Start Chatting</button><p class="note">Chat responsibly. Never share passwords, banking details, or other sensitive information.</p></div>
-<div class="card"><h3>🎓 Show your school <span class="note">(Optional)</span></h3><p class="note">Your school appears as a badge to your chat partner. It does not affect who you are matched with.</p><select id="school1"><option value="">Stay fully anonymous</option><option>University of the Philippines</option><option>De La Salle University</option><option>Ateneo de Manila University</option><option>University of Santo Tomas</option><option>Polytechnic University of the Philippines</option><option>Other school</option></select><button class="primary" onclick="startFromHome()">Continue →</button></div>
-</div>
-<div class="features"><div class="feature">🎲<b>Random chat</b><span class="note">Meet someone new with one tap.</span></div><div class="feature">🎓<b>School badge</b><span class="note">Optional identity without showing your name.</span></div><div class="feature">📣<b>Speaker</b><span class="note">Promoted announcements for the community.</span></div></div>
+  <div class="hero">
+    <div>
+      <div class="tag">For Filipino college students</div>
+      <h1>Meet someone.<br>Start a conversation.</h1>
+      <p class="lead">
+        A simple place to have random, anonymous conversations with fellow
+        college students in the Philippines.
+      </p>
+
+      <button class="primary" onclick="show('setup')">
+        🎲 Start Chatting
+      </button>
+    </div>
+
+    <div class="card">
+      <h3>🎓 Show your school <span class="note">(Optional)</span></h3>
+      <p class="note">
+        Your school appears as a badge. It does not affect who you are matched with.
+      </p>
+
+      <select id="school1">
+        <option value="">Stay fully anonymous</option>
+        <option>University of the Philippines</option>
+        <option>De La Salle University</option>
+        <option>Ateneo de Manila University</option>
+        <option>University of Santo Tomas</option>
+        <option>Polytechnic University of the Philippines</option>
+        <option>Other school</option>
+      </select>
+
+      <button class="primary" onclick="startFromHome()">Continue →</button>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature">
+      🎲<b>Random chat</b>
+      <span class="note">Meet someone new.</span>
+    </div>
+    <div class="feature">
+      🎓<b>School badge</b>
+      <span class="note">Optional identity without your name.</span>
+    </div>
+    <div class="feature">
+      📣<b>Speaker</b>
+      <span class="note">Promoted announcements for the community.</span>
+    </div>
+  </div>
 </section>
 
-<section id="setup" class="page"><div class="setup"><div class="card"><div class="tag">Optional setup</div><h2>Where do you study?</h2><p class="note">You can skip this. Your school will only be displayed as a badge.</p><select id="school2"><option value="">Skip — stay fully anonymous</option><option>University of the Philippines</option><option>De La Salle University</option><option>Ateneo de Manila University</option><option>University of Santo Tomas</option><option>Polytechnic University of the Philippines</option><option>Other school</option></select><button class="primary" style="width:100%" onclick="startChat()">Find someone →</button></div></div></section>
+<section id="setup" class="page">
+  <div class="setup">
+    <div class="card">
+      <div class="tag">Optional setup</div>
+      <h2>Where do you study?</h2>
 
-<section id="chat" class="page"><div class="chat-wrap"><main class="chat"><div class="chathead"><div class="person"><div class="avatar">?</div><div><b>Anonymous Student</b><small id="schoolBadge">● Connected</small></div></div><span class="badge">Random chat</span></div><div id="msgs" class="messages"><div class="system">You are connected. Say hello! 👋</div><div class="msg them">Hey! How's your day going?</div></div><div class="composer"><input id="input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')send()"><button onclick="send()">Send</button></div></main>
-<aside class="side"><b>Keep it friendly ✨</b><p class="note">Be respectful and don't share sensitive information.</p><button class="next" onclick="next()">⏭ Next person</button><button class="outline" style="width:100%" onclick="alert('The real reporting system will be added with the backend.')">🚩 Report</button><div class="speaker"><b>📣 Have an announcement?</b><p class="note">Create a promoted message for the community.</p><button class="primary" onclick="speaker()">Become a Speaker</button></div></aside></div></section>
+      <select id="school2">
+        <option value="">Skip — stay fully anonymous</option>
+        <option>University of the Philippines</option>
+        <option>De La Salle University</option>
+        <option>Ateneo de Manila University</option>
+        <option>University of Santo Tomas</option>
+        <option>Polytechnic University of the Philippines</option>
+        <option>Other school</option>
+      </select>
 
-<div id="modal" class="modalbg"><div class="modal"><h2>📣 Become a Speaker</h2><p class="note">This is the first prototype. Later we'll connect real payment and moderator approval.</p><textarea id="announcement" placeholder="Write your announcement..."></textarea><div class="packs"><button class="pack selected" onclick="pick(this)">Starter<br>₱49</button><button class="pack" onclick="pick(this)">Campus<br>₱99</button><button class="pack" onclick="pick(this)">Plus<br>₱199</button></div><div style="text-align:right"><button class="outline" onclick="closeSpeaker()">Cancel</button> <button class="primary" onclick="submitSpeaker()">Continue →</button></div></div></div>
+      <button class="primary" style="width:100%" onclick="startChat()">
+        Find someone →
+      </button>
+    </div>
+  </div>
+</section>
+
+<section id="chat" class="page">
+  <div class="chat-wrap">
+
+    <main class="chat">
+      <div class="chathead">
+        <div class="person">
+          <div class="avatar">?</div>
+          <div>
+            <b>Anonymous Student</b>
+            <small id="schoolBadge">Looking for someone...</small>
+          </div>
+        </div>
+        <span class="badge" id="statusBadge">Waiting</span>
+      </div>
+
+      <div id="msgs" class="messages">
+        <div class="system">Looking for someone to chat with... 🔎</div>
+      </div>
+
+      <div class="composer">
+        <input
+          id="input"
+          placeholder="Type a message..."
+          disabled
+          onkeydown="if(event.key==='Enter')send()"
+        >
+        <button id="sendButton" onclick="send()" disabled>Send</button>
+      </div>
+    </main>
+
+    <aside class="side">
+      <b>Keep it friendly ✨</b>
+      <p class="note">Be respectful and don't share sensitive information.</p>
+
+      <button class="next" onclick="nextPerson()">⏭ Next person</button>
+
+      <button class="outline" style="width:100%" onclick="reportUser()">
+        🚩 Report
+      </button>
+
+      <div class="speaker">
+        <b>📣 Have an announcement?</b>
+        <p class="note">Create a promoted message for the community.</p>
+        <button class="primary" onclick="speaker()">Become a Speaker</button>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+<div id="modal" class="modalbg">
+  <div class="modal">
+    <h2>📣 Become a Speaker</h2>
+    <p class="note">
+      Speaker payments and approval will be added after the chat system.
+    </p>
+
+    <textarea
+      id="announcement"
+      placeholder="Write your announcement..."
+    ></textarea>
+
+    <div style="text-align:right; margin-top:12px">
+      <button class="outline" onclick="closeSpeaker()">Cancel</button>
+      <button class="primary" onclick="submitSpeaker()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-let school='';
-function show(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');scrollTo(0,0)}
-function startFromHome(){school=document.getElementById('school1').value;startChat()}
-function startChat(){if(!school)school=document.getElementById('school2').value;document.getElementById('schoolBadge').textContent=school?'🎓 '+school:'● Connected';show('chat')}
-function send(){let i=document.getElementById('input'),t=i.value.trim();if(!t)return;let d=document.createElement('div');d.className='msg me';d.textContent=t;document.getElementById('msgs').appendChild(d);i.value='';document.getElementById('msgs').scrollTop=99999}
-function next(){let m=document.getElementById('msgs');m.innerHTML='<div class="system">Finding someone new…</div>';setTimeout(()=>m.innerHTML='<div class="system">You are connected to someone new. 👋</div><div class="msg them">Hi! New match here!</div>',700)}
-function speaker(){document.getElementById('modal').classList.add('show')}function closeSpeaker(){document.getElementById('modal').classList.remove('show')}
-function pick(x){document.querySelectorAll('.pack').forEach(p=>p.classList.remove('selected'));x.classList.add('selected')}
-function submitSpeaker(){if(!document.getElementById('announcement').value.trim()){alert('Please write an announcement first.');return}alert('Speaker draft created! Payment and approval will be connected in the next development phase.');closeSpeaker()}
+  // Your Supabase Project URL and Publishable Key
+  const SUPABASE_URL = 'https://ygnftivolxzznwdztccp.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_7zC9r6QUPYfP3A9uvmNPog_cFTXdG7K';
+
+  const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  let school = '';
+  let profileId = localStorage.getItem('campusChatProfileId');
+  let currentRoom = null;
+  let messageTimer = null;
+  let matchTimer = null;
+
+  function show(id) {
+    document.querySelectorAll('.page').forEach(p => {
+      p.classList.remove('active');
+    });
+
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function startFromHome() {
+    school = document.getElementById('school1').value;
+    startChat();
+  }
+
+  async function startChat() {
+    if (!school) {
+      school = document.getElementById('school2').value;
+    }
+
+    show('chat');
+
+    document.getElementById('schoolBadge').textContent =
+      school ? '🎓 ' + school : '● Looking for a match...';
+
+    await createProfile();
+    await findMatch();
+  }
+
+  async function createProfile() {
+    if (profileId) return;
+
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .insert({
+        school: school || null
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error(error);
+      showSystemMessage('Connection error. Please refresh and try again.');
+      return;
+    }
+
+    profileId = data.id;
+    localStorage.setItem('campusChatProfileId', profileId);
+  }
+
+  async function findMatch() {
+    if (!profileId) return;
+
+    currentRoom = null;
+    clearTimers();
+
+    document.getElementById('statusBadge').textContent = 'Searching';
+    document.getElementById('input').disabled = true;
+    document.getElementById('sendButton').disabled = true;
+
+    document.getElementById('msgs').innerHTML =
+      '<div class="system">Looking for someone to chat with... 🔎</div>';
+
+    const { data: waiting, error } = await supabaseClient
+      .from('waiting_users')
+      .select('*')
+      .neq('profile_id', profileId)
+      .order('joined_at', { ascending: true })
+      .limit(1);
+
+    if (error) {
+      console.error(error);
+      showSystemMessage('Unable to search for a match.');
+      return;
+    }
+
+    if (waiting && waiting.length > 0) {
+      const otherUser = waiting[0];
+
+      const { data: room, error: roomError } = await supabaseClient
+        .from('chat_rooms')
+        .insert({
+          user_one: profileId,
+          user_two: otherUser.profile_id,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (roomError) {
+        console.error(roomError);
+        showSystemMessage('Unable to create a chat. Please try again.');
+        return;
+      }
+
+      currentRoom = room.id;
+
+      await supabaseClient
+        .from('waiting_users')
+        .delete()
+        .eq('profile_id', otherUser.profile_id);
+
+      matched();
+      return;
+    }
+
+    const { error: waitError } = await supabaseClient
+      .from('waiting_users')
+      .upsert({
+        profile_id: profileId,
+        school: school || null,
+        joined_at: new Date().toISOString()
+      });
+
+    if (waitError) {
+      console.error(waitError);
+      showSystemMessage('Unable to join the matching queue.');
+      return;
+    }
+
+    matchTimer = setInterval(checkForRoom, 2000);
+  }
+
+  async function checkForRoom() {
+    if (!profileId || currentRoom) return;
+
+    const { data: rooms, error } = await supabaseClient
+      .from('chat_rooms')
+      .select('*')
+      .eq('status', 'active')
+      .or(`user_one.eq.${profileId},user_two.eq.${profileId}`)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    if (rooms && rooms.length > 0) {
+      currentRoom = rooms[0].id;
+
+      await supabaseClient
+        .from('waiting_users')
+        .delete()
+        .eq('profile_id', profileId);
+
+      matched();
+    }
+  }
+
+  function matched() {
+    clearInterval(matchTimer);
+    matchTimer = null;
+
+    document.getElementById('statusBadge').textContent = 'Connected';
+    document.getElementById('input').disabled = false;
+    document.getElementById('sendButton').disabled = false;
+
+    loadMessages();
+
+    messageTimer = setInterval(loadMessages, 1500);
+  }
+
+  async function loadMessages() {
+    if (!currentRoom) return;
+
+    const { data, error } = await supabaseClient
+      .from('messages')
+      .select('*')
+      .eq('room_id', currentRoom)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const container = document.getElementById('msgs');
+    container.innerHTML = '';
+
+    if (!data.length) {
+      container.innerHTML =
+        '<div class="system">You are connected! Say hello 👋</div>';
+    }
+
+    data.forEach(message => {
+      const div = document.createElement('div');
+
+      div.className =
+        message.sender_id === profileId ? 'msg me' : 'msg them';
+
+      div.textContent = message.content;
+      container.appendChild(div);
+    });
+
+    container.scrollTop = container.scrollHeight;
+  }
+
+  async function send() {
+    const input = document.getElementById('input');
+    const content = input.value.trim();
+
+    if (!content || !currentRoom) return;
+
+    input.value = '';
+
+    const { error } = await supabaseClient
+      .from('messages')
+      .insert({
+        room_id: currentRoom,
+        sender_id: profileId,
+        content: content
+      });
+
+    if (error) {
+      console.error(error);
+      alert('Your message could not be sent.');
+      return;
+    }
+
+    loadMessages();
+  }
+
+  async function nextPerson() {
+    clearTimers();
+
+    if (currentRoom) {
+      await supabaseClient
+        .from('chat_rooms')
+        .update({
+          status: 'ended'
+        })
+        .eq('id', currentRoom);
+    }
+
+    await supabaseClient
+      .from('waiting_users')
+      .delete()
+      .eq('profile_id', profileId);
+
+    currentRoom = null;
+
+    await findMatch();
+  }
+
+  async function reportUser() {
+    if (!currentRoom) {
+      alert('You need to be in a chat before reporting someone.');
+      return;
+    }
+
+    const reason = prompt(
+      'Briefly tell us why you are reporting this user:'
+    );
+
+    if (!reason) return;
+
+    const { error } = await supabaseClient
+      .from('reports')
+      .insert({
+        reporter_id: profileId,
+        room_id: currentRoom,
+        reason: reason
+      });
+
+    if (error) {
+      console.error(error);
+      alert('The report could not be submitted.');
+      return;
+    }
+
+    alert('Thank you. Your report has been submitted.');
+  }
+
+  function showSystemMessage(text) {
+    const div = document.createElement('div');
+    div.className = 'system';
+    div.textContent = text;
+
+    document.getElementById('msgs').appendChild(div);
+  }
+
+  function clearTimers() {
+    if (messageTimer) clearInterval(messageTimer);
+    if (matchTimer) clearInterval(matchTimer);
+
+    messageTimer = null;
+    matchTimer = null;
+  }
+
+  function speaker() {
+    document.getElementById('modal').classList.add('show');
+  }
+
+  function closeSpeaker() {
+    document.getElementById('modal').classList.remove('show');
+  }
+
+  function submitSpeaker() {
+    const announcement =
+      document.getElementById('announcement').value.trim();
+
+    if (!announcement) {
+      alert('Please write an announcement first.');
+      return;
+    }
+
+    alert(
+      'Speaker submissions will be connected to payment and moderation next.'
+    );
+
+    closeSpeaker();
+  }
 </script>
-</body></html>
+
+</body>
+</html>
