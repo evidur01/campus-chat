@@ -32,10 +32,14 @@
       padding: 0 max(20px, 5vw);
     }
 
-    .brand { font-weight: 800; font-size: 21px; }
+    .brand {
+      font-weight: 800;
+      font-size: 21px;
+    }
+
     .brand b { color: var(--purple); }
 
-    button, input, select, textarea { font: inherit; }
+    button, input, textarea { font: inherit; }
     button { cursor: pointer; }
 
     .primary {
@@ -57,14 +61,12 @@
     .page { display: none; }
     .page.active { display: block; }
 
+    /* Homepage */
     .hero {
-      max-width: 1000px;
+      max-width: 850px;
       margin: auto;
-      padding: 72px 24px;
-      display: grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap: 48px;
-      align-items: center;
+      padding: 100px 24px 70px;
+      text-align: center;
     }
 
     .tag {
@@ -88,6 +90,34 @@
       color: #665f76;
     }
 
+    .hero .lead {
+      max-width: 620px;
+      margin: 0 auto 28px;
+    }
+
+    .features {
+      max-width: 1000px;
+      margin: auto;
+      padding: 0 24px 60px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .feature {
+      background: white;
+      border: 1px solid var(--line);
+      padding: 19px;
+      border-radius: 17px;
+      text-align: center;
+    }
+
+    .feature b {
+      display: block;
+      margin: 9px 0;
+    }
+
+    /* Cards and setup */
     .card {
       background: white;
       border: 1px solid var(--line);
@@ -102,33 +132,35 @@
       line-height: 1.5;
     }
 
-    .field-label {
-      display: block;
-      font-weight: 700;
-      font-size: 14px;
-      margin: 16px 0 6px;
+    .setup {
+      max-width: 510px;
+      margin: 65px auto;
+      padding: 0 20px;
     }
 
-    .text-input,
-    .school-input {
+    .field-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin: 20px 0 7px;
+    }
+
+    .text-input {
       width: 100%;
       padding: 13px 14px;
       border: 1px solid #ddd8e8;
       border-radius: 11px;
-      background: white;
-      color: var(--ink);
       outline: none;
     }
 
-    .text-input:focus,
-    .school-input:focus {
+    .text-input:focus {
       border-color: var(--purple);
       box-shadow: 0 0 0 3px #6846e81a;
     }
 
+    /* Searchable school selector */
     .school-picker {
       position: relative;
-      margin: 6px 0 12px;
     }
 
     .school-results {
@@ -145,7 +177,9 @@
       box-shadow: 0 12px 30px #2d21611a;
     }
 
-    .school-results.show { display: block; }
+    .school-results.show {
+      display: block;
+    }
 
     .school-option {
       padding: 12px 14px;
@@ -154,8 +188,9 @@
       border-bottom: 1px solid #f0edf5;
     }
 
-    .school-option:last-child { border-bottom: 0; }
-    .school-option:hover { background: #f4f1ff; }
+    .school-option:hover {
+      background: #f4f1ff;
+    }
 
     .school-region {
       padding: 9px 14px;
@@ -164,36 +199,55 @@
       color: var(--purple);
       text-transform: uppercase;
       background: #faf9fd;
-      border-bottom: 1px solid #eeeaf4;
     }
 
-    .features {
-      max-width: 1000px;
-      margin: auto;
-      padding: 0 24px 50px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
+    /* Matching screen */
+    .loading-wrap {
+      max-width: 600px;
+      margin: 80px auto;
+      padding: 0 20px;
+      text-align: center;
     }
 
-    .feature {
+    .loading-card {
       background: white;
       border: 1px solid var(--line);
-      padding: 19px;
-      border-radius: 17px;
+      border-radius: 24px;
+      padding: 40px 28px;
     }
 
-    .feature b {
+    .spinner {
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 20px;
+      border: 4px solid #ece8fa;
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .ad-box {
+      margin-top: 28px;
+      border: 1px dashed #cfc8dd;
+      border-radius: 15px;
+      padding: 24px 18px;
+      background: #faf9fd;
+      color: #817a8d;
+    }
+
+    .ad-label {
       display: block;
-      margin: 9px 0;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
     }
 
-    .setup {
-      max-width: 510px;
-      margin: 65px auto;
-      padding: 0 20px;
-    }
-
+    /* Chat */
     .chat-wrap {
       max-width: 1080px;
       margin: auto;
@@ -339,6 +393,46 @@
       margin-top: 8px;
     }
 
+    /* Ditched screen */
+    .ditched-wrap {
+      max-width: 600px;
+      margin: 70px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .ditched-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 45px 28px;
+      box-shadow: 0 16px 45px #2d21610d;
+    }
+
+    .escape-scene {
+      height: 110px;
+      font-size: 64px;
+      padding-top: 15px;
+      animation: runAway 2.5s ease-in infinite;
+    }
+
+    @keyframes runAway {
+      0%, 30% { transform: translateX(0); }
+      80%, 100% { transform: translateX(180%); opacity: 0; }
+    }
+
+    .sad-face {
+      font-size: 45px;
+      display: inline-block;
+      animation: sadBounce 2s ease-in-out infinite;
+    }
+
+    @keyframes sadBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(7px); }
+    }
+
+    /* Modal */
     .modalbg {
       display: none;
       position: fixed;
@@ -367,143 +461,31 @@
       resize: vertical;
     }
 
-    .loading-wrap {
-      max-width: 600px;
-      margin: 80px auto;
-      padding: 0 20px;
-      text-align: center;
-    }
-
-    .loading-card {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 40px 28px;
-    }
-
-    .spinner {
-      width: 42px;
-      height: 42px;
-      margin: 0 auto 20px;
-      border: 4px solid #ece8fa;
-      border-top-color: var(--purple);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .ad-box {
-      margin-top: 28px;
-      border: 1px dashed #cfc8dd;
-      border-radius: 15px;
-      padding: 24px 18px;
-      background: #faf9fd;
-      color: #817a8d;
-    }
-
-    .ad-label {
-      display: block;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 10px;
-    }
-
-    .ditched-wrap {
-      max-width: 600px;
-      margin: 70px auto;
-      padding: 0 20px;
-      text-align: center;
-    }
-
-    .ditched-card {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 45px 28px;
-      box-shadow: 0 16px 45px #2d21610d;
-      overflow: hidden;
-    }
-
-    .escape-scene {
-      height: 125px;
-      position: relative;
-      margin-bottom: 15px;
-      overflow: hidden;
-    }
-
-    .runner {
-      position: absolute;
-      left: 50%;
-      top: 20px;
-      font-size: 64px;
-      animation: runAway 3.5s ease-in infinite;
-    }
-
-    .dust {
-      position: absolute;
-      left: 30%;
-      top: 68px;
-      font-size: 25px;
-      opacity: 0;
-      animation: dustAway 3.5s ease-in infinite;
-    }
-
-    @keyframes runAway {
-      0% { transform: translateX(-50%) rotate(0deg); opacity: 1; }
-      20% { transform: translateX(-30%) rotate(-8deg); }
-      45% { transform: translateX(90%) rotate(8deg); }
-      70% { transform: translateX(260%) rotate(0deg); opacity: 1; }
-      85%, 100% { transform: translateX(350%); opacity: 0; }
-    }
-
-    @keyframes dustAway {
-      0%, 15% { opacity: 0; }
-      25%, 65% { opacity: 1; }
-      85%, 100% { opacity: 0; }
-    }
-
-    .sad-face {
-      font-size: 45px;
-      display: inline-block;
-      animation: sadBounce 2s ease-in-out infinite;
-      margin: 5px 0 10px;
-    }
-
-    @keyframes sadBounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(7px); }
-    }
-
-    .ditched-card h2 {
-      margin: 8px 0 10px;
-      font-size: 30px;
-    }
-
-    .ditched-card .primary {
-      margin-top: 20px;
-      width: min(300px, 100%);
-    }
-
     @media(max-width: 760px) {
       .hero {
-        grid-template-columns: 1fr;
-        padding-top: 45px;
+        padding-top: 65px;
       }
 
-      .hero h1 { font-size: 44px; }
-      .features { grid-template-columns: 1fr; }
+      h1 {
+        font-size: 44px;
+      }
+
+      .features {
+        grid-template-columns: 1fr;
+      }
 
       .chat-wrap {
         grid-template-columns: 1fr;
         padding: 12px;
       }
 
-      .side { order: -1; }
-      .chat { height: 570px; }
+      .side {
+        order: -1;
+      }
+
+      .chat {
+        height: 570px;
+      }
     }
   </style>
 </head>
@@ -515,100 +497,101 @@
   <button class="outline" onclick="speaker()">📣 Speaker</button>
 </header>
 
+<!-- HOME -->
 <section id="home" class="page active">
   <div class="hero">
-    <div>
-      <div class="tag">For Filipino college students</div>
-      <h1>Meet someone.<br>Start a conversation.</h1>
-      <p class="lead">
-        A simple place to have random, anonymous conversations with fellow
-        college students in the Philippines.
-      </p>
-      <button class="primary" onclick="show('setup')">🎲 Start Chatting</button>
-    </div>
+    <div class="tag">For Filipino college students</div>
+    <h1>Meet someone.<br>Start a conversation.</h1>
 
-    <div class="card">
-      <div class="tag">Optional setup</div>
-      <h3>How do you want to appear?</h3>
+    <p class="lead">
+      A simple place to have random conversations with fellow college students
+      in the Philippines.
+    </p>
 
-      <label class="field-label">Nickname or alias <span class="note">(Optional)</span></label>
-      <input
-        id="nickname1"
-        class="text-input"
-        maxlength="30"
-        placeholder="e.g. CoffeeLover, Ken, Anonymous Cat"
-      >
-
-      <label class="field-label">🎓 Your school <span class="note">(Optional)</span></label>
-      <p class="note">
-        Your school is visible to your chat partner but does not affect matching.
-      </p>
-
-      <div class="school-picker">
-        <input
-          id="school1"
-          class="school-input"
-          placeholder="🔍 Search your school or university..."
-          autocomplete="off"
-          oninput="filterSchools('school1', 'results1')"
-          onfocus="filterSchools('school1', 'results1')"
-        >
-        <div id="results1" class="school-results"></div>
-      </div>
-
-      <button class="primary" onclick="startFromHome()">Continue →</button>
-    </div>
+    <button class="primary" onclick="show('setup')">
+      🎲 Start Chatting
+    </button>
   </div>
 
   <div class="features">
-    <div class="feature">🎲<b>Random chat</b><span class="note">Meet someone new.</span></div>
-    <div class="feature">🎓<b>School badge</b><span class="note">Optional identity without your name.</span></div>
-    <div class="feature">📣<b>Speaker</b><span class="note">Promoted announcements for the community.</span></div>
+    <div class="feature">
+      🎲
+      <b>Random chat</b>
+      <span class="note">Meet someone new.</span>
+    </div>
+
+    <div class="feature">
+      🎭
+      <b>Your identity, your choice</b>
+      <span class="note">Use an alias and optionally show your school.</span>
+    </div>
+
+    <div class="feature">
+      📣
+      <b>Speaker</b>
+      <span class="note">Promoted announcements for the community.</span>
+    </div>
   </div>
 </section>
 
+<!-- SETUP -->
 <section id="setup" class="page">
   <div class="setup">
     <div class="card">
       <div class="tag">Optional setup</div>
-      <h2>Tell us a little about yourself</h2>
+      <h2>Before we find someone...</h2>
+      <p class="note">
+        You can stay anonymous or add a nickname and school for your chat partner to see.
+      </p>
 
-      <label class="field-label">Nickname or alias <span class="note">(Optional)</span></label>
+      <label class="field-label">
+        🎭 Nickname / Alias <span class="note">(Optional)</span>
+      </label>
+
       <input
-        id="nickname2"
+        id="nicknameInput"
         class="text-input"
         maxlength="30"
-        placeholder="What should your chat partner call you?"
+        placeholder="Example: CoffeeLover23"
+        autocomplete="off"
       >
 
-      <label class="field-label">Where do you study? <span class="note">(Optional)</span></label>
-      <p class="note">Leave both fields blank to stay fully anonymous.</p>
+      <label class="field-label">
+        🎓 School <span class="note">(Optional)</span>
+      </label>
 
       <div class="school-picker">
         <input
-          id="school2"
-          class="school-input"
+          id="schoolInput"
+          class="text-input"
           placeholder="🔍 Search your school or university..."
           autocomplete="off"
-          oninput="filterSchools('school2', 'results2')"
-          onfocus="filterSchools('school2', 'results2')"
+          oninput="filterSchools()"
+          onfocus="filterSchools()"
         >
-        <div id="results2" class="school-results"></div>
+        <div id="schoolResults" class="school-results"></div>
       </div>
 
-      <button class="primary" style="width:100%" onclick="startChat()">
+      <button
+        class="primary"
+        style="width:100%; margin-top:24px"
+        onclick="startChat()"
+      >
         Find someone →
       </button>
     </div>
   </div>
 </section>
 
+<!-- MATCHING -->
 <section id="matching" class="page">
   <div class="loading-wrap">
     <div class="loading-card">
       <div class="spinner"></div>
       <div class="tag">Campus Chat</div>
+
       <h2 id="matchingTitle">Finding someone to chat with...</h2>
+
       <p class="note" id="matchingText">
         Hang tight while we look for another student.
       </p>
@@ -617,22 +600,21 @@
         <span class="ad-label">Advertisement</span>
         <b>Your ad could appear here.</b>
         <p class="note">
-          This space can later be used for ads, sponsored announcements, or your Speaker promotions.
+          This space can later be used for ads, sponsored announcements,
+          or Speaker promotions.
         </p>
       </div>
     </div>
   </div>
 </section>
 
+<!-- DITCHED -->
 <section id="ditched" class="page">
   <div class="ditched-wrap">
     <div class="ditched-card">
-      <div class="escape-scene">
-        <div class="dust">💨💨</div>
-        <div class="runner">🏃</div>
-      </div>
-
+      <div class="escape-scene">🏃💨</div>
       <div class="sad-face">🥲</div>
+
       <div class="tag">Connection ended</div>
       <h2>Well... they ditched you.</h2>
 
@@ -647,17 +629,20 @@
   </div>
 </section>
 
+<!-- CHAT -->
 <section id="chat" class="page">
   <div class="chat-wrap">
     <main class="chat">
       <div class="chathead">
         <div class="person">
-          <div class="avatar" id="partnerAvatar">?</div>
+          <div class="avatar" id="avatar">?</div>
+
           <div>
             <b id="partnerName">Anonymous Student</b>
-            <small id="schoolBadge">Looking for someone...</small>
+            <small id="schoolBadge">Anonymous</small>
           </div>
         </div>
+
         <span class="badge" id="statusBadge">Waiting</span>
       </div>
 
@@ -666,41 +651,69 @@
       </div>
 
       <div class="composer">
-        <input id="input" placeholder="Type a message..." disabled
-          onkeydown="if(event.key==='Enter')send()">
-        <button id="sendButton" onclick="send()" disabled>Send</button>
+        <input
+          id="input"
+          placeholder="Type a message..."
+          disabled
+          onkeydown="if(event.key==='Enter')send()"
+        >
+        <button id="sendButton" onclick="send()" disabled>
+          Send
+        </button>
       </div>
     </main>
 
     <aside class="side">
       <b>Keep it friendly ✨</b>
-      <p class="note">Be respectful and don't share sensitive information.</p>
+      <p class="note">
+        Be respectful and don't share sensitive information.
+      </p>
 
-      <button class="next" onclick="nextPerson()">⏭ Next person</button>
+      <button class="next" onclick="nextPerson()">
+        ⏭ Next person
+      </button>
 
-      <button class="outline" style="width:100%" onclick="reportUser()">
+      <button
+        class="outline"
+        style="width:100%"
+        onclick="reportUser()"
+      >
         🚩 Report
       </button>
 
       <div class="speaker">
         <b>📣 Have an announcement?</b>
-        <p class="note">Create a promoted message for the community.</p>
-        <button class="primary" onclick="speaker()">Become a Speaker</button>
+        <p class="note">
+          Create a promoted message for the community.
+        </p>
+        <button class="primary" onclick="speaker()">
+          Become a Speaker
+        </button>
       </div>
     </aside>
   </div>
 </section>
 
+<!-- SPEAKER MODAL -->
 <div id="modal" class="modalbg">
   <div class="modal">
     <h2>📣 Become a Speaker</h2>
-    <p class="note">Speaker payments and approval will be added after the chat system.</p>
+    <p class="note">
+      Speaker payments and approval will be added after the chat system.
+    </p>
 
-    <textarea id="announcement" placeholder="Write your announcement..."></textarea>
+    <textarea
+      id="announcement"
+      placeholder="Write your announcement..."
+    ></textarea>
 
     <div style="text-align:right; margin-top:12px">
-      <button class="outline" onclick="closeSpeaker()">Cancel</button>
-      <button class="primary" onclick="submitSpeaker()">Continue →</button>
+      <button class="outline" onclick="closeSpeaker()">
+        Cancel
+      </button>
+      <button class="primary" onclick="submitSpeaker()">
+        Continue →
+      </button>
     </div>
   </div>
 </div>
@@ -716,6 +729,7 @@
     SUPABASE_KEY
   );
 
+  /* Schools from different regions of the Philippines */
   const schools = [
     { name: 'University of the Philippines Diliman', region: 'Metro Manila' },
     { name: 'University of the Philippines Manila', region: 'Metro Manila' },
@@ -737,7 +751,6 @@
     { name: 'Saint Louis University', region: 'Luzon' },
     { name: 'University of Baguio', region: 'Luzon' },
     { name: 'University of the Philippines Los Baños', region: 'Luzon' },
-    { name: 'University of the Philippines Open University', region: 'Luzon' },
     { name: 'Cavite State University', region: 'Luzon' },
     { name: 'De La Salle University – Dasmariñas', region: 'Luzon' },
     { name: 'Laguna State Polytechnic University', region: 'Luzon' },
@@ -763,7 +776,6 @@
     { name: 'Silliman University', region: 'Visayas' },
     { name: 'Eastern Visayas State University', region: 'Visayas' },
     { name: 'Leyte Normal University', region: 'Visayas' },
-    { name: 'Visayas State University', region: 'Visayas' },
 
     { name: 'Ateneo de Davao University', region: 'Mindanao' },
     { name: 'University of Mindanao', region: 'Mindanao' },
@@ -772,49 +784,61 @@
     { name: 'Mindanao State University', region: 'Mindanao' },
     { name: 'Mindanao State University – Iligan Institute of Technology', region: 'Mindanao' },
     { name: 'Xavier University – Ateneo de Cagayan', region: 'Mindanao' },
-    { name: 'Capitol University', region: 'Mindanao' },
     { name: 'Central Mindanao University', region: 'Mindanao' },
     { name: 'Caraga State University', region: 'Mindanao' },
-    { name: 'Father Saturnino Urios University', region: 'Mindanao' },
     { name: 'Western Mindanao State University', region: 'Mindanao' }
   ];
 
   let school = '';
   let nickname = '';
   let profileId = localStorage.getItem('campusChatProfileId');
-
   let currentRoom = null;
-  let currentMatchStartedAt = null;
   let messageTimer = null;
   let matchTimer = null;
   let roomStatusTimer = null;
 
-  function filterSchools(inputId, resultsId) {
-    const input = document.getElementById(inputId);
-    const results = document.getElementById(resultsId);
+  function show(id) {
+    document.querySelectorAll('.page').forEach(page => {
+      page.classList.remove('active');
+    });
+
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  /* School search */
+  function filterSchools() {
+    const input = document.getElementById('schoolInput');
+    const results = document.getElementById('schoolResults');
     const query = input.value.trim().toLowerCase();
 
     results.innerHTML = '';
 
-    const matches = schools.filter(s =>
-      s.name.toLowerCase().includes(query)
+    const matches = schools.filter(item =>
+      item.name.toLowerCase().includes(query)
     );
 
-    if (query && !matches.some(s => s.name.toLowerCase() === query)) {
-      const custom = document.createElement('div');
-      custom.className = 'school-option';
-      custom.textContent = 'Use "' + input.value.trim() + '"';
-      custom.onclick = () =>
-        selectSchool(inputId, resultsId, input.value.trim());
-      results.appendChild(custom);
-    }
+    if (query) {
+      matches.slice(0, 20).forEach(item => {
+        addSchoolOption(item.name);
+      });
 
-    if (!query) {
+      if (!matches.some(item => item.name.toLowerCase() === query)) {
+        const custom = document.createElement('div');
+        custom.className = 'school-option';
+        custom.textContent = 'Use "' + input.value.trim() + '"';
+        custom.onclick = () => selectSchool(input.value.trim());
+        results.appendChild(custom);
+      }
+    } else {
       const grouped = {};
 
-      schools.forEach(s => {
-        if (!grouped[s.region]) grouped[s.region] = [];
-        grouped[s.region].push(s);
+      schools.forEach(item => {
+        if (!grouped[item.region]) {
+          grouped[item.region] = [];
+        }
+
+        grouped[item.region].push(item);
       });
 
       Object.keys(grouped).forEach(region => {
@@ -823,71 +847,42 @@
         label.textContent = region;
         results.appendChild(label);
 
-        grouped[region].forEach(s =>
-          addSchoolOption(inputId, resultsId, s.name)
-        );
+        grouped[region].forEach(item => {
+          addSchoolOption(item.name);
+        });
       });
-    } else {
-      matches.slice(0, 20).forEach(s =>
-        addSchoolOption(inputId, resultsId, s.name)
-      );
     }
 
     results.classList.add('show');
   }
 
-  function addSchoolOption(inputId, resultsId, schoolName) {
-    const results = document.getElementById(resultsId);
+  function addSchoolOption(schoolName) {
+    const results = document.getElementById('schoolResults');
     const option = document.createElement('div');
 
     option.className = 'school-option';
     option.textContent = schoolName;
-    option.onclick = () =>
-      selectSchool(inputId, resultsId, schoolName);
+    option.onclick = () => selectSchool(schoolName);
 
     results.appendChild(option);
   }
 
-  function selectSchool(inputId, resultsId, schoolName) {
-    document.getElementById(inputId).value = schoolName;
-    document.getElementById(resultsId).classList.remove('show');
+  function selectSchool(schoolName) {
+    document.getElementById('schoolInput').value = schoolName;
+    document.getElementById('schoolResults').classList.remove('show');
   }
 
-  document.addEventListener('click', function(event) {
-    document.querySelectorAll('.school-picker').forEach(picker => {
-      if (!picker.contains(event.target)) {
-        picker.querySelector('.school-results')
-          .classList.remove('show');
-      }
-    });
+  document.addEventListener('click', event => {
+    const picker = document.querySelector('.school-picker');
+
+    if (picker && !picker.contains(event.target)) {
+      document.getElementById('schoolResults').classList.remove('show');
+    }
   });
 
-  function show(id) {
-    document.querySelectorAll('.page')
-      .forEach(p => p.classList.remove('active'));
-
-    document.getElementById(id).classList.add('active');
-    window.scrollTo(0, 0);
-  }
-
-  function startFromHome() {
-    nickname = document.getElementById('nickname1').value.trim();
-    school = document.getElementById('school1').value.trim();
-
-    startChat();
-  }
-
   async function startChat() {
-    if (!nickname) {
-      nickname = document.getElementById('nickname2').value.trim();
-    }
-
-    if (!school) {
-      school = document.getElementById('school2').value.trim();
-    }
-
-    nickname = nickname.substring(0, 30);
-    school = school.substring(0, 100);
+    nickname = document.getElementById('nicknameInput').value.trim();
+    school = document.getElementById('schoolInput').value.trim();
 
     showMatching(
       'Finding someone to chat with...',
@@ -901,41 +896,45 @@
     }
   }
 
+  /*
+    Create or update the current browser's profile.
+    This lets a returning user change their nickname or school.
+  */
   async function createOrUpdateProfile() {
-    if (profileId) {
-      const { error } = await supabaseClient
+    if (!profileId) {
+      const { data, error } = await supabaseClient
         .from('profiles')
-        .update({
+        .insert({
           school: school || null,
           nickname: nickname || null
         })
-        .eq('id', profileId);
+        .select()
+        .single();
 
-      if (!error) return true;
+      if (error) {
+        console.error(error);
+        alert('Connection error. Please refresh and try again.');
+        show('setup');
+        return false;
+      }
 
-      console.warn('Existing profile could not be updated. Creating a new one.');
-      localStorage.removeItem('campusChatProfileId');
-      profileId = null;
+      profileId = data.id;
+      localStorage.setItem('campusChatProfileId', profileId);
+      return true;
     }
 
-    const { data, error } = await supabaseClient
+    const { error } = await supabaseClient
       .from('profiles')
-      .insert({
+      .update({
         school: school || null,
         nickname: nickname || null
       })
-      .select()
-      .single();
+      .eq('id', profileId);
 
     if (error) {
       console.error(error);
-      alert('Connection error. Please refresh and try again.');
-      show('home');
       return false;
     }
-
-    profileId = data.id;
-    localStorage.setItem('campusChatProfileId', profileId);
 
     return true;
   }
@@ -946,27 +945,16 @@
     show('matching');
   }
 
+  /*
+    The matching fix:
+    A user is only connected after an actual chat room exists
+    containing TWO different users.
+  */
   async function findMatch() {
     if (!profileId) return;
 
-    clearTimers();
     currentRoom = null;
-
-    /*
-      This timestamp is important: only rooms created during the
-      current matching attempt can connect this user.
-    */
-    currentMatchStartedAt = new Date().toISOString();
-
-    await supabaseClient
-      .from('waiting_users')
-      .delete()
-      .eq('profile_id', profileId);
-
-    showMatching(
-      'Finding someone to chat with...',
-      'Hang tight while we look for another student.'
-    );
+    clearTimers();
 
     const { data: waiting, error } = await supabaseClient
       .from('waiting_users')
@@ -977,10 +965,8 @@
 
     if (error) {
       console.error(error);
-      showMatching(
-        'Having trouble connecting...',
-        'Please try again in a moment.'
-      );
+      show('setup');
+      alert('Unable to search for a match. Please try again.');
       return;
     }
 
@@ -988,8 +974,22 @@
       const otherUser = waiting[0];
 
       /*
-        Create a room only when another user is actually waiting.
+        Remove the other user from the waiting queue first.
+        This helps prevent one waiting user from being matched
+        by multiple people at the same time.
       */
+      const { data: claimedUser, error: claimError } = await supabaseClient
+        .from('waiting_users')
+        .delete()
+        .eq('profile_id', otherUser.profile_id)
+        .select()
+        .maybeSingle();
+
+      if (claimError || !claimedUser) {
+        setTimeout(findMatch, 500);
+        return;
+      }
+
       const { data: room, error: roomError } = await supabaseClient
         .from('chat_rooms')
         .insert({
@@ -1000,19 +1000,23 @@
         .select()
         .single();
 
-      if (roomError) {
+      if (roomError || !room) {
         console.error(roomError);
-        await joinWaitingQueue();
+
+        /*
+          Put the other user back in the queue if room creation fails.
+        */
+        await supabaseClient
+          .from('waiting_users')
+          .upsert({
+            profile_id: otherUser.profile_id,
+            school: otherUser.school || null,
+            joined_at: otherUser.joined_at
+          });
+
+        setTimeout(findMatch, 1000);
         return;
       }
-
-      /*
-        Remove both users from the waiting queue.
-      */
-      await supabaseClient
-        .from('waiting_users')
-        .delete()
-        .in('profile_id', [profileId, otherUser.profile_id]);
 
       currentRoom = room.id;
 
@@ -1021,25 +1025,22 @@
       return;
     }
 
-    await joinWaitingQueue();
-  }
-
-  async function joinWaitingQueue() {
-    const { error } = await supabaseClient
+    /*
+      No one is waiting, so join the queue.
+      The user remains on the matching screen.
+    */
+    const { error: waitError } = await supabaseClient
       .from('waiting_users')
       .upsert({
         profile_id: profileId,
         school: school || null,
-        nickname: nickname || null,
         joined_at: new Date().toISOString()
       });
 
-    if (error) {
-      console.error(error);
-      showMatching(
-        'Unable to join the queue',
-        'Please refresh and try again.'
-      );
+    if (waitError) {
+      console.error(waitError);
+      show('setup');
+      alert('Unable to join the matching queue.');
       return;
     }
 
@@ -1047,18 +1048,13 @@
   }
 
   async function checkForRoom() {
-    if (!profileId || currentRoom || !currentMatchStartedAt) return;
+    if (!profileId || currentRoom) return;
 
-    /*
-      Only look for rooms created after THIS matching attempt began.
-      This prevents an old room from reconnecting the user.
-    */
     const { data: rooms, error } = await supabaseClient
       .from('chat_rooms')
       .select('*')
       .eq('status', 'active')
       .or(`user_one.eq.${profileId},user_two.eq.${profileId}`)
-      .gte('created_at', currentMatchStartedAt)
       .order('created_at', { ascending: false })
       .limit(1);
 
@@ -1069,6 +1065,18 @@
 
     if (rooms && rooms.length > 0) {
       const room = rooms[0];
+
+      /*
+        Extra safety check: never connect to a room unless
+        the room contains two different users.
+      */
+      if (room.user_one === room.user_two) {
+        return;
+      }
+
+      const partnerId =
+        room.user_one === profileId ? room.user_two : room.user_one;
+
       currentRoom = room.id;
 
       await supabaseClient
@@ -1076,27 +1084,12 @@
         .delete()
         .eq('profile_id', profileId);
 
-      const partnerId =
-        room.user_one === profileId
-          ? room.user_two
-          : room.user_one;
-
       await loadPartnerInfo(partnerId);
       matched();
     }
   }
 
   async function loadPartnerInfo(partnerId) {
-    document.getElementById('partnerName').textContent =
-      'Anonymous Student';
-
-    document.getElementById('partnerAvatar').textContent = '?';
-
-    document.getElementById('schoolBadge').textContent =
-      '● Anonymous';
-
-    if (!partnerId) return;
-
     const { data, error } = await supabaseClient
       .from('profiles')
       .select('nickname, school')
@@ -1104,24 +1097,32 @@
       .single();
 
     if (error || !data) {
-      console.error(error);
+      document.getElementById('partnerName').textContent =
+        'Anonymous Student';
+
+      document.getElementById('schoolBadge').textContent =
+        '● Anonymous';
+
+      document.getElementById('avatar').textContent = '?';
       return;
     }
 
-    const displayName =
+    const partnerName =
       data.nickname && data.nickname.trim()
         ? data.nickname.trim()
         : 'Anonymous Student';
 
-    document.getElementById('partnerName').textContent = displayName;
-
-    document.getElementById('partnerAvatar').textContent =
-      displayName.charAt(0).toUpperCase();
+    document.getElementById('partnerName').textContent = partnerName;
 
     document.getElementById('schoolBadge').textContent =
       data.school
         ? '🎓 ' + data.school
         : '● Anonymous';
+
+    document.getElementById('avatar').textContent =
+      data.nickname && data.nickname.trim()
+        ? data.nickname.trim().charAt(0).toUpperCase()
+        : '?';
   }
 
   function matched() {
@@ -1141,28 +1142,23 @@
   }
 
   async function checkRoomStatus() {
-    if (!currentRoom || !profileId) return;
+    if (!currentRoom) return;
 
-    const roomIdToCheck = currentRoom;
+    const roomId = currentRoom;
 
     const { data: room, error } = await supabaseClient
       .from('chat_rooms')
       .select('status')
-      .eq('id', roomIdToCheck)
+      .eq('id', roomId)
       .single();
 
     if (error || !room) return;
 
-    if (
-      room.status === 'ended' &&
-      currentRoom === roomIdToCheck
-    ) {
+    if (room.status === 'ended' && currentRoom === roomId) {
       currentRoom = null;
       clearTimers();
 
-      document.getElementById('statusBadge').textContent =
-        'Disconnected';
-
+      document.getElementById('statusBadge').textContent = 'Disconnected';
       document.getElementById('input').disabled = true;
       document.getElementById('sendButton').disabled = true;
 
@@ -1170,64 +1166,39 @@
     }
   }
 
-  function findSomeoneElse() {
-    document.getElementById('msgs').innerHTML =
-      '<div class="system">Finding someone to chat with... 🔎</div>';
-
-    document.getElementById('statusBadge').textContent =
-      'Waiting';
-
-    document.getElementById('partnerName').textContent =
-      'Anonymous Student';
-
-    document.getElementById('partnerAvatar').textContent = '?';
-
-    document.getElementById('schoolBadge').textContent =
-      'Looking for someone...';
-
-    showMatching(
-      'Finding someone new...',
-      'Hopefully this one sticks around. 😅'
-    );
-
-    findMatch();
-  }
-
   async function loadMessages() {
     if (!currentRoom) return;
-
-    const roomIdToLoad = currentRoom;
 
     const { data, error } = await supabaseClient
       .from('messages')
       .select('*')
-      .eq('room_id', roomIdToLoad)
+      .eq('room_id', currentRoom)
       .order('created_at', { ascending: true });
 
-    if (error || currentRoom !== roomIdToLoad) {
-      if (error) console.error(error);
+    if (error) {
+      console.error(error);
       return;
     }
 
     const container = document.getElementById('msgs');
     container.innerHTML = '';
 
-    if (!data.length) {
+    if (!data || data.length === 0) {
       container.innerHTML =
         '<div class="system">You are connected! Say hello 👋</div>';
+    } else {
+      data.forEach(message => {
+        const div = document.createElement('div');
+
+        div.className =
+          message.sender_id === profileId
+            ? 'msg me'
+            : 'msg them';
+
+        div.textContent = message.content;
+        container.appendChild(div);
+      });
     }
-
-    data.forEach(message => {
-      const div = document.createElement('div');
-
-      div.className =
-        message.sender_id === profileId
-          ? 'msg me'
-          : 'msg them';
-
-      div.textContent = message.content;
-      container.appendChild(div);
-    });
 
     container.scrollTop = container.scrollHeight;
   }
@@ -1238,14 +1209,12 @@
 
     if (!content || !currentRoom) return;
 
-    const roomIdToSend = currentRoom;
-
     input.value = '';
 
     const { error } = await supabaseClient
       .from('messages')
       .insert({
-        room_id: roomIdToSend,
+        room_id: currentRoom,
         sender_id: profileId,
         content: content
       });
@@ -1280,7 +1249,6 @@
       .eq('profile_id', profileId);
 
     currentRoom = null;
-    currentMatchStartedAt = null;
 
     document.getElementById('msgs').innerHTML =
       '<div class="system">Finding someone to chat with... 🔎</div>';
@@ -1288,19 +1256,31 @@
     document.getElementById('partnerName').textContent =
       'Anonymous Student';
 
-    document.getElementById('partnerAvatar').textContent = '?';
-
     document.getElementById('schoolBadge').textContent =
       'Looking for someone...';
 
+    document.getElementById('avatar').textContent = '?';
+
     showMatching(
-      'Finding your next conversation...',
-      'Take a quick break while we find someone new.'
+      'Finding someone new...',
+      'Hopefully this one sticks around. 😅'
     );
 
-    setTimeout(() => {
-      findMatch();
-    }, 800);
+    setTimeout(findMatch, 700);
+  }
+
+  async function findSomeoneElse() {
+    document.getElementById('msgs').innerHTML =
+      '<div class="system">Finding someone to chat with... 🔎</div>';
+
+    document.getElementById('statusBadge').textContent = 'Waiting';
+
+    showMatching(
+      'Finding someone new...',
+      'Hopefully this one sticks around. 😅'
+    );
+
+    await findMatch();
   }
 
   async function reportUser() {
