@@ -310,6 +310,52 @@
       resize: vertical;
     }
 
+    /* Matching/loading screen */
+    .loading-wrap {
+      max-width: 600px;
+      margin: 80px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .loading-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 40px 28px;
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 20px;
+      border: 4px solid #ece8fa;
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .ad-box {
+      margin-top: 28px;
+      border: 1px dashed #cfc8dd;
+      border-radius: 15px;
+      padding: 24px 18px;
+      background: #faf9fd;
+      color: #817a8d;
+    }
+
+    .ad-label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
     @media(max-width: 760px) {
       .hero {
         grid-template-columns: 1fr;
@@ -318,6 +364,7 @@
 
       .hero h1 { font-size: 44px; }
       .features { grid-template-columns: 1fr; }
+
       .chat-wrap {
         grid-template-columns: 1fr;
         padding: 12px;
@@ -345,10 +392,7 @@
         A simple place to have random, anonymous conversations with fellow
         college students in the Philippines.
       </p>
-
-      <button class="primary" onclick="show('setup')">
-        🎲 Start Chatting
-      </button>
+      <button class="primary" onclick="show('setup')">🎲 Start Chatting</button>
     </div>
 
     <div class="card">
@@ -372,18 +416,9 @@
   </div>
 
   <div class="features">
-    <div class="feature">
-      🎲<b>Random chat</b>
-      <span class="note">Meet someone new.</span>
-    </div>
-    <div class="feature">
-      🎓<b>School badge</b>
-      <span class="note">Optional identity without your name.</span>
-    </div>
-    <div class="feature">
-      📣<b>Speaker</b>
-      <span class="note">Promoted announcements for the community.</span>
-    </div>
+    <div class="feature">🎲<b>Random chat</b><span class="note">Meet someone new.</span></div>
+    <div class="feature">🎓<b>School badge</b><span class="note">Optional identity without your name.</span></div>
+    <div class="feature">📣<b>Speaker</b><span class="note">Promoted announcements for the community.</span></div>
   </div>
 </section>
 
@@ -410,9 +445,30 @@
   </div>
 </section>
 
+<!-- Loading / ad screen -->
+<section id="matching" class="page">
+  <div class="loading-wrap">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <div class="tag">Campus Chat</div>
+      <h2 id="matchingTitle">Finding someone to chat with...</h2>
+      <p class="note" id="matchingText">
+        Hang tight while we look for another student.
+      </p>
+
+      <div class="ad-box">
+        <span class="ad-label">Advertisement</span>
+        <b>Your ad could appear here.</b>
+        <p class="note">
+          This space can later be used for ads, sponsored announcements, or your Speaker promotions.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="chat" class="page">
   <div class="chat-wrap">
-
     <main class="chat">
       <div class="chathead">
         <div class="person">
@@ -430,12 +486,8 @@
       </div>
 
       <div class="composer">
-        <input
-          id="input"
-          placeholder="Type a message..."
-          disabled
-          onkeydown="if(event.key==='Enter')send()"
-        >
+        <input id="input" placeholder="Type a message..." disabled
+          onkeydown="if(event.key==='Enter')send()">
         <button id="sendButton" onclick="send()" disabled>Send</button>
       </div>
     </main>
@@ -456,21 +508,15 @@
         <button class="primary" onclick="speaker()">Become a Speaker</button>
       </div>
     </aside>
-
   </div>
 </section>
 
 <div id="modal" class="modalbg">
   <div class="modal">
     <h2>📣 Become a Speaker</h2>
-    <p class="note">
-      Speaker payments and approval will be added after the chat system.
-    </p>
+    <p class="note">Speaker payments and approval will be added after the chat system.</p>
 
-    <textarea
-      id="announcement"
-      placeholder="Write your announcement..."
-    ></textarea>
+    <textarea id="announcement" placeholder="Write your announcement..."></textarea>
 
     <div style="text-align:right; margin-top:12px">
       <button class="outline" onclick="closeSpeaker()">Cancel</button>
@@ -479,11 +525,9 @@
   </div>
 </div>
 
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  // Your Supabase Project URL and Publishable Key
   const SUPABASE_URL = 'https://ygnftivolxzznwdztccp.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_7zC9r6QUPYfP3A9uvmNPog_cFTXdG7K';
 
@@ -497,12 +541,10 @@
   let currentRoom = null;
   let messageTimer = null;
   let matchTimer = null;
+  let roomStatusTimer = null;
 
   function show(id) {
-    document.querySelectorAll('.page').forEach(p => {
-      p.classList.remove('active');
-    });
-
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     window.scrollTo(0, 0);
   }
@@ -517,34 +559,40 @@
       school = document.getElementById('school2').value;
     }
 
-    show('chat');
-
     document.getElementById('schoolBadge').textContent =
-      school ? '🎓 ' + school : '● Looking for a match...';
+      school ? '🎓 ' + school : '● Anonymous';
+
+    showMatching('Finding someone to chat with...', 'Hang tight while we look for another student.');
 
     await createProfile();
     await findMatch();
   }
 
   async function createProfile() {
-    if (profileId) return;
+    if (profileId) return true;
 
     const { data, error } = await supabaseClient
       .from('profiles')
-      .insert({
-        school: school || null
-      })
+      .insert({ school: school || null })
       .select()
       .single();
 
     if (error) {
       console.error(error);
+      show('chat');
       showSystemMessage('Connection error. Please refresh and try again.');
-      return;
+      return false;
     }
 
     profileId = data.id;
     localStorage.setItem('campusChatProfileId', profileId);
+    return true;
+  }
+
+  function showMatching(title, text) {
+    document.getElementById('matchingTitle').textContent = title;
+    document.getElementById('matchingText').textContent = text;
+    show('matching');
   }
 
   async function findMatch() {
@@ -553,12 +601,7 @@
     currentRoom = null;
     clearTimers();
 
-    document.getElementById('statusBadge').textContent = 'Searching';
-    document.getElementById('input').disabled = true;
-    document.getElementById('sendButton').disabled = true;
-
-    document.getElementById('msgs').innerHTML =
-      '<div class="system">Looking for someone to chat with... 🔎</div>';
+    showMatching('Finding someone to chat with...', 'Hang tight while we look for another student.');
 
     const { data: waiting, error } = await supabaseClient
       .from('waiting_users')
@@ -569,6 +612,7 @@
 
     if (error) {
       console.error(error);
+      show('chat');
       showSystemMessage('Unable to search for a match.');
       return;
     }
@@ -588,6 +632,7 @@
 
       if (roomError) {
         console.error(roomError);
+        show('chat');
         showSystemMessage('Unable to create a chat. Please try again.');
         return;
       }
@@ -613,6 +658,7 @@
 
     if (waitError) {
       console.error(waitError);
+      show('chat');
       showSystemMessage('Unable to join the matching queue.');
       return;
     }
@@ -652,6 +698,8 @@
     clearInterval(matchTimer);
     matchTimer = null;
 
+    show('chat');
+
     document.getElementById('statusBadge').textContent = 'Connected';
     document.getElementById('input').disabled = false;
     document.getElementById('sendButton').disabled = false;
@@ -659,6 +707,41 @@
     loadMessages();
 
     messageTimer = setInterval(loadMessages, 1500);
+    roomStatusTimer = setInterval(checkRoomStatus, 2000);
+  }
+
+  async function checkRoomStatus() {
+    if (!currentRoom || !profileId) return;
+
+    const roomIdToCheck = currentRoom;
+
+    const { data: room, error } = await supabaseClient
+      .from('chat_rooms')
+      .select('status')
+      .eq('id', roomIdToCheck)
+      .single();
+
+    if (error || !room) return;
+
+    if (room.status === 'ended' && currentRoom === roomIdToCheck) {
+      currentRoom = null;
+      clearTimers();
+
+      document.getElementById('statusBadge').textContent = 'Disconnected';
+      document.getElementById('input').disabled = true;
+      document.getElementById('sendButton').disabled = true;
+
+      showSystemMessage('Your chat partner has disconnected.');
+
+      setTimeout(() => {
+        showMatching(
+          'Your chat partner left.',
+          'Finding someone new for you to talk to...'
+        );
+
+        findMatch();
+      }, 1800);
+    }
   }
 
   async function loadMessages() {
@@ -685,10 +768,8 @@
 
     data.forEach(message => {
       const div = document.createElement('div');
-
       div.className =
         message.sender_id === profileId ? 'msg me' : 'msg them';
-
       div.textContent = message.content;
       container.appendChild(div);
     });
@@ -722,15 +803,18 @@
   }
 
   async function nextPerson() {
+    const oldRoom = currentRoom;
+
     clearTimers();
 
-    if (currentRoom) {
+    document.getElementById('input').disabled = true;
+    document.getElementById('sendButton').disabled = true;
+
+    if (oldRoom) {
       await supabaseClient
         .from('chat_rooms')
-        .update({
-          status: 'ended'
-        })
-        .eq('id', currentRoom);
+        .update({ status: 'ended' })
+        .eq('id', oldRoom);
     }
 
     await supabaseClient
@@ -740,7 +824,14 @@
 
     currentRoom = null;
 
-    await findMatch();
+    showMatching(
+      'Finding your next conversation...',
+      'Take a quick break while we find someone new.'
+    );
+
+    setTimeout(() => {
+      findMatch();
+    }, 1200);
   }
 
   async function reportUser() {
@@ -776,16 +867,17 @@
     const div = document.createElement('div');
     div.className = 'system';
     div.textContent = text;
-
     document.getElementById('msgs').appendChild(div);
   }
 
   function clearTimers() {
     if (messageTimer) clearInterval(messageTimer);
     if (matchTimer) clearInterval(matchTimer);
+    if (roomStatusTimer) clearInterval(roomStatusTimer);
 
     messageTimer = null;
     matchTimer = null;
+    roomStatusTimer = null;
   }
 
   function speaker() {
