@@ -31,6 +31,8 @@
       align-items: center;
       justify-content: space-between;
       padding: 0 max(20px, 5vw);
+      position: relative;
+      z-index: 10;
     }
 
     .brand { font-weight: 800; font-size: 21px; }
@@ -54,6 +56,107 @@
       border: 1px solid #dcd7e8;
       border-radius: 12px;
       padding: 12px 16px;
+    }
+
+    /* ==========================================
+       LIVE PUBLIC ANNOUNCEMENT TICKER
+    ========================================== */
+
+    #announcementBanner {
+      display: none;
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      background: #6846e8;
+      color: white;
+      padding: 13px 0;
+      border-bottom: 3px solid #4f31c8;
+      box-shadow: 0 4px 15px #6846e833;
+    }
+
+    #announcementBanner.visible {
+      display: block;
+    }
+
+    .announcement-heading {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 18px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    .announcement-live-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #ffda72;
+      box-shadow: 0 0 0 4px #ffffff30;
+      animation: announcementPulse 1.2s infinite;
+    }
+
+    @keyframes announcementPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.8); }
+    }
+
+    .announcement-ticker {
+      width: 100%;
+      overflow: hidden;
+      margin-top: 7px;
+    }
+
+    .announcement-track {
+      display: flex;
+      width: max-content;
+      animation: announcementScroll 38s linear infinite;
+    }
+
+    .announcement-track:hover {
+      animation-play-state: paused;
+    }
+
+    .announcement-group {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      gap: 45px;
+      padding-right: 45px;
+    }
+
+    .announcement-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      max-width: 75vw;
+      white-space: nowrap;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .announcement-item strong {
+      color: #ffe29b;
+    }
+
+    .announcement-separator {
+      color: #d5caff;
+      font-size: 20px;
+    }
+
+    @keyframes announcementScroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .announcement-track,
+      .announcement-live-dot {
+        animation: none;
+      }
     }
 
     .page { display: none; }
@@ -505,7 +608,12 @@
     .request-fields input,.request-fields select { width:100%; padding:11px; border:1px solid #ddd8e8; border-radius:10px; }
     .status-pill { display:inline-block; padding:5px 9px; background:#f1eeff; color:#6846e8; border-radius:20px; font-size:12px; font-weight:bold; }
     .muted { color:#817a8d; font-size:13px; }
-    @media (max-width:760px) { .admin-grid { grid-template-columns:1fr; } .request-fields { grid-template-columns:1fr; } .header-actions { gap:6px; } }
+
+    @media (max-width:760px) {
+      .admin-grid { grid-template-columns:1fr; }
+      .request-fields { grid-template-columns:1fr; }
+      .header-actions { gap:6px; }
+    }
 
     @media (max-width: 760px) {
       .hero { padding-top: 65px; }
@@ -514,6 +622,8 @@
       .chat-wrap { grid-template-columns: 1fr; padding: 12px; }
       .side { order: -1; }
       .chat { height: 570px; }
+      .announcement-heading { font-size: 10px; }
+      .announcement-item { font-size: 12px; max-width: 85vw; }
     }
   </style>
 </head>
@@ -527,6 +637,17 @@
       <button class="outline" id="adminHeaderButton" onclick="openAdmin()">Admin</button>
     </div>
   </header>
+
+  <!-- LIVE ANNOUNCEMENTS -->
+  <div id="announcementBanner" aria-live="polite" aria-label="Campus Chat announcements">
+    <div class="announcement-heading">
+      <span class="announcement-live-dot"></span>
+      <span>Campus Chat Live Announcement</span>
+    </div>
+    <div class="announcement-ticker">
+      <div id="announcementTrack" class="announcement-track"></div>
+    </div>
+  </div>
 
   <!-- HOME -->
 
@@ -952,22 +1073,148 @@
     let roomStatusTimer = null;
 
     // ==========================================
+    // LIVE PUBLIC ANNOUNCEMENTS
+    // ==========================================
+
+    let publicAnnouncements = new Map();
+    let announcementsChannel = null;
+
+    function renderPublicAnnouncements() {
+      const banner = document.getElementById('announcementBanner');
+      const track = document.getElementById('announcementTrack');
+
+      if (!banner || !track) return;
+
+      const announcements = Array.from(publicAnnouncements.values())
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      track.innerHTML = '';
+
+      if (announcements.length === 0) {
+        banner.classList.remove('visible');
+        return;
+      }
+
+      banner.classList.add('visible');
+
+      function createAnnouncementGroup() {
+        const group = document.createElement('div');
+        group.className = 'announcement-group';
+
+        announcements.forEach(item => {
+          const announcementItem = document.createElement('div');
+          announcementItem.className = 'announcement-item';
+
+          const speakerName = document.createElement('strong');
+          speakerName.textContent = item.nickname || 'Campus Chat Speaker';
+
+          const message = document.createElement('span');
+          message.textContent = item.announcement || '';
+
+          announcementItem.appendChild(speakerName);
+          announcementItem.appendChild(message);
+
+          if (item.school) {
+            const schoolName = document.createElement('span');
+            schoolName.textContent = '🎓 ' + item.school;
+            announcementItem.appendChild(schoolName);
+          }
+
+          const separator = document.createElement('span');
+          separator.className = 'announcement-separator';
+          separator.textContent = '✦';
+
+          group.appendChild(announcementItem);
+          group.appendChild(separator);
+        });
+
+        return group;
+      }
+
+      // Duplicate the group to create a seamless scrolling ticker.
+      track.appendChild(createAnnouncementGroup());
+      track.appendChild(createAnnouncementGroup());
+    }
+
+    async function initializePublicAnnouncements() {
+      const banner = document.getElementById('announcementBanner');
+
+      if (!banner) return;
+
+      // Subscribe first so new announcements are not missed
+      // while the existing announcements are being loaded.
+      announcementsChannel = supabaseClient
+        .channel('campus-chat-public-announcements')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'public_announcements'
+          },
+          payload => {
+            console.log('Public announcement update:', payload);
+
+            if (payload.eventType === 'DELETE') {
+              const deletedId = payload.old?.id;
+
+              if (deletedId) {
+                publicAnnouncements.delete(deletedId);
+              }
+
+              renderPublicAnnouncements();
+              return;
+            }
+
+            const announcement = payload.new;
+
+            if (!announcement || !announcement.id) return;
+
+            if (announcement.is_active === false) {
+              publicAnnouncements.delete(announcement.id);
+            } else {
+              publicAnnouncements.set(announcement.id, announcement);
+            }
+
+            renderPublicAnnouncements();
+          }
+        )
+        .subscribe(status => {
+          console.log('Announcement Realtime status:', status);
+        });
+
+      // Load announcements already approved before this visitor arrived.
+      const { data, error } = await supabaseClient
+        .from('public_announcements')
+        .select('id,nickname,school,announcement,created_at,is_active')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Could not load public announcements:', error);
+        return;
+      }
+
+      (data || []).forEach(announcement => {
+        if (!publicAnnouncements.has(announcement.id)) {
+          publicAnnouncements.set(announcement.id, announcement);
+        }
+      });
+
+      renderPublicAnnouncements();
+    }
+
+    // ==========================================
     // INACTIVITY SESSION MANAGEMENT
     // ==========================================
 
-    const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+    const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 
     let idleTimer = null;
     let idleMonitorActive = false;
     let sessionExpired = false;
     let terminatingSession = false;
     let adminUser = null;
-
-    /*
-      Start monitoring when the user intentionally starts chatting.
-
-      Any interaction resets the five-minute countdown.
-    */
 
     function startIdleMonitor() {
       stopIdleMonitor();
@@ -997,21 +1244,6 @@
       idleMonitorActive = false;
     }
 
-    /*
-      Activity detection.
-
-      These events count as user activity:
-      - Mouse movement
-      - Mouse clicks
-      - Keyboard input
-      - Scrolling
-      - Touch interactions
-      - Pointer interactions
-
-      Incoming messages and background polling do not
-      reset the inactivity countdown.
-    */
-
     const activityEvents = [
       'mousemove',
       'mousedown',
@@ -1030,13 +1262,6 @@
       );
     });
 
-    /*
-      Terminate an inactive user's session.
-
-      This ends any active room and removes the user
-      from the matching queue.
-    */
-
     async function terminateIdleSession() {
       if (sessionExpired || terminatingSession) return;
 
@@ -1046,7 +1271,6 @@
       stopIdleMonitor();
       clearTimers();
 
-      // Disable chat immediately.
       document.getElementById('input').disabled = true;
       document.getElementById('sendButton').disabled = true;
 
@@ -1057,8 +1281,6 @@
 
       try {
         if (expiredProfileId) {
-
-          // End every active room associated with this profile.
           const { error: roomError } = await supabaseClient
             .from('chat_rooms')
             .update({ status: 'ended' })
@@ -1068,13 +1290,9 @@
             );
 
           if (roomError) {
-            console.error(
-              'Error ending inactive chat:',
-              roomError
-            );
+            console.error('Error ending inactive chat:', roomError);
           }
 
-          // Remove the user from the matching queue.
           const { error: waitingError } = await supabaseClient
             .from('waiting_users')
             .delete()
@@ -1094,7 +1312,6 @@
       } finally {
         currentRoom = null;
 
-        // Reset the chat interface.
         document.getElementById('msgs').innerHTML =
           '<div class="system">Your previous session has expired.</div>';
 
@@ -1109,7 +1326,6 @@
         document.getElementById('statusBadge').textContent =
           'Disconnected';
 
-        // Return to the homepage.
         show('home');
 
         alert(
@@ -1125,25 +1341,36 @@
     // ==========================================
 
     async function goHome() {
-      // Leaving an active match/chat ends it and removes any queue entry.
       stopIdleMonitor();
       clearTimers();
+
       const leavingRoom = currentRoom;
       currentRoom = null;
+
       if (leavingRoom) {
         const { error } = await supabaseClient.from('chat_rooms')
           .update({ status: 'ended' }).eq('id', leavingRoom);
-        if (error) console.error('Could not end chat while returning home:', error);
+
+        if (error) {
+          console.error('Could not end chat while returning home:', error);
+        }
       }
+
       if (profileId) {
         const { error } = await supabaseClient.from('waiting_users')
           .delete().eq('profile_id', profileId);
-        if (error) console.error('Could not remove waiting entry:', error);
+
+        if (error) {
+          console.error('Could not remove waiting entry:', error);
+        }
       }
+
       sessionExpired = false;
       terminatingSession = false;
+
       document.getElementById('input').disabled = true;
       document.getElementById('sendButton').disabled = true;
+
       show('home');
     }
 
@@ -1155,8 +1382,6 @@
       document.getElementById(id).classList.add('active');
       window.scrollTo(0, 0);
     }
-
-    /* First-page agreement */
 
     function toggleStartButton() {
       const agreed = document.getElementById('termsAgreement').checked;
@@ -1278,7 +1503,6 @@
     async function startChat() {
       if (terminatingSession) return;
 
-      // Begin the inactivity countdown.
       startIdleMonitor();
 
       nickname = document.getElementById('nicknameInput').value.trim();
@@ -1291,7 +1515,6 @@
 
       const profileCreated = await createOrUpdateProfile();
 
-      // Prevent an expired session from continuing.
       if (sessionExpired) return;
 
       if (profileCreated) {
@@ -1418,8 +1641,6 @@
           .select()
           .single();
 
-        // If the session expired during room creation,
-        // immediately end the newly created room.
         if (sessionExpired) {
           if (room && room.id) {
             await supabaseClient
@@ -1475,7 +1696,6 @@
         });
 
       if (sessionExpired) {
-        // Remove the entry if the timeout occurred while joining.
         await supabaseClient
           .from('waiting_users')
           .delete()
@@ -1853,77 +2073,82 @@
       document.getElementById('modal').classList.remove('show');
     }
 
-async function submitSpeaker() {
-  const announcement = document.getElementById('announcement').value.trim();
-  const contactMethod = document.getElementById('speakerContactMethod').value;
-  const contactValue = document.getElementById('speakerContactValue').value.trim();
-  const button = document.getElementById('speakerSubmitButton');
+    async function submitSpeaker() {
+      const announcement = document.getElementById('announcement').value.trim();
+      const contactMethod = document.getElementById('speakerContactMethod').value;
+      const contactValue = document.getElementById('speakerContactValue').value.trim();
+      const button = document.getElementById('speakerSubmitButton');
 
-  if (!announcement) {
-    alert('Please write your announcement first.');
-    return;
-  }
+      if (!announcement) {
+        alert('Please write your announcement first.');
+        return;
+      }
 
-  if (!contactValue) {
-    alert('Please enter contact details so we can reach you.');
-    return;
-  }
+      if (!contactValue) {
+        alert('Please enter contact details so we can reach you.');
+        return;
+      }
 
-  button.disabled = true;
-  button.textContent = 'Submitting...';
+      button.disabled = true;
+      button.textContent = 'Submitting...';
 
-  try {
-    const { error } = await supabaseClient
-      .from('speaker_requests')
-      .insert({
-        profile_id: profileId || null,
-        nickname: nickname || document.getElementById('nicknameInput').value.trim() || null,
-        school: school || document.getElementById('schoolInput').value.trim() || null,
-        contact_method: contactMethod,
-        contact_value: contactValue,
-        announcement: announcement,
-        status: 'pending_review'
-      });
+      try {
+        const { error } = await supabaseClient
+          .from('speaker_requests')
+          .insert({
+            profile_id: profileId || null,
+            nickname: nickname || document.getElementById('nicknameInput').value.trim() || null,
+            school: school || document.getElementById('schoolInput').value.trim() || null,
+            contact_method: contactMethod,
+            contact_value: contactValue,
+            announcement: announcement,
+            status: 'pending_review'
+          });
 
-    if (error) {
-      console.error('Speaker request submission failed:', error);
+        if (error) {
+          console.error('Speaker request submission failed:', error);
 
-      alert(
-        'Submission failed.\n\n' +
-        'Error: ' + error.message +
-        '\nCode: ' + (error.code || 'Not available') +
-        '\nDetails: ' + (error.details || 'None') +
-        '\nHint: ' + (error.hint || 'None')
-      );
+          alert(
+            'Submission failed.\n\n' +
+            'Error: ' + error.message +
+            '\nCode: ' + (error.code || 'Not available') +
+            '\nDetails: ' + (error.details || 'None') +
+            '\nHint: ' + (error.hint || 'None')
+          );
 
-      return;
+          return;
+        }
+
+        document.getElementById('announcement').value = '';
+        document.getElementById('speakerContactValue').value = '';
+
+        closeSpeaker();
+
+        alert(
+          'Your Speaker request has been submitted for review. We will contact you using the details you provided to discuss manual payment if your request is accepted.'
+        );
+
+      } catch (error) {
+        console.error('Unexpected Speaker submission error:', error);
+        alert('Unexpected error: ' + error.message);
+
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Submit for review →';
+      }
     }
 
-    document.getElementById('announcement').value = '';
-    document.getElementById('speakerContactValue').value = '';
-
-    closeSpeaker();
-
-    alert(
-      'Your Speaker request has been submitted for review. We will contact you using the details you provided to discuss manual payment if your request is accepted.'
-    );
-
-  } catch (error) {
-    console.error('Unexpected Speaker submission error:', error);
-
-    alert('Unexpected error: ' + error.message);
-
-  } finally {
-    button.disabled = false;
-    button.textContent = 'Submit for review →';
-  }
-}
     // ==========================================
     // ADMIN AUTHENTICATION & DASHBOARD
     // ==========================================
 
     function openAdmin() {
-      if (adminUser) { show('admin'); loadSpeakerRequests(); return; }
+      if (adminUser) {
+        show('admin');
+        loadSpeakerRequests();
+        return;
+      }
+
       document.getElementById('adminLoginError').textContent = '';
       document.getElementById('adminLoginModal').classList.add('show');
     }
@@ -1937,26 +2162,49 @@ async function submitSpeaker() {
       const password = document.getElementById('adminPassword').value;
       const button = document.getElementById('adminLoginButton');
       const errorBox = document.getElementById('adminLoginError');
+
       errorBox.textContent = '';
-      if (!email || !password) { errorBox.textContent = 'Enter both your email and password.'; return; }
-      button.disabled = true; button.textContent = 'Signing in...';
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      button.disabled = false; button.textContent = 'Sign in';
+
+      if (!email || !password) {
+        errorBox.textContent = 'Enter both your email and password.';
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'Signing in...';
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      button.disabled = false;
+      button.textContent = 'Sign in';
+
       if (error || !data.user) {
         errorBox.textContent = error?.message || 'Sign-in failed.';
         return;
       }
+
       const { data: adminRecord, error: adminError } = await supabaseClient
-        .from('admin_users').select('user_id').eq('user_id', data.user.id).maybeSingle();
+        .from('admin_users')
+        .select('user_id')
+        .eq('user_id', data.user.id)
+        .maybeSingle();
+
       if (adminError || !adminRecord) {
         await supabaseClient.auth.signOut();
         errorBox.textContent = 'This account is not authorized as a Campus Chat admin.';
         return;
       }
+
       adminUser = data.user;
       closeAdminLogin();
+
       document.getElementById('adminPassword').value = '';
-      document.getElementById('adminSignedInAs').textContent = 'Signed in as ' + (adminUser.email || 'admin');
+      document.getElementById('adminSignedInAs').textContent =
+        'Signed in as ' + (adminUser.email || 'admin');
+
       show('admin');
       await loadSpeakerRequests();
     }
@@ -1969,26 +2217,51 @@ async function submitSpeaker() {
 
     function escapeHTML(value) {
       return String(value ?? '').replace(/[&<>"']/g, char => ({
-        '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#39;'
       })[char]);
     }
 
     async function loadSpeakerRequests() {
       const container = document.getElementById('speakerRequests');
-      if (!adminUser) { container.innerHTML = '<div class="card">Please sign in as an admin.</div>'; return; }
-      container.innerHTML = '<div class="card">Loading Speaker requests...</div>';
-      const { data, error } = await supabaseClient.from('speaker_requests')
-        .select('*').order('created_at', { ascending: false });
-      if (error) {
-        console.error(error);
-        container.innerHTML = '<div class="card">Could not load requests. Check the admin_users and speaker_requests RLS policies.</div>';
+
+      if (!adminUser) {
+        container.innerHTML = '<div class="card">Please sign in as an admin.</div>';
         return;
       }
+
+      container.innerHTML = '<div class="card">Loading Speaker requests...</div>';
+
+      const { data, error } = await supabaseClient
+        .from('speaker_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error(error);
+
+        container.innerHTML =
+          '<div class="card">Could not load requests. Check the admin_users and speaker_requests RLS policies.</div>';
+
+        return;
+      }
+
       const rows = data || [];
+
       document.getElementById('statTotal').textContent = rows.length;
-      document.getElementById('statPending').textContent = rows.filter(r => r.status === 'pending_review').length;
-      document.getElementById('statApproved').textContent = rows.filter(r => r.status === 'approved').length;
-      if (!rows.length) { container.innerHTML = '<div class="card">No Speaker requests yet.</div>'; return; }
+      document.getElementById('statPending').textContent =
+        rows.filter(r => r.status === 'pending_review').length;
+      document.getElementById('statApproved').textContent =
+        rows.filter(r => r.status === 'approved').length;
+
+      if (!rows.length) {
+        container.innerHTML = '<div class="card">No Speaker requests yet.</div>';
+        return;
+      }
+
       container.innerHTML = rows.map(r => `
         <article class="request-card" data-request-id="${escapeHTML(r.id)}">
           <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
@@ -2014,15 +2287,27 @@ async function submitSpeaker() {
           <input class="text-input" id="reference-${escapeHTML(r.id)}" value="${escapeHTML(r.payment_reference || '')}" placeholder="Reference or confirmation details">
           <label class="field-label">Private admin notes</label>
           <textarea id="notes-${escapeHTML(r.id)}" placeholder="Internal notes; not shown to the applicant">${escapeHTML(r.admin_notes || '')}</textarea>
-          <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="primary" onclick="saveSpeakerRequest('${escapeHTML(r.id)}')">Save changes</button></div>
-        </article>`).join('');
+          <div style="display:flex;justify-content:flex-end;margin-top:12px">
+            <button class="primary" onclick="saveSpeakerRequest('${escapeHTML(r.id)}')">Save changes</button>
+          </div>
+        </article>
+      `).join('');
     }
 
     async function saveSpeakerRequest(id) {
-      if (!adminUser) { alert('Please sign in as admin.'); return; }
+      if (!adminUser) {
+        alert('Please sign in as admin.');
+        return;
+      }
+
       const amountRaw = document.getElementById('amount-' + id).value;
       const amount = amountRaw === '' ? null : Number(amountRaw);
-      if (amount !== null && (!Number.isFinite(amount) || amount < 0)) { alert('Enter a valid payment amount.'); return; }
+
+      if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
+        alert('Enter a valid payment amount.');
+        return;
+      }
+
       const updates = {
         status: document.getElementById('status-' + id).value,
         payment_amount: amount,
@@ -2031,39 +2316,46 @@ async function submitSpeaker() {
         admin_notes: document.getElementById('notes-' + id).value.trim() || null,
         updated_at: new Date().toISOString()
       };
-      const { error } = await supabaseClient.from('speaker_requests').update(updates).eq('id', id);
-      if (error) { console.error(error); alert('Could not save this request. Check the admin update policy and column grants.'); return; }
+
+      const { error } = await supabaseClient
+        .from('speaker_requests')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) {
+        console.error(error);
+        alert('Could not save this request. Check the admin update policy and column grants.');
+        return;
+      }
+
       alert('Speaker request updated. Remember to contact the applicant directly for manual payment arrangements.');
       await loadSpeakerRequests();
     }
 
-    // Restore an existing Supabase admin session on page load.
     async function restoreAdminSession() {
       const { data } = await supabaseClient.auth.getSession();
+
       if (!data?.session?.user) return;
+
       const user = data.session.user;
-      const { data: record } = await supabaseClient.from('admin_users')
-        .select('user_id').eq('user_id', user.id).maybeSingle();
+
+      const { data: record } = await supabaseClient
+        .from('admin_users')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
       if (record) {
         adminUser = user;
-        document.getElementById('adminSignedInAs').textContent = 'Signed in as ' + (user.email || 'admin');
+
+        document.getElementById('adminSignedInAs').textContent =
+          'Signed in as ' + (user.email || 'admin');
       }
     }
 
     // ==========================================
     // REFRESH / PAGE LOAD CLEANUP
     // ==========================================
-
-    /*
-      When a user reloads the website:
-
-      1. Any active chat connected to their profile is ended.
-      2. Their previous partner detects the ended room.
-      3. The user is removed from the waiting list.
-      4. They are not automatically placed back in the queue.
-
-      The inactivity monitor is also stopped on page reload.
-    */
 
     async function cleanupPreviousConnection() {
       if (!profileId) return;
@@ -2078,10 +2370,7 @@ async function submitSpeaker() {
           );
 
         if (roomError) {
-          console.error(
-            'Error ending previous connection:',
-            roomError
-          );
+          console.error('Error ending previous connection:', roomError);
         }
 
         const { error: waitingError } = await supabaseClient
@@ -2090,21 +2379,18 @@ async function submitSpeaker() {
           .eq('profile_id', profileId);
 
         if (waitingError) {
-          console.error(
-            'Error removing previous waiting status:',
-            waitingError
-          );
+          console.error('Error removing previous waiting status:', waitingError);
         }
 
       } catch (error) {
-        console.error(
-          'Error cleaning up previous connection:',
-          error
-        );
+        console.error('Error cleaning up previous connection:', error);
       }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // Start live announcements for every visitor, including guests.
+      initializePublicAnnouncements();
+
       await cleanupPreviousConnection();
       await restoreAdminSession();
     });
