@@ -1811,40 +1811,54 @@
       roomStatusTimer = setInterval(checkRoomStatus, 2000);
     }
 
-    async function checkRoomStatus() {
-      if (!currentRoom || sessionExpired) return;
 
-      const roomId = currentRoom;
+async function checkRoomStatus() {
+  if (!currentRoom || sessionExpired || terminatingSession) {
+    return;
+  }
 
-      const { data: room, error } = await supabaseClient
-        .from('chat_rooms')
-        .select('status, skipped_by')
-        .eq('id', roomId)
-        .single();
+  const roomId = currentRoom;
 
-      if (sessionExpired || currentRoom !== roomId) return;
+  const { data: room, error } = await supabaseClient
+    .from('chat_rooms')
+    .select('status')
+    .eq('id', roomId)
+    .single();
 
-      if (error || !room) return;
+  // Ignore outdated responses from a previous conversation.
+  if (
+    sessionExpired ||
+    terminatingSession ||
+    currentRoom !== roomId
+  ) {
+    return;
+  }
 
-      if (room.status === 'ended') {
-        currentRoom = null;
-        clearTimers();
+  if (error) {
+    console.error('Room status check failed:', error);
+    return;
+  }
 
-        document.getElementById('statusBadge').textContent =
-          'Disconnected';
+  if (!room) return;
 
-        document.getElementById('input').disabled = true;
-        document.getElementById('sendButton').disabled = true;
+  if (room.status === 'ended') {
+    // The OTHER participant ended or left the conversation.
+    currentRoom = null;
+    clearTimers();
 
-        // Only the person who was skipped sees the funny "You got ditched" page.
-        // The person who initiated the skip sees the separate ended page.
-        if (room.skipped_by && room.skipped_by !== profileId) {
-          showDitchedMessage();
-        } else {
-          show('ended');
-        }
-      }
-    }
+    document.getElementById('statusBadge').textContent =
+      'Disconnected';
+
+    document.getElementById('input').disabled = true;
+    document.getElementById('sendButton').disabled = true;
+
+    // ALWAYS show the funny animation to the person left behind.
+    // This covers Skip, refresh, navigating home and disconnects
+    // that are recorded as ended in Supabase.
+    showDitchedMessage();
+  }
+}
+
 
     function showDitchedMessage() {
       const jokes = [
@@ -2513,44 +2527,70 @@ async function saveSpeakerRequest(id) {
       The inactivity monitor is also stopped on page reload.
     */
 
-    async function cleanupPreviousConnection() {
-      if (!profileId) return;
+   
+async function cleanupPreviousConnection() {
+  if (!profileId) return;
 
-      try {
-        const { error: roomError } = await supabaseClient
-          .from('chat_rooms')
-          .update({ status: 'ended' })
-          .eq('status', 'active')
-          .or(
-            `user_one.eq.${profileId},user_two.eq.${profileId}`
-          );
+  try {
+    // When this browser reloads, end its previous active chat.
+    // The OTHER participant will detect this and see "You got ditched!".
+    const { error: roomError } = await supabaseClient
+      .from('chat_rooms')
+      .update({
+        status: 'ended',
+        skipped_by: profileId
+      })
+      .eq('status', 'active')
+      .or(
+        `user_one.eq.${profileId},user_two.eq.${profileId}`
+      );
 
-        if (roomError) {
-          console.error(
-            'Error ending previous connection:',
-            roomError
-          );
-        }
+    if (roomError) {
+      console.error(
+        'Error ending refreshed user's chat:',
+        roomError
+      );
 
-        const { error: waitingError } = await supabaseClient
-          .from('waiting_users')
-          .delete()
-          .eq('profile_id', profileId);
+      // Fallback for databases where skipped_by is unavailable.
+      // The other user will still see "You got ditched!" because
+      // checkRoomStatus no longer depends on skipped_by.
+      const { error: fallbackError } = await supabaseClient
+        .from('chat_rooms')
+        .update({ status: 'ended' })
+        .eq('status', 'active')
+        .or(
+          `user_one.eq.${profileId},user_two.eq.${profileId}`
+        );
 
-        if (waitingError) {
-          console.error(
-            'Error removing previous waiting status:',
-            waitingError
-          );
-        }
-
-      } catch (error) {
+      if (fallbackError) {
         console.error(
-          'Error cleaning up previous connection:',
-          error
+          'Fallback refresh cleanup failed:',
+          fallbackError
         );
       }
     }
+
+    // Remove the refreshing user from the waiting queue.
+    const { error: waitingError } = await supabaseClient
+      .from('waiting_users')
+      .delete()
+      .eq('profile_id', profileId);
+
+    if (waitingError) {
+      console.error(
+        'Could not remove user from waiting queue:',
+        waitingError
+      );
+    }
+
+  } catch (error) {
+    console.error(
+      'Unexpected refresh cleanup error:',
+      error
+    );
+  }
+}
+
 
     // ==========================================
     // PUBLIC ANNOUNCEMENTS
