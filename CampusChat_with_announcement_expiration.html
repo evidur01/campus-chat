@@ -1,0 +1,2438 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Campus Chat</title>
+
+  <style>
+    :root {
+      --purple: #6846e8;
+      --ink: #1d1830;
+      --bg: #f7f6fc;
+      --line: #e8e5f0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    header {
+      height: 68px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 max(20px, 5vw);
+    }
+
+    .brand { font-weight: 800; font-size: 21px; }
+    .brand b { color: var(--purple); }
+
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.55; }
+
+    .primary {
+      background: var(--purple);
+      color: white;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-weight: 700;
+    }
+
+    .outline {
+      background: white;
+      border: 1px solid #dcd7e8;
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .hero {
+      max-width: 850px;
+      margin: auto;
+      padding: 100px 24px 70px;
+      text-align: center;
+    }
+
+    .tag {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--purple);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      font-size: 58px;
+      line-height: 1.02;
+      letter-spacing: -2px;
+      margin: 12px 0 18px;
+    }
+
+    .lead {
+      font-size: 18px;
+      line-height: 1.55;
+      color: #665f76;
+    }
+
+    .hero .lead {
+      max-width: 620px;
+      margin: 0 auto 28px;
+    }
+
+    .agreement {
+      max-width: 520px;
+      margin: 0 auto 20px;
+      padding: 15px 18px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      text-align: left;
+    }
+
+    .agreement label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #665f76;
+    }
+
+    .agreement input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      margin-top: 2px;
+      flex-shrink: 0;
+      accent-color: var(--purple);
+      cursor: pointer;
+    }
+
+    .terms-link {
+      color: var(--purple);
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .features {
+      max-width: 1000px;
+      margin: auto;
+      padding: 0 24px 60px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .feature {
+      background: white;
+      border: 1px solid var(--line);
+      padding: 19px;
+      border-radius: 17px;
+      text-align: center;
+    }
+
+    .feature b { display: block; margin: 9px 0; }
+
+    .card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 16px 45px #2d21610d;
+    }
+
+    .note {
+      font-size: 12px;
+      color: #817a8d;
+      line-height: 1.5;
+    }
+
+    .setup {
+      max-width: 510px;
+      margin: 65px auto;
+      padding: 0 20px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin: 20px 0 7px;
+    }
+
+    .text-input {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid #ddd8e8;
+      border-radius: 11px;
+      outline: none;
+    }
+
+    .text-input:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px #6846e81a;
+    }
+
+    .school-picker { position: relative; }
+
+    .school-results {
+      display: none;
+      position: absolute;
+      z-index: 20;
+      width: 100%;
+      max-height: 250px;
+      overflow-y: auto;
+      background: white;
+      border: 1px solid #ddd8e8;
+      border-radius: 11px;
+      margin-top: 5px;
+      box-shadow: 0 12px 30px #2d21611a;
+    }
+
+    .school-results.show { display: block; }
+
+    .school-option {
+      padding: 12px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      border-bottom: 1px solid #f0edf5;
+    }
+
+    .school-option:hover { background: #f4f1ff; }
+
+    .school-region {
+      padding: 9px 14px;
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--purple);
+      text-transform: uppercase;
+      background: #faf9fd;
+    }
+
+    .loading-wrap {
+      max-width: 600px;
+      margin: 80px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .loading-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 40px 28px;
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 20px;
+      border: 4px solid #ece8fa;
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .ad-box {
+      margin-top: 28px;
+      border: 1px dashed #cfc8dd;
+      border-radius: 15px;
+      padding: 24px 18px;
+      background: #faf9fd;
+      color: #817a8d;
+    }
+
+    .announcement-bar {
+      display: none;
+      background: #fff8e8;
+      border-bottom: 1px solid #f0d99e;
+      padding: 12px max(20px, 5vw);
+    }
+    .announcement-bar.show { display: block; }
+    .announcement-item { padding: 8px 0; }
+    .announcement-item + .announcement-item { border-top: 1px solid #f0dfb8; }
+    .announcement-heading { font-size: 12px; font-weight: 800; color: #8a5a00; margin-bottom: 4px; }
+    .announcement-copy { white-space: pre-wrap; line-height: 1.45; color: #392d18; overflow-wrap: anywhere; }
+    .announcement-expiry { display: block; margin-top: 4px; color: #806d4a; font-size: 11px; }
+
+    .ad-label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .chat-wrap {
+      max-width: 1080px;
+      margin: auto;
+      padding: 25px;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 18px;
+    }
+
+    .chat {
+      height: 620px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chathead {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .person { display: flex; gap: 11px; align-items: center; }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #eee9ff;
+      color: var(--purple);
+      display: grid;
+      place-items: center;
+      font-weight: bold;
+    }
+
+    .person small {
+      display: block;
+      color: #817a8d;
+      margin-top: 3px;
+    }
+
+    .badge {
+      font-size: 11px;
+      background: #f0edff;
+      color: #5e3ed3;
+      padding: 5px 8px;
+      border-radius: 99px;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 22px;
+      overflow-y: auto;
+    }
+
+    .system {
+      text-align: center;
+      font-size: 12px;
+      color: #958e9e;
+      margin: 12px;
+    }
+
+    .msg {
+      max-width: 76%;
+      padding: 11px 14px;
+      border-radius: 16px;
+      margin: 12px 0;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .them {
+      background: #f0edff;
+      border-bottom-left-radius: 4px;
+    }
+
+    .me {
+      background: var(--purple);
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .composer {
+      padding: 14px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 8px;
+    }
+
+    .composer input {
+      flex: 1;
+      border: 1px solid #ddd8e8;
+      border-radius: 11px;
+      padding: 13px;
+    }
+
+    .composer button {
+      border: 0;
+      background: var(--purple);
+      color: white;
+      border-radius: 11px;
+      padding: 0 16px;
+      font-weight: bold;
+    }
+
+    .side {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      height: max-content;
+    }
+
+    .next {
+      width: 100%;
+      border: 0;
+      background: #ffc44d;
+      padding: 12px;
+      border-radius: 11px;
+      font-weight: bold;
+      margin: 12px 0;
+    }
+
+    .speaker {
+      background: #f1eeff;
+      padding: 16px;
+      border-radius: 15px;
+      margin-top: 18px;
+    }
+
+    .speaker button {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .suggestion-footer {
+      max-width: 1080px;
+      margin: 0 auto 30px;
+      padding: 0 25px;
+      text-align: center;
+    }
+
+    .suggestion-footer button {
+      width: 100%;
+      background: white;
+      color: var(--purple);
+      border: 1px solid #dcd7e8;
+      border-radius: 12px;
+      padding: 15px;
+      font-weight: 700;
+    }
+
+    .suggestion-footer button:hover { background: #f1eeff; }
+
+    .ditched-wrap {
+      max-width: 600px;
+      margin: 70px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .ditched-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 45px 28px;
+      box-shadow: 0 16px 45px #2d21610d;
+    }
+
+    .escape-scene {
+      height: 110px;
+      font-size: 64px;
+      padding-top: 15px;
+      animation: runAway 2.5s ease-in infinite;
+    }
+
+    @keyframes runAway {
+      0%, 30% { transform: translateX(0); }
+      80%, 100% { transform: translateX(180%); opacity: 0; }
+    }
+
+    .sad-face {
+      font-size: 45px;
+      display: inline-block;
+      animation: sadBounce 2s ease-in-out infinite;
+    }
+
+    @keyframes sadBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(7px); }
+    }
+
+    .modalbg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #17122188;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+
+    .modalbg.show { display: flex; }
+
+    .modal {
+      background: white;
+      width: min(500px, 100%);
+      padding: 25px;
+      border-radius: 22px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal textarea {
+      width: 100%;
+      height: 115px;
+      border: 1px solid #ddd8e8;
+      border-radius: 11px;
+      padding: 12px;
+      resize: vertical;
+    }
+
+    .terms-modal { width: min(650px, 100%); }
+
+    .terms-content h3 {
+      margin: 20px 0 7px;
+      font-size: 16px;
+    }
+
+    .terms-content p {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #665f76;
+      margin: 0 0 10px;
+    }
+
+    .brand { cursor: pointer; }.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.header-actions .primary,
+.header-actions .outline {
+  padding: 9px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  header {
+    padding: 0 12px;
+  }
+
+  .brand {
+    font-size: 18px;
+  }
+
+  .header-actions {
+    gap: 5px;
+  }
+
+  .header-actions .primary,
+  .header-actions .outline {
+    padding: 8px 9px;
+    font-size: 11px;
+  }
+}
+    .admin-wrap { max-width: 1050px; margin: 45px auto; padding: 0 20px 60px; }
+    .admin-toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:18px; }
+    .admin-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:18px 0; }
+    .admin-stat { background:#fff; border:1px solid var(--line); border-radius:15px; padding:16px; }
+    .admin-stat strong { display:block; font-size:25px; margin-top:6px; }
+    .request-card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; margin:12px 0; }
+    .request-card textarea { width:100%; min-height:75px; border:1px solid #ddd8e8; border-radius:10px; padding:10px; }
+    .request-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:12px 0; }
+    .request-fields input,.request-fields select { width:100%; padding:11px; border:1px solid #ddd8e8; border-radius:10px; }
+    .status-pill { display:inline-block; padding:5px 9px; background:#f1eeff; color:#6846e8; border-radius:20px; font-size:12px; font-weight:bold; }
+    .muted { color:#817a8d; font-size:13px; }
+    @media (max-width:760px) { .admin-grid { grid-template-columns:1fr; } .request-fields { grid-template-columns:1fr; } .header-actions { gap:6px; } }
+
+    @media (max-width: 760px) {
+      .hero { padding-top: 65px; }
+      h1 { font-size: 44px; }
+      .features { grid-template-columns: 1fr; }
+      .chat-wrap { grid-template-columns: 1fr; padding: 12px; }
+      .side { order: -1; }
+      .chat { height: 570px; }
+      .suggestion-footer { padding: 0 12px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="brand" role="button" tabindex="0" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' ')goHome()">Campus<b>Chat</b></div>
+    <div class="header-actions">
+      <button class="primary" onclick="speaker()">📣 Become a Speaker</button>
+      <button class="outline" id="adminHeaderButton" onclick="openAdmin()">Admin</button>
+    </div>
+  </header>
+
+  <!-- Public announcements: visible across all pages -->
+  <section id="publicAnnouncements" class="announcement-bar" aria-live="polite" aria-label="Campus announcements"></section>
+
+  <!-- HOME -->
+
+  <section id="home" class="page active">
+    <div class="hero">
+      <div class="tag">For Filipino college students</div>
+
+      <h1>Meet someone.<br>Start a conversation.</h1>
+
+      <p class="lead">
+        A simple place to have random conversations with fellow college students
+        in the Philippines.
+      </p>
+
+      <div class="agreement">
+        <label>
+          <input type="checkbox" id="termsAgreement" onchange="toggleStartButton()">
+          <span>
+            I confirm that I am <b>18 years old or above</b> and I have read and
+            agree to the
+            <span class="terms-link" onclick="openTerms(event)">
+              Terms & Conditions and Disclaimer of Liability
+            </span>.
+          </span>
+        </label>
+      </div>
+
+      <button id="startButton" class="primary" onclick="goToSetup()" disabled>
+        🎲 Start Chatting
+      </button>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        🎲
+        <b>Random chat</b>
+        <span class="note">Meet someone new.</span>
+      </div>
+
+      <div class="feature">
+        🎭
+        <b>Your identity, your choice</b>
+        <span class="note">Use an alias and optionally show your school.</span>
+      </div>
+
+      <div class="feature">
+        📣
+        <b>Speaker</b>
+        <span class="note">Promoted announcements for the community.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETUP -->
+
+  <section id="setup" class="page">
+    <div class="setup">
+      <div class="card">
+        <div class="tag">Optional setup</div>
+
+        <h2>Before we find someone...</h2>
+
+        <p class="note">
+          You can stay anonymous or add a nickname and school for your chat
+          partner to see.
+        </p>
+
+        <label class="field-label">
+          🎭 Nickname / Alias <span class="note">(Optional)</span>
+        </label>
+
+        <input
+          id="nicknameInput"
+          class="text-input"
+          maxlength="30"
+          placeholder="Example: CoffeeLover23"
+          autocomplete="off"
+        >
+
+        <label class="field-label">
+          🎓 School <span class="note">(Optional)</span>
+        </label>
+
+        <div class="school-picker">
+          <input
+            id="schoolInput"
+            class="text-input"
+            placeholder="🔍 Search your school or university..."
+            autocomplete="off"
+            oninput="filterSchools()"
+            onfocus="filterSchools()"
+          >
+
+          <div id="schoolResults" class="school-results"></div>
+        </div>
+
+        <button
+          class="primary"
+          style="width:100%; margin-top:24px"
+          onclick="startChat()"
+        >
+          Find someone →
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MATCHING -->
+
+  <section id="matching" class="page">
+    <div class="loading-wrap">
+      <div class="loading-card">
+        <div class="spinner"></div>
+
+        <div class="tag">Campus Chat</div>
+
+        <h2 id="matchingTitle">Finding someone to chat with...</h2>
+
+        <p class="note" id="matchingText">
+          Hang tight while we look for another student.
+        </p>
+
+        <div class="ad-box">
+          <span class="ad-label">Advertisement</span>
+          <b>Your ad could appear here.</b>
+
+          <p class="note">
+            This space can later be used for ads, sponsored announcements,
+            or Speaker promotions.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DITCHED -->
+
+  <section id="ditched" class="page">
+    <div class="ditched-wrap">
+      <div class="ditched-card">
+        <div class="escape-scene">🏃💨</div>
+        <div class="sad-face">🥲</div>
+
+        <div class="tag">Conversation ended</div>
+
+        <h2>This conversation has ended.</h2>
+
+        <p class="lead" style="font-size:16px">
+          Ready to meet someone new? Start another chat whenever you're ready.
+        </p>
+
+        <button class="primary" onclick="findSomeoneElse()">
+          🎲 New Chat
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHAT -->
+
+  <section id="chat" class="page">
+    <div class="chat-wrap">
+      <main class="chat">
+        <div class="chathead">
+          <div class="person">
+            <div class="avatar" id="avatar">?</div>
+
+            <div>
+              <b id="partnerName">Anonymous Student</b>
+              <small id="schoolBadge">Anonymous</small>
+            </div>
+          </div>
+
+          <span class="badge" id="statusBadge">Waiting</span>
+        </div>
+
+        <div id="msgs" class="messages">
+          <div class="system">Looking for someone to chat with... 🔎</div>
+        </div>
+
+        <div class="composer">
+          <input
+            id="input"
+            placeholder="Type a message..."
+            disabled
+            onkeydown="if(event.key==='Enter')send()"
+          >
+
+          <button id="sendButton" onclick="send()" disabled>
+            Send
+          </button>
+        </div>
+      </main>
+
+      <aside class="side">
+        <b>Keep it friendly ✨</b>
+
+        <p class="note">
+          Be respectful and don't share sensitive information.
+        </p>
+
+        <button class="next" onclick="openSkipConfirmation()">
+          ⏭ Skip
+        </button>
+
+        <button class="outline" style="width:100%" onclick="reportUser()">
+          🚩 Report
+        </button>
+      </aside>
+    </div>
+
+    <div class="suggestion-footer">
+      <button onclick="openSuggestion()">💡 Got any suggestions? Help us improve Campus Chat</button>
+    </div>
+  </section>
+
+  <!-- SPEAKER REQUEST MODAL -->
+  <div id="modal" class="modalbg">
+    <div class="modal">
+      <h2>📣 Become a Speaker</h2>
+      <p class="note">Submit your announcement for review. If accepted, Campus Chat will contact you to arrange payment manually. Your announcement will not be promoted until approved.</p>
+      <label class="field-label" for="speakerContactMethod">Preferred contact method</label>
+      <select id="speakerContactMethod" class="text-input">
+        <option value="Facebook Messenger">Facebook Messenger</option>
+        <option value="Email">Email</option>
+        <option value="Mobile number">Mobile number</option>
+        <option value="Other">Other</option>
+      </select>
+      <label class="field-label" for="speakerContactValue">Your contact details</label>
+      <input id="speakerContactValue" class="text-input" maxlength="160" placeholder="Enter your Messenger name, email, or number">
+      <label class="field-label" for="announcement">Your announcement</label>
+      <textarea id="announcement" maxlength="1200" placeholder="Write your announcement (max 1,200 characters)..."></textarea>
+      <div style="text-align:right; margin-top:12px">
+        <button class="outline" onclick="closeSpeaker()">Cancel</button>
+        <button class="primary" id="speakerSubmitButton" onclick="submitSpeaker()">Submit for review →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SKIP CONFIRMATION MODAL -->
+  <div id="skipConfirmModal" class="modalbg">
+    <div class="modal" style="text-align:center">
+      <div style="font-size:45px">🤔</div>
+      <h2>Are you sure you want to skip?</h2>
+      <p class="note">
+        Your current conversation will end permanently. You will NOT be
+        automatically matched with another person. You will need to press
+        New Chat when you're ready to find someone again.
+      </p>
+      <div style="display:flex;gap:10px;margin-top:22px">
+        <button class="outline" style="flex:1" onclick="closeSkipConfirmation()">Stay</button>
+        <button class="primary" style="flex:1;background:#e6a323" onclick="confirmSkip()">Yes, Skip</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUGGESTION MODAL -->
+  <div id="suggestionModal" class="modalbg">
+    <div class="modal">
+      <h2>💡 Got any suggestions?</h2>
+      <p class="note">We'd love to hear your ideas! Tell us how we can make Campus Chat better.</p>
+      <label class="field-label" for="suggestionText">Your suggestion</label>
+      <textarea id="suggestionText" maxlength="1500" placeholder="Share your ideas, feedback, or anything you'd like us to improve..." style="height:140px"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:15px">
+        <button class="outline" onclick="closeSuggestion()">Cancel</button>
+        <button class="primary" id="suggestionSubmitButton" onclick="submitSuggestion()">Submit suggestion →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN LOGIN MODAL -->
+  <div id="adminLoginModal" class="modalbg">
+    <div class="modal">
+      <h2>Campus Chat Admin</h2>
+      <p class="note">Sign in using the admin email and password created in Supabase Authentication.</p>
+      <label class="field-label" for="adminEmail">Email</label>
+      <input id="adminEmail" class="text-input" type="email" autocomplete="username" placeholder="Admin email">
+      <label class="field-label" for="adminPassword">Password</label>
+      <input id="adminPassword" class="text-input" type="password" autocomplete="current-password" placeholder="Password">
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
+        <button class="outline" onclick="closeAdminLogin()">Cancel</button>
+        <button class="primary" id="adminLoginButton" onclick="adminLogin()">Sign in</button>
+      </div>
+      <p id="adminLoginError" class="note" style="color:#b42318"></p>
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD -->
+  <section id="admin" class="page">
+    <div class="admin-wrap">
+      <div class="admin-toolbar">
+        <div><div class="tag">Private area</div><h2 style="margin:8px 0 0">Speaker management</h2><p class="note" id="adminSignedInAs"></p></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="outline" onclick="loadSpeakerRequests()">↻ Refresh</button>
+          <button class="outline" onclick="adminLogout()">Log out</button>
+          <button class="outline" onclick="goHome()">Homepage</button>
+        </div>
+      </div>
+      <div class="admin-grid">
+        <div class="admin-stat"><span class="muted">Total requests</span><strong id="statTotal">0</strong></div>
+        <div class="admin-stat"><span class="muted">Awaiting review</span><strong id="statPending">0</strong></div>
+        <div class="admin-stat"><span class="muted">Approved</span><strong id="statApproved">0</strong></div>
+      </div>
+      <p class="note">Payment arrangement is handled manually outside Campus Chat. Add the amount and instructions here, then contact the applicant using their supplied details. Do not mark a request approved until you have verified payment and reviewed its content.</p>
+      <div id="speakerRequests"><div class="card">Loading Speaker requests...</div></div>
+    </div>
+  </section>
+
+  <!-- TERMS MODAL -->
+
+  <div id="termsModal" class="modalbg">
+    <div class="modal terms-modal">
+      <h2>Terms & Conditions</h2>
+
+      <div class="terms-content">
+        <h3>1. Age Requirement</h3>
+        <p>
+          Campus Chat is intended only for users who are 18 years old or above.
+          By using this platform, you confirm that you meet this age requirement.
+        </p>
+
+        <h3>2. User Conduct</h3>
+        <p>
+          You agree to communicate respectfully and not use the platform to
+          harass, threaten, exploit, impersonate, or harm other users. Illegal,
+          abusive, or inappropriate behavior may result in removal from the
+          platform.
+        </p>
+
+        <h3>3. Your Privacy</h3>
+        <p>
+          Do not share sensitive personal information such as passwords, bank
+          details, home addresses, or other private information with strangers.
+          You are responsible for the information you choose to share during a
+          conversation.
+        </p>
+
+        <h3>4. Disclaimer of Liability</h3>
+        <p>
+          Campus Chat provides a platform for users to have conversations with
+          other users. We do not guarantee the identity, intentions, accuracy,
+          or behavior of any user you may encounter.
+        </p>
+
+        <p>
+          To the extent permitted by applicable law, Campus Chat and its
+          operators are not liable for personal interactions, conversations,
+          information shared, or actions taken by users while using the platform.
+          Users participate in conversations at their own discretion and
+          responsibility.
+        </p>
+
+        <h3>5. Reporting and Safety</h3>
+        <p>
+          If another user behaves inappropriately, you may end the conversation
+          and submit a report. Reports may be reviewed to help maintain a safer
+          community.
+        </p>
+      </div>
+
+      <div style="text-align:right; margin-top:20px">
+        <button class="primary" onclick="closeTerms()">I Understand</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUPABASE -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    const SUPABASE_URL = 'https://ygnftivolxzznwdztccp.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_7zC9r6QUPYfP3A9uvmNPog_cFTXdG7K';
+
+    const supabaseClient = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    const schools = [
+      { name: 'University of the Philippines Diliman', region: 'Metro Manila' },
+      { name: 'University of the Philippines Manila', region: 'Metro Manila' },
+      { name: 'Ateneo de Manila University', region: 'Metro Manila' },
+      { name: 'De La Salle University', region: 'Metro Manila' },
+      { name: 'University of Santo Tomas', region: 'Metro Manila' },
+      { name: 'Polytechnic University of the Philippines', region: 'Metro Manila' },
+      { name: 'Far Eastern University', region: 'Metro Manila' },
+      { name: 'University of the East', region: 'Metro Manila' },
+      { name: 'Mapúa University', region: 'Metro Manila' },
+      { name: 'Adamson University', region: 'Metro Manila' },
+      { name: 'National University', region: 'Metro Manila' },
+      { name: 'Technological University of the Philippines', region: 'Metro Manila' },
+      { name: 'Centro Escolar University', region: 'Metro Manila' },
+      { name: 'University of Makati', region: 'Metro Manila' },
+      { name: 'Technological Institute of the Philippines', region: 'Metro Manila' },
+
+      { name: 'University of the Philippines Baguio', region: 'Luzon' },
+      { name: 'Saint Louis University', region: 'Luzon' },
+      { name: 'University of Baguio', region: 'Luzon' },
+      { name: 'University of the Philippines Los Baños', region: 'Luzon' },
+      { name: 'Cavite State University', region: 'Luzon' },
+      { name: 'De La Salle University – Dasmariñas', region: 'Luzon' },
+      { name: 'Laguna State Polytechnic University', region: 'Luzon' },
+      { name: 'Batangas State University', region: 'Luzon' },
+      { name: 'Bulacan State University', region: 'Luzon' },
+      { name: 'Tarlac State University', region: 'Luzon' },
+      { name: 'Holy Angel University', region: 'Luzon' },
+      { name: 'Bicol University', region: 'Luzon' },
+      { name: 'Ateneo de Naga University', region: 'Luzon' },
+      { name: 'Mariano Marcos State University', region: 'Luzon' },
+
+      { name: 'University of the Philippines Visayas', region: 'Visayas' },
+      { name: 'University of San Carlos', region: 'Visayas' },
+      { name: 'University of San Jose–Recoletos', region: 'Visayas' },
+      { name: 'University of Cebu', region: 'Visayas' },
+      { name: 'University of the Visayas', region: 'Visayas' },
+      { name: 'Cebu Technological University', region: 'Visayas' },
+      { name: 'Cebu Normal University', region: 'Visayas' },
+      { name: 'West Visayas State University', region: 'Visayas' },
+      { name: 'Central Philippine University', region: 'Visayas' },
+      { name: 'University of San Agustin', region: 'Visayas' },
+      { name: 'University of St. La Salle', region: 'Visayas' },
+      { name: 'Silliman University', region: 'Visayas' },
+      { name: 'Eastern Visayas State University', region: 'Visayas' },
+      { name: 'Leyte Normal University', region: 'Visayas' },
+
+      { name: 'Ateneo de Davao University', region: 'Mindanao' },
+      { name: 'University of Mindanao', region: 'Mindanao' },
+      { name: 'University of Southeastern Philippines', region: 'Mindanao' },
+      { name: 'University of the Philippines Mindanao', region: 'Mindanao' },
+      { name: 'Mindanao State University', region: 'Mindanao' },
+      { name: 'Mindanao State University – Iligan Institute of Technology', region: 'Mindanao' },
+      { name: 'Xavier University – Ateneo de Cagayan', region: 'Mindanao' },
+      { name: 'Central Mindanao University', region: 'Mindanao' },
+      { name: 'Caraga State University', region: 'Mindanao' },
+      { name: 'Western Mindanao State University', region: 'Mindanao' }
+    ];
+
+    let school = '';
+    let nickname = '';
+    let profileId = localStorage.getItem('campusChatProfileId');
+
+    let currentRoom = null;
+    let messageTimer = null;
+    let matchTimer = null;
+    let roomStatusTimer = null;
+
+    // ==========================================
+    // INACTIVITY SESSION MANAGEMENT
+    // ==========================================
+
+    const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+    let idleTimer = null;
+    let idleMonitorActive = false;
+    let sessionExpired = false;
+    let terminatingSession = false;
+    let adminUser = null;
+
+    /*
+      Start monitoring when the user intentionally starts chatting.
+
+      Any interaction resets the five-minute countdown.
+    */
+
+    function startIdleMonitor() {
+      stopIdleMonitor();
+
+      sessionExpired = false;
+      terminatingSession = false;
+      idleMonitorActive = true;
+
+      resetIdleTimer();
+    }
+
+    function resetIdleTimer() {
+      if (!idleMonitorActive || sessionExpired || terminatingSession) {
+        return;
+      }
+
+      clearTimeout(idleTimer);
+
+      idleTimer = setTimeout(() => {
+        terminateIdleSession();
+      }, IDLE_TIMEOUT_MS);
+    }
+
+    function stopIdleMonitor() {
+      clearTimeout(idleTimer);
+      idleTimer = null;
+      idleMonitorActive = false;
+    }
+
+    /*Activity detection.
+
+      These events count as user activity:
+      - Mouse movement
+      - Mouse clicks
+      - Keyboard input
+      - Scrolling
+      - Touch interactions
+      - Pointer interactions
+
+      Incoming messages and background polling do not
+      reset the inactivity countdown.
+    */
+
+    const activityEvents = [
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'scroll',
+      'touchstart',
+      'pointerdown',
+      'click'
+    ];
+
+    activityEvents.forEach(eventName => {
+      document.addEventListener(
+        eventName,
+        resetIdleTimer,
+        { passive: true }
+      );
+    });
+
+    /*
+      Terminate an inactive user's session.
+
+      This ends any active room and removes the user
+      from the matching queue.
+    */
+
+    async function terminateIdleSession() {
+      if (sessionExpired || terminatingSession) return;
+
+      terminatingSession = true;
+      sessionExpired = true;
+
+      stopIdleMonitor();
+      clearTimers();
+
+      // Disable chat immediately.
+      document.getElementById('input').disabled = true;
+      document.getElementById('sendButton').disabled = true;
+
+      document.getElementById('statusBadge').textContent =
+        'Session expired';
+
+      const expiredProfileId = profileId;
+
+      try {
+        if (expiredProfileId) {
+
+          // End every active room associated with this profile.
+          const { error: roomError } = await supabaseClient
+            .from('chat_rooms')
+            .update({ status: 'ended' })
+            .eq('status', 'active')
+            .or(
+              `user_one.eq.${expiredProfileId},user_two.eq.${expiredProfileId}`
+            );
+
+          if (roomError) {
+            console.error(
+              'Error ending inactive chat:',
+              roomError
+            );
+          }
+
+          // Remove the user from the matching queue.
+          const { error: waitingError } = await supabaseClient
+            .from('waiting_users')
+            .delete()
+            .eq('profile_id', expiredProfileId);
+
+          if (waitingError) {
+            console.error(
+              'Error removing inactive user from queue:',
+              waitingError
+            );
+          }
+        }
+
+      } catch (error) {
+        console.error('Inactivity cleanup error:', error);
+
+      } finally {
+        currentRoom = null;
+
+        // Reset the chat interface.
+        document.getElementById('msgs').innerHTML =
+          '<div class="system">Your previous session has expired.</div>';
+
+        document.getElementById('partnerName').textContent =
+          'Anonymous Student';
+
+        document.getElementById('schoolBadge').textContent =
+          'Anonymous';
+
+        document.getElementById('avatar').textContent = '?';
+
+        document.getElementById('statusBadge').textContent =
+          'Disconnected';
+
+        // Return to the homepage.
+        show('home');
+
+        alert(
+          'Your Campus Chat session has ended due to 5 minutes of inactivity. You have been removed from the matching queue.'
+        );
+
+        terminatingSession = false;
+      }
+    }
+
+    // ==========================================
+    // GENERAL NAVIGATION
+    // ==========================================
+
+    async function goHome() {
+      // Leaving an active match/chat ends it and removes any queue entry.
+      stopIdleMonitor();
+      clearTimers();
+      const leavingRoom = currentRoom;
+      currentRoom = null;
+      if (leavingRoom) {
+        const { error } = await supabaseClient.from('chat_rooms')
+          .update({ status: 'ended' }).eq('id', leavingRoom);
+        if (error) console.error('Could not end chat while returning home:', error);
+      }
+      if (profileId) {
+        const { error } = await supabaseClient.from('waiting_users')
+          .delete().eq('profile_id', profileId);
+        if (error) console.error('Could not remove waiting entry:', error);
+      }
+      sessionExpired = false;
+      terminatingSession = false;
+      document.getElementById('input').disabled = true;
+      document.getElementById('sendButton').disabled = true;
+      show('home');
+    }
+
+    function show(id) {
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+      });
+
+      document.getElementById(id).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    /* First-page agreement */
+
+    function toggleStartButton() {
+      const agreed = document.getElementById('termsAgreement').checked;
+      document.getElementById('startButton').disabled = !agreed;
+    }
+
+    function goToSetup() {
+      if (!document.getElementById('termsAgreement').checked) {
+        alert(
+          'Please confirm that you are 18 or older and agree to the Terms & Conditions.'
+        );
+        return;
+      }
+
+      show('setup');
+    }
+
+    function openTerms(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      document.getElementById('termsModal').classList.add('show');
+    }
+
+    function closeTerms() {
+      document.getElementById('termsModal').classList.remove('show');
+    }
+
+    // ==========================================
+    // SCHOOL SEARCH
+    // ==========================================
+
+    function filterSchools() {
+      const input = document.getElementById('schoolInput');
+      const results = document.getElementById('schoolResults');
+      const query = input.value.trim().toLowerCase();
+
+      results.innerHTML = '';
+
+      const matches = schools.filter(item =>
+        item.name.toLowerCase().includes(query)
+      );
+
+      if (query) {
+        matches.slice(0, 20).forEach(item => {
+          addSchoolOption(item.name);
+        });
+
+        if (!matches.some(item => item.name.toLowerCase() === query)) {
+          const custom = document.createElement('div');
+
+          custom.className = 'school-option';
+          custom.textContent = 'Use "' + input.value.trim() + '"';
+          custom.onclick = () => selectSchool(input.value.trim());
+
+          results.appendChild(custom);
+        }
+
+      } else {
+        const grouped = {};
+
+        schools.forEach(item => {
+          if (!grouped[item.region]) {
+            grouped[item.region] = [];
+          }
+
+          grouped[item.region].push(item);
+        });
+
+        Object.keys(grouped).forEach(region => {
+          const label = document.createElement('div');
+
+          label.className = 'school-region';
+          label.textContent = region;
+
+          results.appendChild(label);
+
+          grouped[region].forEach(item => {
+            addSchoolOption(item.name);
+          });
+        });
+      }
+
+      results.classList.add('show');
+    }
+
+    function addSchoolOption(schoolName) {
+      const results = document.getElementById('schoolResults');
+      const option = document.createElement('div');
+
+      option.className = 'school-option';
+      option.textContent = schoolName;
+      option.onclick = () => selectSchool(schoolName);
+
+      results.appendChild(option);
+    }
+
+    function selectSchool(schoolName) {
+      document.getElementById('schoolInput').value = schoolName;
+      document.getElementById('schoolResults').classList.remove('show');
+    }
+
+    document.addEventListener('click', event => {
+      const picker = document.querySelector('.school-picker');
+
+      if (picker && !picker.contains(event.target)) {
+        document
+          .getElementById('schoolResults')
+          .classList.remove('show');
+      }
+    });
+
+    // ==========================================
+    // START CHAT
+    // ==========================================
+
+    async function startChat() {
+      if (terminatingSession) return;
+
+      // Begin the inactivity countdown.
+      startIdleMonitor();
+
+      nickname = document.getElementById('nicknameInput').value.trim();
+      school = document.getElementById('schoolInput').value.trim();
+
+      showMatching(
+        'Finding someone to chat with...',
+        'Hang tight while we look for another student.'
+      );
+
+      const profileCreated = await createOrUpdateProfile();
+
+      // Prevent an expired session from continuing.
+      if (sessionExpired) return;
+
+      if (profileCreated) {
+        await findMatch();
+      }
+    }
+
+    async function createOrUpdateProfile() {
+      if (sessionExpired) return false;
+
+      if (!profileId) {
+        const { data, error } = await supabaseClient
+          .from('profiles')
+          .insert({
+            school: school || null,
+            nickname: nickname || null
+          })
+          .select()
+          .single();
+
+        if (sessionExpired) return false;
+
+        if (error) {
+          console.error(error);
+          stopIdleMonitor();
+
+          alert('Connection error. Please refresh and try again.');
+          show('setup');
+          return false;
+        }
+
+        profileId = data.id;
+        localStorage.setItem('campusChatProfileId', profileId);
+
+        return true;
+      }
+
+      const { error } = await supabaseClient
+        .from('profiles')
+        .update({
+          school: school || null,
+          nickname: nickname || null
+        })
+        .eq('id', profileId);
+
+      if (sessionExpired) return false;
+
+      if (error) {
+        console.error(error);
+        stopIdleMonitor();
+
+        alert('Connection error. Please refresh and try again.');
+        show('setup');
+        return false;
+      }
+
+      return true;
+    }
+
+    function showMatching(title, text) {
+      document.getElementById('matchingTitle').textContent = title;
+      document.getElementById('matchingText').textContent = text;
+
+      show('matching');
+    }
+
+    // ==========================================
+    // MATCHING
+    // ==========================================
+
+    async function findMatch() {
+      if (!profileId || sessionExpired || terminatingSession) return;
+
+      currentRoom = null;
+      clearTimers();
+
+      const { data: waiting, error } = await supabaseClient
+        .from('waiting_users')
+        .select('*')
+        .neq('profile_id', profileId)
+        .order('joined_at', { ascending: true })
+        .limit(1);
+
+      if (sessionExpired) return;
+
+      if (error) {
+        console.error(error);
+        stopIdleMonitor();
+
+        show('setup');
+        alert('Unable to search for a match. Please try again.');
+        return;
+      }
+
+      if (waiting && waiting.length > 0) {
+        const otherUser = waiting[0];
+
+        if (sessionExpired) return;
+
+        const { data: claimedUser, error: claimError } =
+          await supabaseClient
+            .from('waiting_users')
+            .delete()
+            .eq('profile_id', otherUser.profile_id)
+            .select()
+            .maybeSingle();
+
+        if (sessionExpired) return;
+
+        if (claimError || !claimedUser) {
+          if (!sessionExpired) {
+            setTimeout(findMatch, 500);
+          }
+          return;
+        }
+
+        const { data: room, error: roomError } = await supabaseClient
+          .from('chat_rooms')
+          .insert({
+            user_one: profileId,
+            user_two: otherUser.profile_id,
+            status: 'active'
+          })
+          .select()
+          .single();
+
+        // If the session expired during room creation,
+        // immediately end the newly created room.
+        if (sessionExpired) {
+          if (room && room.id) {
+            await supabaseClient
+              .from('chat_rooms')
+              .update({ status: 'ended' })
+              .eq('id', room.id);
+          }
+          return;
+        }
+
+        if (roomError || !room) {
+          console.error(roomError);
+
+          await supabaseClient
+            .from('waiting_users')
+            .upsert({
+              profile_id: otherUser.profile_id,
+              school: otherUser.school || null,
+              joined_at: otherUser.joined_at
+            });
+
+          if (!sessionExpired) {
+            setTimeout(findMatch, 1000);
+          }
+          return;
+        }
+
+        currentRoom = room.id;
+
+        await loadPartnerInfo(otherUser.profile_id);
+
+        if (sessionExpired) {
+          await supabaseClient
+            .from('chat_rooms')
+            .update({ status: 'ended' })
+            .eq('id', room.id);
+
+          return;
+        }
+
+        matched();
+        return;
+      }
+
+      if (sessionExpired) return;
+
+      const { error: waitError } = await supabaseClient
+        .from('waiting_users')
+        .upsert({
+          profile_id: profileId,
+          school: school || null,
+          joined_at: new Date().toISOString()
+        });
+
+      if (sessionExpired) {
+        // Remove the entry if the timeout occurred while joining.
+        await supabaseClient
+          .from('waiting_users')
+          .delete()
+          .eq('profile_id', profileId);
+
+        return;
+      }
+
+      if (waitError) {
+        console.error(waitError);
+        stopIdleMonitor();
+
+        show('setup');
+        alert('Unable to join the matching queue.');
+        return;
+      }
+
+      matchTimer = setInterval(checkForRoom, 2000);
+    }
+
+    async function checkForRoom() {
+      if (!profileId || currentRoom || sessionExpired) return;
+
+      const { data: rooms, error } = await supabaseClient
+        .from('chat_rooms')
+        .select('*')
+        .eq('status', 'active')
+        .or(`user_one.eq.${profileId},user_two.eq.${profileId}`)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (sessionExpired) return;
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      if (rooms && rooms.length > 0) {
+        const room = rooms[0];
+
+        if (room.user_one === room.user_two) {
+          return;
+        }
+
+        const partnerId =
+          room.user_one === profileId
+            ? room.user_two
+            : room.user_one;
+
+        currentRoom = room.id;
+
+        await supabaseClient
+          .from('waiting_users')
+          .delete()
+          .eq('profile_id', profileId);
+
+        if (sessionExpired) {
+          await supabaseClient
+            .from('chat_rooms')
+            .update({ status: 'ended' })
+            .eq('id', room.id);
+
+          return;
+        }
+
+        await loadPartnerInfo(partnerId);
+
+        if (sessionExpired) return;
+
+        matched();
+      }
+    }
+
+    // ==========================================
+    // PARTNER INFORMATION
+    // ==========================================
+
+    async function loadPartnerInfo(partnerId) {
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('nickname, school')
+        .eq('id', partnerId)
+        .single();
+
+      if (sessionExpired) return;
+
+      if (error || !data) {
+        document.getElementById('partnerName').textContent =
+          'Anonymous Student';
+
+        document.getElementById('schoolBadge').textContent =
+          '● Anonymous';
+
+        document.getElementById('avatar').textContent = '?';
+
+        return;
+      }
+
+      const partnerName =
+        data.nickname && data.nickname.trim()
+          ? data.nickname.trim()
+          : 'Anonymous Student';
+
+      document.getElementById('partnerName').textContent = partnerName;
+
+      document.getElementById('schoolBadge').textContent =
+        data.school
+          ? '🎓 ' + data.school
+          : '● Anonymous';
+
+      document.getElementById('avatar').textContent =
+        data.nickname && data.nickname.trim()
+          ? data.nickname.trim().charAt(0).toUpperCase()
+          : '?';
+    }
+
+    // ==========================================
+    // CONNECTED CHAT
+    // ==========================================
+
+    function matched() {
+      if (sessionExpired || terminatingSession) return;
+
+      clearInterval(matchTimer);
+      matchTimer = null;
+
+      show('chat');
+
+      document.getElementById('statusBadge').textContent = 'Connected';
+      document.getElementById('input').disabled = false;
+      document.getElementById('sendButton').disabled = false;
+
+      loadMessages();
+
+      messageTimer = setInterval(loadMessages, 1500);
+      roomStatusTimer = setInterval(checkRoomStatus, 2000);
+    }
+
+    async function checkRoomStatus() {
+      if (!currentRoom || sessionExpired) return;
+
+      const roomId = currentRoom;
+
+      const { data: room, error } = await supabaseClient
+        .from('chat_rooms')
+        .select('status')
+        .eq('id', roomId)
+        .single();
+
+      if (sessionExpired || currentRoom !== roomId) return;
+
+      if (error || !room) return;
+
+      if (room.status === 'ended') {
+        currentRoom = null;
+        clearTimers();
+
+        document.getElementById('statusBadge').textContent =
+          'Disconnected';
+
+        document.getElementById('input').disabled = true;
+        document.getElementById('sendButton').disabled = true;
+
+        show('ditched');
+      }
+    }
+
+    // ==========================================
+    // MESSAGES
+    // ==========================================
+
+    async function loadMessages() {
+      if (!currentRoom || sessionExpired) return;
+
+      const roomId = currentRoom;
+
+      const { data, error } = await supabaseClient
+        .from('messages')
+        .select('*')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: true });
+
+      if (sessionExpired || currentRoom !== roomId) return;
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      const container = document.getElementById('msgs');
+      container.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        container.innerHTML =
+          '<div class="system">You are connected! Say hello 👋</div>';
+      } else {
+        data.forEach(message => {
+          const div = document.createElement('div');
+
+          div.className =
+            message.sender_id === profileId
+              ? 'msg me'
+              : 'msg them';
+
+          div.textContent = message.content;
+
+          container.appendChild(div);
+        });
+      }
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function send() {
+      if (sessionExpired || terminatingSession) return;
+
+      const input = document.getElementById('input');
+      const content = input.value.trim();
+
+      if (!content || !currentRoom) return;
+
+      const roomId = currentRoom;
+
+      input.value = '';
+
+      const { error } = await supabaseClient
+        .from('messages')
+        .insert({
+          room_id: roomId,
+          sender_id: profileId,
+          content: content
+        });
+
+      if (sessionExpired || currentRoom !== roomId) return;
+
+      if (error) {
+        console.error(error);
+        alert('Your message could not be sent.');
+        return;
+      }
+
+      loadMessages();
+    }
+
+    // ==========================================
+    // SKIP CURRENT CONVERSATION
+    // ==========================================
+
+    function openSkipConfirmation() {
+      if (sessionExpired || terminatingSession || !currentRoom) return;
+      document.getElementById('skipConfirmModal').classList.add('show');
+    }
+
+    function closeSkipConfirmation() {
+      document.getElementById('skipConfirmModal').classList.remove('show');
+    }
+
+    async function confirmSkip() {
+      if (sessionExpired || terminatingSession || !currentRoom) return;
+
+      const oldRoom = currentRoom;
+      closeSkipConfirmation();
+      clearTimers();
+
+      // Clear the active room immediately so no further messages can be sent.
+      currentRoom = null;
+      document.getElementById('input').disabled = true;
+      document.getElementById('sendButton').disabled = true;
+      document.getElementById('statusBadge').textContent = 'Disconnected';
+
+      try {
+        const { error: roomError } = await supabaseClient
+          .from('chat_rooms')
+          .update({ status: 'ended' })
+          .eq('id', oldRoom);
+
+        if (roomError) {
+          console.error('Could not end skipped conversation:', roomError);
+        }
+
+        if (profileId) {
+          const { error: waitingError } = await supabaseClient
+            .from('waiting_users')
+            .delete()
+            .eq('profile_id', profileId);
+
+          if (waitingError) {
+            console.error('Could not remove user from queue:', waitingError);
+          }
+        }
+      } catch (error) {
+        console.error('Error ending skipped conversation:', error);
+      }
+
+      if (sessionExpired) return;
+
+      document.getElementById('msgs').innerHTML =
+        '<div class="system">You ended this conversation.</div>';
+      document.getElementById('partnerName').textContent = 'Anonymous Student';
+      document.getElementById('schoolBadge').textContent = 'Anonymous';
+      document.getElementById('avatar').textContent = '?';
+
+      // Deliberately do not call findMatch() here. The user must press New Chat.
+      show('ditched');
+    }
+
+    async function findSomeoneElse() {
+      if (sessionExpired || terminatingSession) return;
+
+      document.getElementById('msgs').innerHTML =
+        '<div class="system">Finding someone to chat with... 🔎</div>';
+
+      document.getElementById('statusBadge').textContent = 'Waiting';
+
+      showMatching(
+        'Finding someone new...',
+        'Hopefully this one sticks around. 😅'
+      );
+
+      await findMatch();
+    }
+
+    // ==========================================
+    // REPORT
+    // ==========================================
+
+    async function reportUser() {
+      if (!currentRoom || sessionExpired) {
+        alert('You need to be in a chat before reporting someone.');
+        return;
+      }
+
+      const reason = prompt(
+        'Briefly tell us why you are reporting this user:'
+      );
+
+      if (!reason) return;
+
+      if (sessionExpired || !currentRoom) return;
+
+      const { error } = await supabaseClient
+        .from('reports')
+        .insert({
+          reporter_id: profileId,
+          room_id: currentRoom,
+          reason: reason
+        });
+
+      if (sessionExpired) return;
+
+      if (error) {
+        console.error(error);
+        alert('The report could not be submitted.');
+        return;
+      }
+
+      alert('Thank you. Your report has been submitted.');
+    }
+
+    // ==========================================
+    // TIMERS
+    // ==========================================
+
+    function clearTimers() {
+      if (messageTimer) clearInterval(messageTimer);
+      if (matchTimer) clearInterval(matchTimer);
+      if (roomStatusTimer) clearInterval(roomStatusTimer);
+
+      messageTimer = null;
+      matchTimer = null;
+      roomStatusTimer = null;
+    }
+
+    // ==========================================
+    // SPEAKER REQUEST SUBMISSION
+    // ==========================================
+
+    function speaker() {
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function closeSpeaker() {
+      document.getElementById('modal').classList.remove('show');
+    }
+
+    async function submitSpeaker() {
+  const announcement = document.getElementById('announcement').value.trim();
+  const contactMethod = document.getElementById('speakerContactMethod').value;
+  const contactValue = document.getElementById('speakerContactValue').value.trim();
+  const button = document.getElementById('speakerSubmitButton');
+
+  if (!announcement) {
+    alert('Please write your announcement first.');
+    return;
+  }
+
+  if (!contactValue) {
+    alert('Please enter contact details so we can reach you.');
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Submitting...';
+
+  try {
+    const { error } = await supabaseClient
+      .from('speaker_requests')
+      .insert({
+        profile_id: profileId || null,
+        nickname: nickname || document.getElementById('nicknameInput').value.trim() || null,
+        school: school || document.getElementById('schoolInput').value.trim() || null,
+        contact_method: contactMethod,
+        contact_value: contactValue,
+        announcement: announcement,
+        status: 'pending_review'
+      });
+
+    if (error) {
+      console.error('Speaker request submission failed:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+
+      alert(
+        'We could not submit your request.\n\n' +
+        'Error: ' + error.message +
+        (error.details ? '\nDetails: ' + error.details : '')
+      );
+      return;
+    }
+
+    document.getElementById('announcement').value = '';
+    document.getElementById('speakerContactValue').value = '';
+
+    closeSpeaker();
+
+    alert(
+      'Your Speaker request has been submitted for review. ' +
+      'We will contact you using the details you provided.'
+    );
+
+  } catch (error) {
+    console.error('Unexpected Speaker submission error:', error);
+    alert('Something went wrong. Please try again.');
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Submit for review →';
+  }
+}
+
+    // ==========================================
+    // SUGGESTIONS
+    // ==========================================
+
+    function openSuggestion() {
+      document.getElementById('suggestionModal').classList.add('show');
+    }
+
+    function closeSuggestion() {
+      document.getElementById('suggestionModal').classList.remove('show');
+    }
+
+    async function submitSuggestion() {
+      const suggestion = document.getElementById('suggestionText').value.trim();
+      const button = document.getElementById('suggestionSubmitButton');
+
+      if (!suggestion) {
+        alert('Please write your suggestion first.');
+        return;
+      }
+
+      if (suggestion.length > 1500) {
+        alert('Your suggestion must not exceed 1,500 characters.');
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'Submitting...';
+
+      try {
+        const { error } = await supabaseClient
+          .from('suggestions')
+          .insert({
+            profile_id: profileId || null,
+            nickname: nickname || document.getElementById('nicknameInput').value.trim() || null,
+            school: school || document.getElementById('schoolInput').value.trim() || null,
+            suggestion
+          });
+
+        if (error) {
+          console.error('Suggestion submission failed:', error);
+          alert('Your suggestion could not be submitted. Please try again.');
+          return;
+        }
+
+        document.getElementById('suggestionText').value = '';
+        closeSuggestion();
+        alert('Thank you! Your suggestion has been submitted successfully.');
+      } catch (error) {
+        console.error('Unexpected suggestion error:', error);
+        alert('Something went wrong. Please try again.');
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Submit suggestion →';
+      }
+    }
+
+    // ==========================================
+    // ADMIN AUTHENTICATION & DASHBOARD
+    // ==========================================
+
+    function openAdmin() {
+      if (adminUser) { show('admin'); loadSpeakerRequests(); return; }
+      document.getElementById('adminLoginError').textContent = '';
+      document.getElementById('adminLoginModal').classList.add('show');
+    }
+
+    function closeAdminLogin() {
+      document.getElementById('adminLoginModal').classList.remove('show');
+    }
+
+    async function adminLogin() {
+      const email = document.getElementById('adminEmail').value.trim();
+      const password = document.getElementById('adminPassword').value;
+      const button = document.getElementById('adminLoginButton');
+      const errorBox = document.getElementById('adminLoginError');
+      errorBox.textContent = '';
+      if (!email || !password) { errorBox.textContent = 'Enter both your email and password.'; return; }
+      button.disabled = true; button.textContent = 'Signing in...';
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      button.disabled = false; button.textContent = 'Sign in';
+      if (error || !data.user) {
+        errorBox.textContent = error?.message || 'Sign-in failed.';
+        return;
+      }
+      const { data: adminRecord, error: adminError } = await supabaseClient
+        .from('admin_users').select('user_id').eq('user_id', data.user.id).maybeSingle();
+      if (adminError || !adminRecord) {
+        await supabaseClient.auth.signOut();
+        errorBox.textContent = 'This account is not authorized as a Campus Chat admin.';
+        return;
+      }
+      adminUser = data.user;
+      closeAdminLogin();
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('adminSignedInAs').textContent = 'Signed in as ' + (adminUser.email || 'admin');
+      show('admin');
+      await loadSpeakerRequests();
+    }
+
+    async function adminLogout() {
+      await supabaseClient.auth.signOut();
+      adminUser = null;
+      show('home');
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+      })[char]);
+    }
+
+    function toLocalDateTimeInput(isoValue) {
+      if (!isoValue) return '';
+      const date = new Date(isoValue);
+      if (Number.isNaN(date.getTime())) return '';
+      const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      return local.toISOString().slice(0, 16);
+    }
+
+    async function loadSpeakerRequests() {
+      const container = document.getElementById('speakerRequests');
+      if (!adminUser) { container.innerHTML = '<div class="card">Please sign in as an admin.</div>'; return; }
+      container.innerHTML = '<div class="card">Loading Speaker requests...</div>';
+      const { data, error } = await supabaseClient.from('speaker_requests')
+        .select('*').order('created_at', { ascending: false });
+      if (error) {
+        console.error(error);
+        container.innerHTML = '<div class="card">Could not load requests. Check the admin_users and speaker_requests RLS policies.</div>';
+        return;
+      }
+      const rows = data || [];
+      document.getElementById('statTotal').textContent = rows.length;
+      document.getElementById('statPending').textContent = rows.filter(r => r.status === 'pending_review').length;
+      document.getElementById('statApproved').textContent = rows.filter(r => r.status === 'approved').length;
+      if (!rows.length) { container.innerHTML = '<div class="card">No Speaker requests yet.</div>'; return; }
+      container.innerHTML = rows.map(r => `
+        <article class="request-card" data-request-id="${escapeHTML(r.id)}">
+          <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+            <b>${escapeHTML(r.nickname || 'Anonymous applicant')} ${r.school ? '· ' + escapeHTML(r.school) : ''}</b>
+            <span class="status-pill">${escapeHTML((r.status || '').replaceAll('_',' '))}</span>
+          </div>
+          <p class="muted">Submitted ${escapeHTML(new Date(r.created_at).toLocaleString())}</p>
+          <p style="white-space:pre-wrap">${escapeHTML(r.announcement)}</p>
+          <p><b>Contact:</b> ${escapeHTML(r.contact_method)} — ${escapeHTML(r.contact_value)}</p>
+          <div class="request-fields">
+            <label><span class="muted">Request status</span><select id="status-${escapeHTML(r.id)}">
+              <option value="pending_review" ${r.status==='pending_review'?'selected':''}>Pending review</option>
+              <option value="awaiting_payment" ${r.status==='awaiting_payment'?'selected':''}>Awaiting payment</option>
+              <option value="payment_verification" ${r.status==='payment_verification'?'selected':''}>Payment verification</option>
+              <option value="approved" ${r.status==='approved'?'selected':''}>Approved</option>
+              <option value="rejected" ${r.status==='rejected'?'selected':''}>Rejected</option>
+            </select></label>
+            <label><span class="muted">Agreed payment amount (PHP)</span><input id="amount-${escapeHTML(r.id)}" type="number" min="0" step="0.01" value="${r.payment_amount ?? ''}" placeholder="e.g. 150"></label>
+          </div>
+          <label class="field-label">Announcement expiration date and time (required for approval)</label>
+          <input class="text-input" id="expires-${escapeHTML(r.id)}" type="datetime-local" value="${escapeHTML(toLocalDateTimeInput(r.expires_at))}">
+          <p class="muted">The announcement will automatically stop appearing after this date and time (Philippine local time in this browser).</p>
+          <label class="field-label">Manual payment instructions / next steps</label>
+          <textarea id="instructions-${escapeHTML(r.id)}" placeholder="Describe how you will contact the applicant and arrange payment...">${escapeHTML(r.payment_instructions || '')}</textarea>
+          <label class="field-label">Payment reference (optional)</label>
+          <input class="text-input" id="reference-${escapeHTML(r.id)}" value="${escapeHTML(r.payment_reference || '')}" placeholder="Reference or confirmation details">
+          <label class="field-label">Private admin notes</label>
+          <textarea id="notes-${escapeHTML(r.id)}" placeholder="Internal notes; not shown to the applicant">${escapeHTML(r.admin_notes || '')}</textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="primary" onclick="saveSpeakerRequest('${escapeHTML(r.id)}')">Save changes</button></div>
+        </article>`).join('');
+    }
+
+    async function saveSpeakerRequest(id) {
+      if (!adminUser) { alert('Please sign in as admin.'); return; }
+
+      const amountRaw = document.getElementById('amount-' + id).value;
+      const amount = amountRaw === '' ? null : Number(amountRaw);
+      if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
+        alert('Enter a valid payment amount.');
+        return;
+      }
+
+      const status = document.getElementById('status-' + id).value;
+      const expiryRaw = document.getElementById('expires-' + id).value;
+      let expiresAt = null;
+
+      if (expiryRaw) {
+        const parsedExpiry = new Date(expiryRaw);
+        if (Number.isNaN(parsedExpiry.getTime())) {
+          alert('Please enter a valid expiration date and time.');
+          return;
+        }
+        expiresAt = parsedExpiry.toISOString();
+      }
+
+      if (status === 'approved' && (!expiresAt || new Date(expiresAt).getTime() <= Date.now())) {
+        alert('Set an expiration date and time in the future before approving this announcement.');
+        return;
+      }
+
+      const updates = {
+        status,
+        expires_at: expiresAt,
+        payment_amount: amount,
+        payment_instructions: document.getElementById('instructions-' + id).value.trim() || null,
+        payment_reference: document.getElementById('reference-' + id).value.trim() || null,
+        admin_notes: document.getElementById('notes-' + id).value.trim() || null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data: request, error } = await supabaseClient
+        .from('speaker_requests')
+        .update(updates)
+        .eq('id', id)
+        .select('id, announcement, status, expires_at')
+        .single();
+
+      if (error || !request) {
+        console.error(error);
+        alert('Could not save this request. Check the admin update policy and column grants.');
+        return;
+      }
+
+      // Keep public content in a separate table so applicant contact details,
+      // payment information, and admin notes are never exposed to visitors.
+      if (request.status === 'approved') {
+        const { error: publishError } = await supabaseClient
+          .from('public_announcements')
+          .upsert({
+            request_id: request.id,
+            announcement: request.announcement,
+            expires_at: request.expires_at,
+            published_at: new Date().toISOString()
+          }, { onConflict: 'request_id' });
+
+        if (publishError) {
+          console.error('Announcement publication failed:', publishError);
+          alert('The request was saved as approved, but publishing failed. Check the public_announcements admin policy, then save again.');
+          await loadSpeakerRequests();
+          return;
+        }
+      } else {
+        const { error: unpublishError } = await supabaseClient
+          .from('public_announcements')
+          .delete()
+          .eq('request_id', id);
+
+        if (unpublishError) {
+          console.error('Announcement removal failed:', unpublishError);
+          alert('The request status was saved, but the public announcement could not be removed. Check the public_announcements admin delete policy.');
+          await loadSpeakerRequests();
+          return;
+        }
+      }
+
+      alert(request.status === 'approved'
+        ? 'Announcement approved and published. It will disappear automatically at its expiration time.'
+        : 'Speaker request updated. Any previously published announcement has been unpublished.');
+      await loadSpeakerRequests();
+    }
+
+    // Restore an existing Supabase admin session on page load.
+    async function restoreAdminSession() {
+      const { data } = await supabaseClient.auth.getSession();
+      if (!data?.session?.user) return;
+      const user = data.session.user;
+      const { data: record } = await supabaseClient.from('admin_users')
+        .select('user_id').eq('user_id', user.id).maybeSingle();
+      if (record) {
+        adminUser = user;
+        document.getElementById('adminSignedInAs').textContent = 'Signed in as ' + (user.email || 'admin');
+      }
+    }
+
+    // ==========================================
+    // REFRESH / PAGE LOAD CLEANUP
+    // ==========================================
+
+    /*
+      When a user reloads the website:
+
+      1. Any active chat connected to their profile is ended.
+      2. Their previous partner detects the ended room.
+      3. The user is removed from the waiting list.
+      4. They are not automatically placed back in the queue.
+
+      The inactivity monitor is also stopped on page reload.
+    */
+
+    async function cleanupPreviousConnection() {
+      if (!profileId) return;
+
+      try {
+        const { error: roomError } = await supabaseClient
+          .from('chat_rooms')
+          .update({ status: 'ended' })
+          .eq('status', 'active')
+          .or(
+            `user_one.eq.${profileId},user_two.eq.${profileId}`
+          );
+
+        if (roomError) {
+          console.error(
+            'Error ending previous connection:',
+            roomError
+          );
+        }
+
+        const { error: waitingError } = await supabaseClient
+          .from('waiting_users')
+          .delete()
+          .eq('profile_id', profileId);
+
+        if (waitingError) {
+          console.error(
+            'Error removing previous waiting status:',
+            waitingError
+          );
+        }
+
+      } catch (error) {
+        console.error(
+          'Error cleaning up previous connection:',
+          error
+        );
+      }
+    }
+
+    // ==========================================
+    // PUBLIC ANNOUNCEMENTS
+    // ==========================================
+
+    let announcementChannel = null;
+    let announcementExpiryTimer = null;
+
+    async function loadPublicAnnouncements() {
+      const container = document.getElementById('publicAnnouncements');
+      if (!container) return;
+
+      const now = new Date().toISOString();
+      const { data, error } = await supabaseClient
+        .from('public_announcements')
+        .select('id, announcement, expires_at, published_at')
+        .gt('expires_at', now)
+        .order('published_at', { ascending: false });
+
+      if (error) {
+        // Public announcement loading should never block the chat website.
+        console.error('Could not load public announcements:', error);
+        return;
+      }
+
+      container.replaceChildren();
+
+      (data || []).forEach(item => {
+        const article = document.createElement('article');
+        article.className = 'announcement-item';
+
+        const heading = document.createElement('div');
+        heading.className = 'announcement-heading';
+        heading.textContent = '📣 CAMPUS ANNOUNCEMENT';
+
+        const copy = document.createElement('div');
+        copy.className = 'announcement-copy';
+        copy.textContent = item.announcement || '';
+
+        const expiry = document.createElement('small');
+        expiry.className = 'announcement-expiry';
+        expiry.textContent = 'Until ' + new Date(item.expires_at).toLocaleString();
+
+        article.append(heading, copy, expiry);
+        container.appendChild(article);
+      });
+
+      container.classList.toggle('show', (data || []).length > 0);
+
+      // Re-query at the nearest expiration so an open tab hides expired content
+      // even when no database change event occurs at that exact moment.
+      clearTimeout(announcementExpiryTimer);
+      const nextExpiry = (data || [])
+        .map(item => new Date(item.expires_at).getTime())
+        .filter(time => Number.isFinite(time) && time > Date.now())
+        .sort((a, b) => a - b)[0];
+
+      if (nextExpiry) {
+        announcementExpiryTimer = setTimeout(
+          loadPublicAnnouncements,
+          Math.min(Math.max(nextExpiry - Date.now() + 1000, 1000), 2147483000)
+        );
+      }
+    }
+
+    function subscribeToPublicAnnouncements() {
+      if (announcementChannel) return;
+
+      announcementChannel = supabaseClient
+        .channel('campus-chat-public-announcements')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'public_announcements'
+        }, () => loadPublicAnnouncements())
+        .subscribe();
+
+      loadPublicAnnouncements();
+    }
+
+    // Refresh when a background tab becomes visible again (for delayed timers).
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) loadPublicAnnouncements();
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await cleanupPreviousConnection();
+      await restoreAdminSession();
+      subscribeToPublicAnnouncements();
+    });
+
+  </script>
+
+</body>
+</html>
