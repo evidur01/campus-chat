@@ -2186,94 +2186,172 @@
         </article>`).join('');
     }
 
-    async function saveSpeakerRequest(id) {
-      if (!adminUser) { alert('Please sign in as admin.'); return; }
+ 
+async function saveSpeakerRequest(id) {
+  if (!adminUser) {
+    alert('Please sign in as admin.');
+    return;
+  }
 
-      const amountRaw = document.getElementById('amount-' + id).value;
-      const amount = amountRaw === '' ? null : Number(amountRaw);
-      if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
-        alert('Enter a valid payment amount.');
-        return;
-      }
+  const amountInput = document.getElementById('amount-' + id);
+  const statusInput = document.getElementById('status-' + id);
+  const expiryInput = document.getElementById('expires-' + id);
+  const instructionsInput = document.getElementById('instructions-' + id);
+  const referenceInput = document.getElementById('reference-' + id);
+  const notesInput = document.getElementById('notes-' + id);
 
-      const status = document.getElementById('status-' + id).value;
-      const expiryRaw = document.getElementById('expires-' + id).value;
-      let expiresAt = null;
+  if (
+    !amountInput || !statusInput || !expiryInput ||
+    !instructionsInput || !referenceInput || !notesInput
+  ) {
+    alert('Could not find all request fields. Refresh the page and try again.');
+    return;
+  }
 
-      if (expiryRaw) {
-        const parsedExpiry = new Date(expiryRaw);
-        if (Number.isNaN(parsedExpiry.getTime())) {
-          alert('Please enter a valid expiration date and time.');
-          return;
-        }
-        expiresAt = parsedExpiry.toISOString();
-      }
+  // Validate payment amount.
+  const amountRaw = amountInput.value;
+  const amount = amountRaw === '' ? null : Number(amountRaw);
 
-      if (status === 'approved' && (!expiresAt || new Date(expiresAt).getTime() <= Date.now())) {
-        alert('Set an expiration date and time in the future before approving this announcement.');
-        return;
-      }
+  if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
+    alert('Enter a valid payment amount.');
+    return;
+  }
 
-      const updates = {
-        status,
-        expires_at: expiresAt,
-        payment_amount: amount,
-        payment_instructions: document.getElementById('instructions-' + id).value.trim() || null,
-        payment_reference: document.getElementById('reference-' + id).value.trim() || null,
-        admin_notes: document.getElementById('notes-' + id).value.trim() || null,
-        updated_at: new Date().toISOString()
-      };
+  // Validate status and expiration.
+  const status = statusInput.value;
+  const expiryRaw = expiryInput.value;
+  let expiresAt = null;
 
-      const { data: request, error } = await supabaseClient
-        .from('speaker_requests')
-        .update(updates)
-        .eq('id', id)
-        .select('id, announcement, status, expires_at')
-        .single();
+  if (expiryRaw) {
+    const parsedExpiry = new Date(expiryRaw);
 
-      if (error || !request) {
-        console.error(error);
-        alert('Could not save this request. Check the admin update policy and column grants.');
-        return;
-      }
-
-      // Keep public content in a separate table so applicant contact details,
-      // payment information, and admin notes are never exposed to visitors.
-      if (request.status === 'approved') {
-        const { error: publishError } = await supabaseClient
-          .from('public_announcements')
-          .upsert({
-            request_id: request.id,
-            announcement: request.announcement,
-            expires_at: request.expires_at,
-            published_at: new Date().toISOString()
-          }, { onConflict: 'request_id' });
-
-        if (publishError) {
-          console.error('Announcement publication failed:', publishError);
-          alert('The request was saved as approved, but publishing failed. Check the public_announcements admin policy, then save again.');
-          await loadSpeakerRequests();
-          return;
-        }
-      } else {
-        const { error: unpublishError } = await supabaseClient
-          .from('public_announcements')
-          .delete()
-          .eq('request_id', id);
-
-        if (unpublishError) {
-          console.error('Announcement removal failed:', unpublishError);
-          alert('The request status was saved, but the public announcement could not be removed. Check the public_announcements admin delete policy.');
-          await loadSpeakerRequests();
-          return;
-        }
-      }
-
-      alert(request.status === 'approved'
-        ? 'Announcement approved and published. It will disappear automatically at its expiration time.'
-        : 'Speaker request updated. Any previously published announcement has been unpublished.');
-      await loadSpeakerRequests();
+    if (Number.isNaN(parsedExpiry.getTime())) {
+      alert('Please enter a valid expiration date and time.');
+      return;
     }
+
+    expiresAt = parsedExpiry.toISOString();
+  }
+
+  if (
+    status === 'approved' &&
+    (!expiresAt || new Date(expiresAt).getTime() <= Date.now())
+  ) {
+    alert('Set an expiration date and time in the future before approving this announcement.');
+    return;
+  }
+
+  // Save the admin's changes to the private request table.
+  const updates = {
+    status: status,
+    expires_at: expiresAt,
+    payment_amount: amount,
+    payment_instructions: instructionsInput.value.trim() || null,
+    payment_reference: referenceInput.value.trim() || null,
+    admin_notes: notesInput.value.trim() || null,
+    updated_at: new Date().toISOString()
+  };
+
+  const { data: request, error: saveError } = await supabaseClient
+    .from('speaker_requests')
+    .update(updates)
+    .eq('id', id)
+    .select('id, announcement, status, expires_at')
+    .single();
+
+  if (saveError || !request) {
+    console.error('Saving speaker request failed:', {
+      message: saveError?.message,
+      details: saveError?.details,
+      hint: saveError?.hint,
+      code: saveError?.code
+    });
+
+    alert(
+      'Could not save this request.\n\n' +
+      'Error: ' + (saveError?.message || 'No request was returned') +
+      '\nCode: ' + (saveError?.code || 'N/A') +
+      '\nDetails: ' + (saveError?.details || 'N/A') +
+      '\nHint: ' + (saveError?.hint || 'N/A')
+    );
+
+    return;
+  }
+
+  // Publish approved announcements to the separate public table.
+  // This keeps applicant contact details, payment information,
+  // and private admin notes away from public visitors.
+  if (request.status === 'approved') {
+    const announcementData = {
+      request_id: request.id,
+      announcement: request.announcement,
+      expires_at: request.expires_at,
+      published_at: new Date().toISOString()
+    };
+
+    const { error: publishError } = await supabaseClient
+      .from('public_announcements')
+      .upsert(announcementData, {
+        onConflict: 'request_id'
+      });
+
+    if (publishError) {
+      console.error('Announcement publication failed:', {
+        message: publishError.message,
+        details: publishError.details,
+        hint: publishError.hint,
+        code: publishError.code
+      });
+
+      alert(
+        'The request was saved as approved, but publishing failed.\n\n' +
+        'Error: ' + (publishError.message || 'Unknown error') +
+        '\nCode: ' + (publishError.code || 'N/A') +
+        '\nDetails: ' + (publishError.details || 'N/A') +
+        '\nHint: ' + (publishError.hint || 'N/A')
+      );
+
+      await loadSpeakerRequests();
+      return;
+    }
+
+  } else {
+    // If the request is no longer approved, remove its public announcement.
+    const { error: unpublishError } = await supabaseClient
+      .from('public_announcements')
+      .delete()
+      .eq('request_id', id);
+
+    if (unpublishError) {
+      console.error('Announcement removal failed:', {
+        message: unpublishError.message,
+        details: unpublishError.details,
+        hint: unpublishError.hint,
+        code: unpublishError.code
+      });
+
+      alert(
+        'The request status was saved, but the public announcement could not be removed.\n\n' +
+        'Error: ' + (unpublishError.message || 'Unknown error') +
+        '\nCode: ' + (unpublishError.code || 'N/A') +
+        '\nDetails: ' + (unpublishError.details || 'N/A') +
+        '\nHint: ' + (unpublishError.hint || 'N/A')
+      );
+
+      await loadSpeakerRequests();
+      return;
+    }
+  }
+
+  alert(
+    request.status === 'approved'
+      ? 'Announcement approved and published. It will disappear automatically at its expiration time.'
+      : 'Speaker request updated. Any previously published announcement has been unpublished.'
+  );
+
+  await loadSpeakerRequests();
+}
+
 
     // Restore an existing Supabase admin session on page load.
     async function restoreAdminSession() {
