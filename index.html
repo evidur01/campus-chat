@@ -1853,37 +1853,71 @@
       document.getElementById('modal').classList.remove('show');
     }
 
-    async function submitSpeaker() {
-      const announcement = document.getElementById('announcement').value.trim();
-      const contactMethod = document.getElementById('speakerContactMethod').value;
-      const contactValue = document.getElementById('speakerContactValue').value.trim();
-      const button = document.getElementById('speakerSubmitButton');
-      if (!announcement) { alert('Please write your announcement first.'); return; }
-      if (!contactValue) { alert('Please enter contact details so we can reach you.'); return; }
-      button.disabled = true;
-      button.textContent = 'Submitting...';
-      const { data, error } = await supabaseClient.from('speaker_requests').insert({
+async function submitSpeaker() {
+  const announcement = document.getElementById('announcement').value.trim();
+  const contactMethod = document.getElementById('speakerContactMethod').value;
+  const contactValue = document.getElementById('speakerContactValue').value.trim();
+  const button = document.getElementById('speakerSubmitButton');
+
+  if (!announcement) {
+    alert('Please write your announcement first.');
+    return;
+  }
+
+  if (!contactValue) {
+    alert('Please enter contact details so we can reach you.');
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Submitting...';
+
+  try {
+    const { error } = await supabaseClient
+      .from('speaker_requests')
+      .insert({
         profile_id: profileId || null,
         nickname: nickname || document.getElementById('nicknameInput').value.trim() || null,
         school: school || document.getElementById('schoolInput').value.trim() || null,
         contact_method: contactMethod,
         contact_value: contactValue,
-        announcement,
+        announcement: announcement,
         status: 'pending_review'
-      }).select('id').maybeSingle();
-      button.disabled = false;
-      button.textContent = 'Submit for review →';
-      if (error) {
-        console.error('Speaker request submission failed:', error);
-        alert('We could not submit your request. Please try again later. If this continues, check the speaker_requests table permissions and RLS policies in Supabase.');
-        return;
-      }
-      document.getElementById('announcement').value = '';
-      document.getElementById('speakerContactValue').value = '';
-      closeSpeaker();
-      alert('Your Speaker request has been submitted for review. We will contact you using the details you provided to discuss manual payment if your request is accepted.');
+      });
+
+    if (error) {
+      console.error('Speaker request submission failed:', error);
+
+      alert(
+        'Submission failed.\n\n' +
+        'Error: ' + error.message +
+        '\nCode: ' + (error.code || 'Not available') +
+        '\nDetails: ' + (error.details || 'None') +
+        '\nHint: ' + (error.hint || 'None')
+      );
+
+      return;
     }
 
+    document.getElementById('announcement').value = '';
+    document.getElementById('speakerContactValue').value = '';
+
+    closeSpeaker();
+
+    alert(
+      'Your Speaker request has been submitted for review. We will contact you using the details you provided to discuss manual payment if your request is accepted.'
+    );
+
+  } catch (error) {
+    console.error('Unexpected Speaker submission error:', error);
+
+    alert('Unexpected error: ' + error.message);
+
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Submit for review →';
+  }
+}
     // ==========================================
     // ADMIN AUTHENTICATION & DASHBOARD
     // ==========================================
