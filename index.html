@@ -356,6 +356,102 @@
       margin-bottom: 10px;
     }
 
+    /* Ditched screen */
+    .ditched-wrap {
+      max-width: 600px;
+      margin: 70px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .ditched-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 45px 28px;
+      box-shadow: 0 16px 45px #2d21610d;
+      overflow: hidden;
+    }
+
+    .escape-scene {
+      height: 125px;
+      position: relative;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+
+    .runner {
+      position: absolute;
+      left: 50%;
+      top: 20px;
+      font-size: 64px;
+      animation: runAway 3.5s ease-in infinite;
+    }
+
+    .dust {
+      position: absolute;
+      left: 30%;
+      top: 68px;
+      font-size: 25px;
+      opacity: 0;
+      animation: dustAway 3.5s ease-in infinite;
+    }
+
+    @keyframes runAway {
+      0% {
+        transform: translateX(-50%) rotate(0deg);
+        opacity: 1;
+      }
+      20% {
+        transform: translateX(-30%) rotate(-8deg);
+      }
+      45% {
+        transform: translateX(90%) rotate(8deg);
+      }
+      70% {
+        transform: translateX(260%) rotate(0deg);
+        opacity: 1;
+      }
+      85%, 100% {
+        transform: translateX(350%);
+        opacity: 0;
+      }
+    }
+
+    @keyframes dustAway {
+      0%, 15% {
+        opacity: 0;
+      }
+      25%, 65% {
+        opacity: 1;
+      }
+      85%, 100% {
+        opacity: 0;
+      }
+    }
+
+    .sad-face {
+      font-size: 45px;
+      display: inline-block;
+      animation: sadBounce 2s ease-in-out infinite;
+      margin: 5px 0 10px;
+    }
+
+    @keyframes sadBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(7px); }
+    }
+
+    .ditched-card h2 {
+      margin: 8px 0 10px;
+      font-size: 30px;
+    }
+
+    .ditched-card .primary {
+      margin-top: 20px;
+      width: min(300px, 100%);
+    }
+
     @media(max-width: 760px) {
       .hero {
         grid-template-columns: 1fr;
@@ -467,6 +563,31 @@
   </div>
 </section>
 
+<!-- Funny disconnected / ditched screen -->
+<section id="ditched" class="page">
+  <div class="ditched-wrap">
+    <div class="ditched-card">
+      <div class="escape-scene">
+        <div class="dust">💨💨</div>
+        <div class="runner">🏃</div>
+      </div>
+
+      <div class="sad-face">🥲</div>
+
+      <div class="tag">Connection ended</div>
+      <h2>Well... they ditched you.</h2>
+
+      <p class="lead" style="font-size:16px">
+        Don't take it personally. Maybe their mom called them for dinner. 🍗😂
+      </p>
+
+      <button class="primary" onclick="findSomeoneElse()">
+        🎲 Find someone else
+      </button>
+    </div>
+  </div>
+</section>
+
 <section id="chat" class="page">
   <div class="chat-wrap">
     <main class="chat">
@@ -562,7 +683,10 @@
     document.getElementById('schoolBadge').textContent =
       school ? '🎓 ' + school : '● Anonymous';
 
-    showMatching('Finding someone to chat with...', 'Hang tight while we look for another student.');
+    showMatching(
+      'Finding someone to chat with...',
+      'Hang tight while we look for another student.'
+    );
 
     await createProfile();
     await findMatch();
@@ -601,7 +725,10 @@
     currentRoom = null;
     clearTimers();
 
-    showMatching('Finding someone to chat with...', 'Hang tight while we look for another student.');
+    showMatching(
+      'Finding someone to chat with...',
+      'Hang tight while we look for another student.'
+    );
 
     const { data: waiting, error } = await supabaseClient
       .from('waiting_users')
@@ -731,17 +858,22 @@
       document.getElementById('input').disabled = true;
       document.getElementById('sendButton').disabled = true;
 
-      showSystemMessage('Your chat partner has disconnected.');
-
-      setTimeout(() => {
-        showMatching(
-          'Your chat partner left.',
-          'Finding someone new for you to talk to...'
-        );
-
-        findMatch();
-      }, 1800);
+      show('ditched');
     }
+  }
+
+  function findSomeoneElse() {
+    document.getElementById('msgs').innerHTML =
+      '<div class="system">Finding someone to chat with... 🔎</div>';
+
+    document.getElementById('statusBadge').textContent = 'Waiting';
+
+    showMatching(
+      'Finding someone new...',
+      'Hopefully this one sticks around. 😅'
+    );
+
+    findMatch();
   }
 
   async function loadMessages() {
@@ -823,6 +955,9 @@
       .eq('profile_id', profileId);
 
     currentRoom = null;
+
+    document.getElementById('msgs').innerHTML =
+      '<div class="system">Finding someone to chat with... 🔎</div>';
 
     showMatching(
       'Finding your next conversation...',
