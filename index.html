@@ -42,6 +42,11 @@
     button, input, textarea { font: inherit; }
     button { cursor: pointer; }
 
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
     .primary {
       background: var(--purple);
       color: white;
@@ -93,6 +98,42 @@
     .hero .lead {
       max-width: 620px;
       margin: 0 auto 28px;
+    }
+
+    .agreement {
+      max-width: 520px;
+      margin: 0 auto 20px;
+      padding: 15px 18px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      text-align: left;
+    }
+
+    .agreement label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #665f76;
+    }
+
+    .agreement input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      margin-top: 2px;
+      flex-shrink: 0;
+      accent-color: var(--purple);
+      cursor: pointer;
+    }
+
+    .terms-link {
+      color: var(--purple);
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
     }
 
     .features {
@@ -441,6 +482,7 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
+      z-index: 100;
     }
 
     .modalbg.show { display: flex; }
@@ -450,6 +492,8 @@
       width: min(500px, 100%);
       padding: 25px;
       border-radius: 22px;
+      max-height: 85vh;
+      overflow-y: auto;
     }
 
     .modal textarea {
@@ -459,6 +503,22 @@
       border-radius: 11px;
       padding: 12px;
       resize: vertical;
+    }
+
+    .terms-modal {
+      width: min(650px, 100%);
+    }
+
+    .terms-content h3 {
+      margin: 20px 0 7px;
+      font-size: 16px;
+    }
+
+    .terms-content p {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #665f76;
+      margin: 0 0 10px;
     }
 
     @media(max-width: 760px) {
@@ -508,7 +568,29 @@
       in the Philippines.
     </p>
 
-    <button class="primary" onclick="show('setup')">
+    <div class="agreement">
+      <label>
+        <input
+          type="checkbox"
+          id="termsAgreement"
+          onchange="toggleStartButton()"
+        >
+        <span>
+          I confirm that I am <b>18 years old or above</b> and I have read and
+          agree to the
+          <span class="terms-link" onclick="openTerms(event)">
+            Terms & Conditions and Disclaimer of Liability
+          </span>.
+        </span>
+      </label>
+    </div>
+
+    <button
+      id="startButton"
+      class="primary"
+      onclick="goToSetup()"
+      disabled
+    >
       🎲 Start Chatting
     </button>
   </div>
@@ -718,6 +800,65 @@
   </div>
 </div>
 
+<!-- TERMS AND CONDITIONS MODAL -->
+<div id="termsModal" class="modalbg">
+  <div class="modal terms-modal">
+    <h2>Terms & Conditions</h2>
+
+    <div class="terms-content">
+      <h3>1. Age Requirement</h3>
+      <p>
+        Campus Chat is intended only for users who are 18 years old or above.
+        By using this platform, you confirm that you meet this age requirement.
+      </p>
+
+      <h3>2. User Conduct</h3>
+      <p>
+        You agree to communicate respectfully and not use the platform to
+        harass, threaten, exploit, impersonate, or harm other users. Illegal,
+        abusive, or inappropriate behavior may result in removal from the
+        platform.
+      </p>
+
+      <h3>3. Your Privacy</h3>
+      <p>
+        Do not share sensitive personal information such as passwords, bank
+        details, home addresses, or other private information with strangers.
+        You are responsible for the information you choose to share during a
+        conversation.
+      </p>
+
+      <h3>4. Disclaimer of Liability</h3>
+      <p>
+        Campus Chat provides a platform for users to have conversations with
+        other users. We do not guarantee the identity, intentions, accuracy, or
+        behavior of any user you may encounter.
+      </p>
+
+      <p>
+        To the extent permitted by applicable law, Campus Chat and its
+        operators are not liable for personal interactions, conversations,
+        information shared, or actions taken by users while using the platform.
+        Users participate in conversations at their own discretion and
+        responsibility.
+      </p>
+
+      <h3>5. Reporting and Safety</h3>
+      <p>
+        If another user behaves inappropriately, you may end the conversation
+        and submit a report. Reports may be reviewed to help maintain a safer
+        community.
+      </p>
+    </div>
+
+    <div style="text-align:right; margin-top:20px">
+      <button class="primary" onclick="closeTerms()">
+        I Understand
+      </button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
@@ -729,7 +870,6 @@
     SUPABASE_KEY
   );
 
-  /* Schools from different regions of the Philippines */
   const schools = [
     { name: 'University of the Philippines Diliman', region: 'Metro Manila' },
     { name: 'University of the Philippines Manila', region: 'Metro Manila' },
@@ -804,6 +944,34 @@
 
     document.getElementById(id).classList.add('active');
     window.scrollTo(0, 0);
+  }
+
+  /* First-page agreement */
+  function toggleStartButton() {
+    const agreed = document.getElementById('termsAgreement').checked;
+    document.getElementById('startButton').disabled = !agreed;
+  }
+
+  function goToSetup() {
+    if (!document.getElementById('termsAgreement').checked) {
+      alert('Please confirm that you are 18 or older and agree to the Terms & Conditions.');
+      return;
+    }
+
+    show('setup');
+  }
+
+  function openTerms(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    document.getElementById('termsModal').classList.add('show');
+  }
+
+  function closeTerms() {
+    document.getElementById('termsModal').classList.remove('show');
   }
 
   /* School search */
@@ -896,10 +1064,6 @@
     }
   }
 
-  /*
-    Create or update the current browser's profile.
-    This lets a returning user change their nickname or school.
-  */
   async function createOrUpdateProfile() {
     if (!profileId) {
       const { data, error } = await supabaseClient
@@ -933,6 +1097,8 @@
 
     if (error) {
       console.error(error);
+      alert('Connection error. Please refresh and try again.');
+      show('setup');
       return false;
     }
 
@@ -945,11 +1111,6 @@
     show('matching');
   }
 
-  /*
-    The matching fix:
-    A user is only connected after an actual chat room exists
-    containing TWO different users.
-  */
   async function findMatch() {
     if (!profileId) return;
 
@@ -973,11 +1134,6 @@
     if (waiting && waiting.length > 0) {
       const otherUser = waiting[0];
 
-      /*
-        Remove the other user from the waiting queue first.
-        This helps prevent one waiting user from being matched
-        by multiple people at the same time.
-      */
       const { data: claimedUser, error: claimError } = await supabaseClient
         .from('waiting_users')
         .delete()
@@ -1003,9 +1159,6 @@
       if (roomError || !room) {
         console.error(roomError);
 
-        /*
-          Put the other user back in the queue if room creation fails.
-        */
         await supabaseClient
           .from('waiting_users')
           .upsert({
@@ -1025,10 +1178,6 @@
       return;
     }
 
-    /*
-      No one is waiting, so join the queue.
-      The user remains on the matching screen.
-    */
     const { error: waitError } = await supabaseClient
       .from('waiting_users')
       .upsert({
@@ -1066,10 +1215,6 @@
     if (rooms && rooms.length > 0) {
       const room = rooms[0];
 
-      /*
-        Extra safety check: never connect to a room unless
-        the room contains two different users.
-      */
       if (room.user_one === room.user_two) {
         return;
       }
