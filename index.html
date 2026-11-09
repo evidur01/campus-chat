@@ -1174,7 +1174,7 @@
       </nav>
       <div id="adminViewSpeakers" class="admin-view active">
       <h3>📣 Speaker requests</h3>
-      <p class="note">The default worklist hides approved requests. Use the filter to view the approved archive; hiding does not delete any database records.</p>
+      <p class="note">The default worklist hides approved requests. Supabase can permanently remove expired approved requests daily once the separate cleanup SQL is installed. The archive shows records still retained.</p>
       <div class="admin-list-filter"><label for="speakerListFilter"><b>Show:</b></label>
         <select id="speakerListFilter" onchange="renderSpeakerRequestList()">
           <option value="action">Needs attention (default)</option>
@@ -1196,7 +1196,8 @@
       <div id="adminViewCleanup" class="admin-view">
       <section class="admin-section" aria-labelledby="cleanupHeading">
         <h3 id="cleanupHeading">🧹 Clear old announcement requests</h3>
-        <p class="note">Select submission dates (Philippine time), preview the number of eligible Speaker requests, then confirm permanent deletion. Requests linked to a public announcement are always protected, even if expired. Approved requests with unexpired announcements are also protected. To hide approved records without deleting them, use Speaker Requests → Approved archive.</p>
+        <p class="note">Manual cleanup remains available by date. Separately, Supabase can permanently remove rejected requests more than 7 days old and approved requests more than 24 hours past their expiration once daily. Expired public announcements are removed first; pending or payment-related requests stay protected.</p>
+        <p class="note"><b>Daily cleanup:</b> Requires the separate Supabase SQL installation. The daily job runs independently of this page, and this dashboard cannot confirm it is installed until you check Supabase Cron.</p>
         <div class="request-fields">
           <label><span class="muted">From date (inclusive)</span><input type="date" id="cleanupFrom" onchange="resetRequestCleanupPreview()"></label>
           <label><span class="muted">To date (inclusive)</span><input type="date" id="cleanupTo" onchange="resetRequestCleanupPreview()"></label>
@@ -1224,13 +1225,21 @@
       <div id="adminViewReports" class="admin-view">
       <section class="admin-section" aria-labelledby="reportsHeading">
         <div class="admin-toolbar">
-          <div><h3 id="reportsHeading">🚩 Reports management</h3><p class="note">Review submitted user reports and save moderator-only notes.</p></div>
+          <div><h3 id="reportsHeading">🚩 Reports management</h3><p class="note">Review active reports. Resolved and dismissed reports disappear from this worklist after saving, but remain in a private archive for accountability.</p></div>
           <button class="outline" onclick="loadAdminReports()">↻ Refresh reports</button>
         </div>
         <div class="admin-grid">
-          <div class="admin-stat"><span class="muted">Total reports</span><strong id="reportTotal">0</strong></div>
+          <div class="admin-stat"><span class="muted">Open reports</span><strong id="reportTotal">0</strong></div>
           <div class="admin-stat"><span class="muted">Pending</span><strong id="reportPending">0</strong></div>
-          <div class="admin-stat"><span class="muted">Resolved</span><strong id="reportResolved">0</strong></div>
+          <div class="admin-stat"><span class="muted">Under review</span><strong id="reportResolved">0</strong></div>
+        </div>
+        <div class="admin-list-filter">
+          <label for="reportListFilter"><b>Show:</b></label>
+          <select id="reportListFilter" onchange="renderAdminReports()">
+            <option value="open">Open reports only (default)</option>
+            <option value="closed">Resolved / dismissed archive</option>
+            <option value="all">All reports</option>
+          </select>
         </div>
         <div id="adminReports"><p class="note">Reports load after admin sign-in.</p></div>
       </section>
@@ -2816,6 +2825,8 @@ async function saveSpeakerRequest(id) {
       resetRequestCleanupPreview();
     }
 
+    let adminReportCache = [];
+
     async function loadAdminReports() {
       const container = document.getElementById('adminReports');
       if (!adminUser) {
@@ -2831,11 +2842,25 @@ async function saveSpeakerRequest(id) {
         container.textContent = 'Could not load reports. Verify your admin account and reports RLS policies.';
         return;
       }
-      const rows = data || [];
-      document.getElementById('reportTotal').textContent = String(rows.length);
-      document.getElementById('reportPending').textContent = String(rows.filter(r => (r.status || 'pending') === 'pending').length);
-      document.getElementById('reportResolved').textContent = String(rows.filter(r => r.status === 'resolved').length);
-      if (!rows.length) { container.textContent = 'No user reports yet.'; return; }
+      adminReportCache = data || [];
+      renderAdminReports();
+    }
+
+    function renderAdminReports() {
+      const container = document.getElementById('adminReports');
+      const filter = document.getElementById('reportListFilter').value;
+      const open = adminReportCache.filter(r => !['resolved', 'dismissed'].includes(r.status || 'pending'));
+      document.getElementById('reportTotal').textContent = String(open.length);
+      document.getElementById('reportPending').textContent = String(open.filter(r => (r.status || 'pending') === 'pending').length);
+      document.getElementById('reportResolved').textContent = String(open.filter(r => r.status === 'reviewing').length);
+      const rows = adminReportCache.filter(r => {
+        const closed = ['resolved', 'dismissed'].includes(r.status || 'pending');
+        return filter === 'all' || (filter === 'closed' ? closed : !closed);
+      });
+      if (!rows.length) {
+        container.textContent = filter === 'open' ? 'No open reports. Resolved and dismissed reports are hidden in the archive.' : 'No reports match this filter.';
+        return;
+      }
       container.innerHTML = rows.map(r => {
         const id = escapeHTML(r.id);
         const status = r.status || 'pending';
@@ -2875,7 +2900,7 @@ async function saveSpeakerRequest(id) {
         alert('Report update failed. Check admin permissions: ' + error.message);
         return;
       }
-      alert('Moderation review saved.');
+      // Once resolved/dismissed, the item disappears from the default open worklist.
       await loadAdminReports();
     }
 
