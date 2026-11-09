@@ -1033,11 +1033,18 @@
   <section id="privacy" class="page"><div class="info-wrap"><div class="card">
     <div class="tag">Your information</div><h1>Privacy Policy</h1>
     <p><strong>Last updated:</strong> November 9, 2026</p>
-    <p>This policy describes the information handled by Campus Konek based on the current website implementation. The retention details below reflect the current website implementation and may be updated as data-handling processes are established.</p>
+    <p>This policy explains how Campus Konek collects, uses, stores, and deletes information based on the website and database processes currently configured. Technical failures or legally required preservation may affect the timing of deletion.</p>
     <h2>Information you provide</h2><p>When you use chat, you may enter a nickname, school, and messages. When you submit a report, suggestion, or Speaker request, the information you enter is submitted for that purpose. Speaker requests may include your chosen contact method and contact details.</p>
     <h2>How the website works</h2><p>The website uses Supabase for chat-related records, matching, announcements, reports, suggestions, and administrator authentication. A browser storage identifier helps associate your browser with a chat profile. Technical hosting and network providers may process connection information needed to deliver the service.</p>
     <h2>Who can see information</h2><p>Your current chat partner can see messages you send and the optional nickname and school you provide. Authorized administrators may access information needed to review Speaker requests and manage announcements, subject to database permissions. Do not assume chat messages are private from the service operator or technical providers.</p>
-    <h2>Retention and deletion</h2><p>Chat and submission records may remain in the database after a conversation ends. For ended, unreported chat rooms with a recorded ending timestamp, a scheduled database job is configured to delete messages after approximately 24–25 hours, subject to successful scheduler execution. Reported chats may be retained for moderation; other records have separate retention practices. For access or deletion requests, email <a href="mailto:support@campuskonek.com">support@campuskonek.com</a>.</p>
+    <h2>Chat message retention</h2>
+    <p>For conversations marked ended with a recorded <code>ended_at</code> timestamp and no associated report, an hourly scheduled database job deletes chat messages once the conversation has been ended for at least 24 hours. Under normal operation this happens approximately 24 to 25 hours after the conversation ends. It does not delete messages from active conversations or automatically cover older rooms missing an ending timestamp. Database backups or technical logs may have separate retention periods.</p>
+    <h2>Reports and moderation</h2>
+    <p>When a conversation is reported, its messages are excluded from that automatic cleanup so the report can be assessed. Reports, their reasons, associated identifiers, review status, and any private moderator notes may remain stored for safety review and follow-up. There is not yet a fixed automatic deletion schedule for report records; they are reviewed and removed when no longer needed, subject to applicable obligations.</p>
+    <h2>Speaker requests and announcements</h2>
+    <p>Speaker requests may contain an announcement, optional profile details, contact information, payment-related references, and administrator notes. The scheduled daily cleanup removes approved request records after their announcements have been expired for more than 24 hours, provided no public announcement still references the request. It also removes rejected requests older than seven days. The job first clears public announcements expired for more than 24 hours. Pending requests and requests awaiting payment or verification are not removed by that schedule. Records needed for accounting, disputes, or legal compliance may require separate handling; do not rely on the automated cleanup as a substitute for those obligations.</p>
+    <h2>Other information and deletion requests</h2>
+    <p>Profiles, browser identifiers, matchmaking records, suggestions, and administrator authentication records are not covered by the chat-message and Speaker-request cleanup schedules above. Retention for these categories is still being reviewed. To ask about your data or request access, correction, or deletion, email <a href="mailto:support@campuskonek.com">support@campuskonek.com</a>. We may request reasonable information to verify your request and may retain information when legally required.</p>
     <h2>Advertising and cookies</h2><p>Advertising is not yet enabled in this version. If ads are introduced, this policy will be updated to describe advertising partners, cookies, consent choices, and applicable controls before ads go live.</p>
     <h2>Questions or privacy requests</h2><p><strong>Operator contact:</strong> <a href="mailto:support@campuskonek.com">support@campuskonek.com</a>. Contact this address for privacy questions and requests to access or delete personal data.</p>
     <button class="primary" onclick="goHome()">Back to home</button>
@@ -1170,11 +1177,10 @@
       <nav class="admin-nav" aria-label="Admin dashboard sections">
         <button type="button" id="adminNavSpeakers" class="active" onclick="switchAdminView('speakers')">📣 Speaker Requests</button>
         <button type="button" id="adminNavReports" onclick="switchAdminView('reports')">🚩 Reports Management</button>
-        <button type="button" id="adminNavCleanup" onclick="switchAdminView('cleanup')">🧹 Request Cleanup</button>
       </nav>
       <div id="adminViewSpeakers" class="admin-view active">
       <h3>📣 Speaker requests</h3>
-      <p class="note">The default worklist hides approved requests. Supabase can permanently remove expired approved requests daily once the separate cleanup SQL is installed. The archive shows records still retained.</p>
+      <p class="note">The default worklist hides approved requests. Supabase runs daily cleanup for eligible expired approvals and older rejected requests. The archive shows records still retained, including recently approved or unexpired items.</p>
       <div class="admin-list-filter"><label for="speakerListFilter"><b>Show:</b></label>
         <select id="speakerListFilter" onchange="renderSpeakerRequestList()">
           <option value="action">Needs attention (default)</option>
@@ -1193,34 +1199,6 @@
       <div id="speakerRequests"><div class="card">Loading Speaker requests...</div></div>
       </div><!-- /adminViewSpeakers -->
 
-      <div id="adminViewCleanup" class="admin-view">
-      <section class="admin-section" aria-labelledby="cleanupHeading">
-        <h3 id="cleanupHeading">🧹 Clear old announcement requests</h3>
-        <p class="note">Manual cleanup remains available by date. Separately, Supabase can permanently remove rejected requests more than 7 days old and approved requests more than 24 hours past their expiration once daily. Expired public announcements are removed first; pending or payment-related requests stay protected.</p>
-        <p class="note"><b>Daily cleanup:</b> Requires the separate Supabase SQL installation. The daily job runs independently of this page, and this dashboard cannot confirm it is installed until you check Supabase Cron.</p>
-        <div class="request-fields">
-          <label><span class="muted">From date (inclusive)</span><input type="date" id="cleanupFrom" onchange="resetRequestCleanupPreview()"></label>
-          <label><span class="muted">To date (inclusive)</span><input type="date" id="cleanupTo" onchange="resetRequestCleanupPreview()"></label>
-          <label><span class="muted">Request status</span>
-            <select id="cleanupStatus" onchange="resetRequestCleanupPreview()">
-              <option value="rejected">Rejected (recommended)</option>
-              <option value="pending_review">Pending review</option>
-              <option value="awaiting_payment">Awaiting payment</option>
-              <option value="payment_verification">Payment verification</option>
-              <option value="approved">Approved and expired (unlinked only)</option>
-              <option value="all">All eligible statuses</option>
-            </select>
-          </label>
-        </div>
-        <button class="outline" id="previewCleanupButton" onclick="previewRequestCleanup()">🔎 Preview requests</button>
-        <div id="cleanupFeedback" class="admin-feedback" role="status" aria-live="polite">Nothing will be deleted until you preview and confirm.</div>
-        <div class="admin-danger">
-          <p class="note" style="margin-top:0"><b>Permanent deletion.</b> This removes the selected private request records, including applicant contact/payment information. It does not delete any public announcements. Database permission checks are enforced by a Supabase RPC function.</p>
-          <button class="admin-delete" id="confirmCleanupButton" onclick="executeRequestCleanup()" disabled>Delete previewed requests</button>
-        </div>
-      </section>
-
-      </div><!-- /adminViewCleanup -->
 
       <div id="adminViewReports" class="admin-view">
       <section class="admin-section" aria-labelledby="reportsHeading">
@@ -2805,8 +2783,8 @@ async function saveSpeakerRequest(id) {
     // ==========================================
 
     function switchAdminView(which) {
-      if (!adminUser || !['speakers', 'reports', 'cleanup'].includes(which)) return;
-      const names = {speakers:'Speakers',reports:'Reports',cleanup:'Cleanup'};
+      if (!adminUser || !['speakers', 'reports'].includes(which)) return;
+      const names = {speakers:'Speakers',reports:'Reports'};
       for (const [key, suffix] of Object.entries(names)) {
         document.getElementById('adminView' + suffix).classList.toggle('active', key === which);
         const nav = document.getElementById('adminNav' + suffix);
@@ -2822,7 +2800,6 @@ async function saveSpeakerRequest(id) {
     async function refreshAdminDashboard() {
       if (!adminUser) return;
       await Promise.all([loadSpeakerRequests(), loadAdminReports()]);
-      resetRequestCleanupPreview();
     }
 
     let adminReportCache = [];
@@ -2904,86 +2881,6 @@ async function saveSpeakerRequest(id) {
       await loadAdminReports();
     }
 
-    // ==========================================
-    // ADMIN-ONLY SPEAKER REQUEST CLEANUP
-    // ==========================================
-
-    let cleanupPreview = null;
-
-    function resetRequestCleanupPreview() {
-      cleanupPreview = null;
-      document.getElementById('confirmCleanupButton').disabled = true;
-      document.getElementById('cleanupFeedback').textContent = 'Choose dates and preview requests before deleting.';
-    }
-
-    function requestCleanupFilters() {
-      const start = document.getElementById('cleanupFrom').value;
-      const end = document.getElementById('cleanupTo').value;
-      const status = document.getElementById('cleanupStatus').value;
-      if (!start || !end || start > end) {
-        alert('Choose a valid From date and To date.');
-        return null;
-      }
-      return { p_start_date: start, p_end_date: end, p_status: status };
-    }
-
-    async function previewRequestCleanup() {
-      if (!adminUser) return;
-      const filters = requestCleanupFilters();
-      if (!filters) return;
-      const feedback = document.getElementById('cleanupFeedback');
-      const previewButton = document.getElementById('previewCleanupButton');
-      resetRequestCleanupPreview();
-      feedback.textContent = 'Checking eligible requests...';
-      previewButton.disabled = true;
-      const { data, error } = await supabaseClient.rpc('admin_cleanup_speaker_requests', {
-        ...filters, p_execute: false
-      });
-      previewButton.disabled = false;
-      if (error) {
-        console.error('Speaker request cleanup preview failed:', error);
-        feedback.textContent = 'Preview failed. Install the accompanying SQL function and check admin permissions: ' + error.message;
-        return;
-      }
-      const count = Number(data);
-      if (!Number.isSafeInteger(count) || count < 0) {
-        feedback.textContent = 'Unexpected preview response. No changes made.';
-        return;
-      }
-      cleanupPreview = { filters, count };
-      feedback.textContent = `${count} eligible request${count === 1 ? '' : 's'} match the dates and status. Publicly linked announcements and unexpired approvals are protected.`;
-      document.getElementById('confirmCleanupButton').disabled = count === 0;
-    }
-
-    async function executeRequestCleanup() {
-      if (!adminUser || !cleanupPreview || cleanupPreview.count < 1) return;
-      const filters = requestCleanupFilters();
-      if (!filters || JSON.stringify(filters) !== JSON.stringify(cleanupPreview.filters)) {
-        resetRequestCleanupPreview();
-        alert('Your filters changed. Please preview again.');
-        return;
-      }
-      if (!confirm(`Permanently delete up to ${cleanupPreview.count} eligible Speaker request records? This cannot be undone. Public announcements will remain protected.`)) return;
-      const phrase = prompt('To confirm permanent deletion, type DELETE REQUESTS exactly:');
-      if (phrase !== 'DELETE REQUESTS') return;
-      const deleteButton = document.getElementById('confirmCleanupButton');
-      deleteButton.disabled = true;
-      const { data, error } = await supabaseClient.rpc('admin_cleanup_speaker_requests', {
-        ...filters, p_execute: true
-      });
-      if (error) {
-        console.error('Speaker cleanup failed:', error);
-        document.getElementById('cleanupFeedback').textContent = 'Deletion failed: ' + error.message;
-      } else {
-        const deleted = Number(data);
-        document.getElementById('cleanupFeedback').textContent = `Deleted ${deleted} eligible Speaker request${deleted === 1 ? '' : 's'}. Published announcements were protected.`;
-        await loadSpeakerRequests();
-        if (deleted === 0) {
-          document.getElementById('cleanupFeedback').textContent += ' If old approved requests still appear in the archive, they may be protected because a public announcement is linked to them. The default Speaker worklist hides approved requests.';
-        }
-      }
-      cleanupPreview = null;
-    }
 
     // Restore an existing Supabase admin session on page load.
     async function restoreAdminSession() {
