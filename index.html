@@ -734,6 +734,18 @@
     .seo-intro p { line-height:1.7; color:#5e566e; }
     .seo-intro a { color:#5e3ed3; }
     @media(max-width:760px) { .seo-intro { margin:22px 16px 50px; padding:20px; } }
+
+    /* Admin-only moderation and request cleanup */
+    .admin-section { margin-top:28px; padding:22px; background:white; border:1px solid var(--line); border-radius:18px; }
+    .admin-section h3 { margin:0 0 8px; }
+    .admin-section .request-fields { margin-top:14px; }
+    .admin-section select,.admin-section input[type="date"] {width:100%; min-width:0; padding:11px; border:1px solid #ddd8e8; border-radius:10px; background:#fff;}
+    .report-card {border:1px solid var(--line);border-radius:13px;padding:15px;margin:12px 0;background:#fff;}
+    .report-card textarea {width:100%;min-height:74px;border:1px solid #ddd8e8;border-radius:10px;padding:10px;resize:vertical;}
+    .admin-danger {border:1px solid #f2c4c4;background:#fff8f8;border-radius:13px;padding:14px;margin-top:15px;}
+    .admin-delete {background:#ad2323;color:white;border:0;border-radius:10px;padding:12px 15px;font-weight:700;}
+    .admin-delete:disabled {opacity:.55;cursor:not-allowed;}
+    .admin-feedback {margin:10px 0;color:#554c66;overflow-wrap:anywhere;}
   </style>
 </head>
 
@@ -1138,9 +1150,9 @@
   <section id="admin" class="page">
     <div class="admin-wrap">
       <div class="admin-toolbar">
-        <div><div class="tag">Private area</div><h2 style="margin:8px 0 0">Speaker management</h2><p class="note" id="adminSignedInAs"></p></div>
+        <div><div class="tag">Private area</div><h2 style="margin:8px 0 0">Admin dashboard</h2><p class="note" id="adminSignedInAs"></p></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="outline" onclick="loadSpeakerRequests()">↻ Refresh</button>
+          <button class="outline" onclick="refreshAdminDashboard()">↻ Refresh all</button>
           <button class="outline" onclick="adminLogout()">Log out</button>
           <button class="outline" onclick="goHome()">Homepage</button>
         </div>
@@ -1152,6 +1164,44 @@
       </div>
       <p class="note">Payment arrangement is handled manually outside Campus Konek. Add the amount and instructions here, then contact the applicant using their supplied details. Do not mark a request approved until you have verified payment and reviewed its content.</p>
       <div id="speakerRequests"><div class="card">Loading Speaker requests...</div></div>
+
+      <section class="admin-section" aria-labelledby="cleanupHeading">
+        <h3 id="cleanupHeading">🧹 Clear old announcement requests</h3>
+        <p class="note">Select submission dates (Philippine time), preview the number of eligible Speaker requests, then confirm permanent deletion. Requests linked to a public announcement are always protected. Approved requests with unexpired announcements are also protected.</p>
+        <div class="request-fields">
+          <label><span class="muted">From date (inclusive)</span><input type="date" id="cleanupFrom" onchange="resetRequestCleanupPreview()"></label>
+          <label><span class="muted">To date (inclusive)</span><input type="date" id="cleanupTo" onchange="resetRequestCleanupPreview()"></label>
+          <label><span class="muted">Request status</span>
+            <select id="cleanupStatus" onchange="resetRequestCleanupPreview()">
+              <option value="rejected">Rejected (recommended)</option>
+              <option value="pending_review">Pending review</option>
+              <option value="awaiting_payment">Awaiting payment</option>
+              <option value="payment_verification">Payment verification</option>
+              <option value="approved">Approved and expired (unlinked only)</option>
+              <option value="all">All eligible statuses</option>
+            </select>
+          </label>
+        </div>
+        <button class="outline" id="previewCleanupButton" onclick="previewRequestCleanup()">🔎 Preview requests</button>
+        <div id="cleanupFeedback" class="admin-feedback" role="status" aria-live="polite">Nothing will be deleted until you preview and confirm.</div>
+        <div class="admin-danger">
+          <p class="note" style="margin-top:0"><b>Permanent deletion.</b> This removes the selected private request records, including applicant contact/payment information. It does not delete any public announcements. Database permission checks are enforced by a Supabase RPC function.</p>
+          <button class="admin-delete" id="confirmCleanupButton" onclick="executeRequestCleanup()" disabled>Delete previewed requests</button>
+        </div>
+      </section>
+
+      <section class="admin-section" aria-labelledby="reportsHeading">
+        <div class="admin-toolbar">
+          <div><h3 id="reportsHeading">🚩 Reports management</h3><p class="note">Review submitted user reports and save moderator-only notes.</p></div>
+          <button class="outline" onclick="loadAdminReports()">↻ Refresh reports</button>
+        </div>
+        <div class="admin-grid">
+          <div class="admin-stat"><span class="muted">Total reports</span><strong id="reportTotal">0</strong></div>
+          <div class="admin-stat"><span class="muted">Pending</span><strong id="reportPending">0</strong></div>
+          <div class="admin-stat"><span class="muted">Resolved</span><strong id="reportResolved">0</strong></div>
+        </div>
+        <div id="adminReports"><p class="note">Reports load after admin sign-in.</p></div>
+      </section>
     </div>
   </section>
 
@@ -2413,7 +2463,7 @@ async function checkRoomStatus() {
     // ==========================================
 
     function openAdmin() {
-      if (adminUser) { show('admin'); loadSpeakerRequests(); return; }
+      if (adminUser) { show('admin'); refreshAdminDashboard(); return; }
       document.getElementById('adminLoginError').textContent = '';
       document.getElementById('adminLoginModal').classList.add('show');
     }
@@ -2448,7 +2498,7 @@ async function checkRoomStatus() {
       document.getElementById('adminPassword').value = '';
       document.getElementById('adminSignedInAs').textContent = 'Signed in as ' + (adminUser.email || 'admin');
       show('admin');
-      await loadSpeakerRequests();
+      await refreshAdminDashboard();
     }
 
     async function adminLogout() {
@@ -2685,6 +2735,157 @@ async function saveSpeakerRequest(id) {
   await loadSpeakerRequests();
 }
 
+
+    // ==========================================
+    // ADMIN REPORTS MANAGEMENT
+    // ==========================================
+
+    async function refreshAdminDashboard() {
+      if (!adminUser) return;
+      await Promise.all([loadSpeakerRequests(), loadAdminReports()]);
+      resetRequestCleanupPreview();
+    }
+
+    async function loadAdminReports() {
+      const container = document.getElementById('adminReports');
+      if (!adminUser) {
+        container.textContent = 'Please sign in as an admin.';
+        return;
+      }
+      container.textContent = 'Loading reports...';
+      const { data, error } = await supabaseClient.from('reports')
+        .select('id, reporter_id, room_id, reason, created_at, status, admin_notes, reviewed_at')
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Admin report loading failed:', error);
+        container.textContent = 'Could not load reports. Verify your admin account and reports RLS policies.';
+        return;
+      }
+      const rows = data || [];
+      document.getElementById('reportTotal').textContent = String(rows.length);
+      document.getElementById('reportPending').textContent = String(rows.filter(r => (r.status || 'pending') === 'pending').length);
+      document.getElementById('reportResolved').textContent = String(rows.filter(r => r.status === 'resolved').length);
+      if (!rows.length) { container.textContent = 'No user reports yet.'; return; }
+      container.innerHTML = rows.map(r => {
+        const id = escapeHTML(r.id);
+        const status = r.status || 'pending';
+        const options = ['pending', 'reviewing', 'resolved', 'dismissed']
+          .map(s => `<option value="${s}" ${status === s ? 'selected' : ''}>${s[0].toUpperCase() + s.slice(1)}</option>`).join('');
+        return `<article class="report-card">
+          <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+            <b>Report · ${escapeHTML(new Date(r.created_at).toLocaleString())}</b>
+            <span class="status-pill">${escapeHTML(status)}</span>
+          </div>
+          <p style="white-space:pre-wrap;overflow-wrap:anywhere">${escapeHTML(r.reason)}</p>
+          <p class="muted">Room: ${escapeHTML(r.room_id || 'Unavailable')} · Reporter: ${escapeHTML(r.reporter_id || 'Unavailable')}</p>
+          <p class="muted">Last reviewed: ${r.reviewed_at ? escapeHTML(new Date(r.reviewed_at).toLocaleString()) : 'Not yet'}</p>
+          <div class="request-fields"><label><span class="muted">Moderation status</span>
+            <select id="reportStatus-${id}">${options}</select></label></div>
+          <label class="field-label" for="reportNotes-${id}">Private admin notes</label>
+          <textarea id="reportNotes-${id}" maxlength="4000" placeholder="Actions taken and outcome...">${escapeHTML(r.admin_notes || '')}</textarea>
+          <div style="text-align:right;margin-top:10px"><button class="primary" onclick="saveAdminReport('${id}')">Save review</button></div>
+        </article>`;
+      }).join('');
+    }
+
+    async function saveAdminReport(id) {
+      if (!adminUser) return;
+      const statusInput = document.getElementById('reportStatus-' + id);
+      const notesInput = document.getElementById('reportNotes-' + id);
+      if (!statusInput || !notesInput) return;
+      const status = statusInput.value;
+      if (!['pending', 'reviewing', 'resolved', 'dismissed'].includes(status)) return;
+      const { error } = await supabaseClient.from('reports').update({
+        status,
+        admin_notes: notesInput.value.trim() || null,
+        reviewed_at: status === 'pending' ? null : new Date().toISOString()
+      }).eq('id', id);
+      if (error) {
+        console.error('Could not save report:', error);
+        alert('Report update failed. Check admin permissions: ' + error.message);
+        return;
+      }
+      alert('Moderation review saved.');
+      await loadAdminReports();
+    }
+
+    // ==========================================
+    // ADMIN-ONLY SPEAKER REQUEST CLEANUP
+    // ==========================================
+
+    let cleanupPreview = null;
+
+    function resetRequestCleanupPreview() {
+      cleanupPreview = null;
+      document.getElementById('confirmCleanupButton').disabled = true;
+      document.getElementById('cleanupFeedback').textContent = 'Choose dates and preview requests before deleting.';
+    }
+
+    function requestCleanupFilters() {
+      const start = document.getElementById('cleanupFrom').value;
+      const end = document.getElementById('cleanupTo').value;
+      const status = document.getElementById('cleanupStatus').value;
+      if (!start || !end || start > end) {
+        alert('Choose a valid From date and To date.');
+        return null;
+      }
+      return { p_start_date: start, p_end_date: end, p_status: status };
+    }
+
+    async function previewRequestCleanup() {
+      if (!adminUser) return;
+      const filters = requestCleanupFilters();
+      if (!filters) return;
+      const feedback = document.getElementById('cleanupFeedback');
+      const previewButton = document.getElementById('previewCleanupButton');
+      resetRequestCleanupPreview();
+      feedback.textContent = 'Checking eligible requests...';
+      previewButton.disabled = true;
+      const { data, error } = await supabaseClient.rpc('admin_cleanup_speaker_requests', {
+        ...filters, p_execute: false
+      });
+      previewButton.disabled = false;
+      if (error) {
+        console.error('Speaker request cleanup preview failed:', error);
+        feedback.textContent = 'Preview failed. Install the accompanying SQL function and check admin permissions: ' + error.message;
+        return;
+      }
+      const count = Number(data);
+      if (!Number.isSafeInteger(count) || count < 0) {
+        feedback.textContent = 'Unexpected preview response. No changes made.';
+        return;
+      }
+      cleanupPreview = { filters, count };
+      feedback.textContent = `${count} eligible request${count === 1 ? '' : 's'} match the dates and status. Publicly linked announcements and unexpired approvals are protected.`;
+      document.getElementById('confirmCleanupButton').disabled = count === 0;
+    }
+
+    async function executeRequestCleanup() {
+      if (!adminUser || !cleanupPreview || cleanupPreview.count < 1) return;
+      const filters = requestCleanupFilters();
+      if (!filters || JSON.stringify(filters) !== JSON.stringify(cleanupPreview.filters)) {
+        resetRequestCleanupPreview();
+        alert('Your filters changed. Please preview again.');
+        return;
+      }
+      if (!confirm(`Permanently delete up to ${cleanupPreview.count} eligible Speaker request records? This cannot be undone. Public announcements will remain protected.`)) return;
+      const phrase = prompt('To confirm permanent deletion, type DELETE REQUESTS exactly:');
+      if (phrase !== 'DELETE REQUESTS') return;
+      const deleteButton = document.getElementById('confirmCleanupButton');
+      deleteButton.disabled = true;
+      const { data, error } = await supabaseClient.rpc('admin_cleanup_speaker_requests', {
+        ...filters, p_execute: true
+      });
+      if (error) {
+        console.error('Speaker cleanup failed:', error);
+        document.getElementById('cleanupFeedback').textContent = 'Deletion failed: ' + error.message;
+      } else {
+        const deleted = Number(data);
+        document.getElementById('cleanupFeedback').textContent = `Deleted ${deleted} eligible Speaker request${deleted === 1 ? '' : 's'}. Published announcements were protected.`;
+        await loadSpeakerRequests();
+      }
+      cleanupPreview = null;
+    }
 
     // Restore an existing Supabase admin session on page load.
     async function restoreAdminSession() {
