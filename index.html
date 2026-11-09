@@ -746,6 +746,9 @@
     .admin-delete {background:#ad2323;color:white;border:0;border-radius:10px;padding:12px 15px;font-weight:700;}
     .admin-delete:disabled {opacity:.55;cursor:not-allowed;}
     .admin-feedback {margin:10px 0;color:#554c66;overflow-wrap:anywhere;}
+    .captcha-area { margin-top:18px; padding:12px; border:1px solid var(--line); border-radius:12px; background:#faf9fd; }
+    .captcha-heading {font-weight:700;font-size:13px;margin:0 0 10px;}
+    .captcha-area[hidden] {display:none !important;}
     /* Three separate screens inside the private admin dashboard */
     .admin-nav { display:flex;flex-wrap:wrap;gap:9px;margin:18px 0 22px; }
     .admin-nav button { padding:12px 15px;border:1px solid #dad4e9;background:#fff;border-radius:12px;font-weight:700;color:#493b66; }
@@ -878,6 +881,11 @@
           <div id="schoolResults" class="school-results"></div>
         </div>
 
+        <div id="chatCaptchaArea" class="captcha-area" hidden>
+          <div class="captcha-heading">Verify you're human before your first chat</div>
+          <div id="chatTurnstileWidget"></div>
+          <p class="note" id="chatCaptchaHelp">Cloudflare Turnstile helps protect Campus Konek against automated sign-ups.</p>
+        </div>
         <button
           class="primary"
           style="width:100%; margin-top:24px"
@@ -1035,7 +1043,7 @@
     <p><strong>Last updated:</strong> November 9, 2026</p>
     <p>This policy explains how Campus Konek collects, uses, stores, and deletes information based on the website and database processes currently configured. Technical failures or legally required preservation may affect the timing of deletion.</p>
     <h2>Information you provide</h2><p>When you use chat, you may enter a nickname, school, and messages. When you submit a report, suggestion, or Speaker request, the information you enter is submitted for that purpose. Speaker requests may include your chosen contact method and contact details.</p>
-    <h2>How the website works</h2><p>The website uses Supabase for chat-related records, matching, announcements, reports, suggestions, and administrator authentication. A browser storage identifier helps associate your browser with a chat profile. Technical hosting and network providers may process connection information needed to deliver the service.</p>
+    <h2>How the website works</h2><p>The website uses Supabase for chat-related records, matching, announcements, reports, suggestions, and administrator authentication. A browser storage identifier currently helps associate your browser with a chat profile. A future security update will use a Supabase anonymous authentication identity to protect sessions; this feature is not yet active in this deployment. Technical hosting and network providers may process connection information needed to deliver the service.</p>
     <h2>Who can see information</h2><p>Your current chat partner can see messages you send and the optional nickname and school you provide. Authorized administrators may access information needed to review Speaker requests and manage announcements, subject to database permissions. Do not assume chat messages are private from the service operator or technical providers.</p>
     <h2>Chat message retention</h2>
     <p>For conversations marked ended with a recorded <code>ended_at</code> timestamp and no associated report, an hourly scheduled database job deletes chat messages once the conversation has been ended for at least 24 hours. Under normal operation this happens approximately 24 to 25 hours after the conversation ends. It does not delete messages from active conversations or automatically cover older rooms missing an ending timestamp. Database backups or technical logs may have separate retention periods.</p>
@@ -1155,6 +1163,10 @@
       <input id="adminEmail" class="text-input" type="email" autocomplete="username" placeholder="Admin email">
       <label class="field-label" for="adminPassword">Password</label>
       <input id="adminPassword" class="text-input" type="password" autocomplete="current-password" placeholder="Password">
+      <div id="adminCaptchaArea" class="captcha-area" hidden>
+        <div class="captcha-heading">Verify you're human to sign in</div>
+        <div id="adminTurnstileWidget"></div>
+      </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
         <button class="outline" onclick="closeAdminLogin()">Cancel</button>
         <button class="primary" id="adminLoginButton" onclick="adminLogin()">Sign in</button>
@@ -1308,6 +1320,96 @@
       SUPABASE_URL,
       SUPABASE_KEY
     );
+
+    // CAMPUS KONEK AUTH MIGRATION — STAGED, NOT ENABLED BY DEFAULT.
+    // Before setting either flag to true, complete the matching SQL migration,
+    // configure the public Turnstile site key, and test in a staging project.
+    // NEVER put a Cloudflare Turnstile SECRET key in this file.
+    const CHAT_AUTH_ENABLED = true;
+    const TURNSTILE_ENABLED = true;
+    const TURNSTILE_SITE_KEY = '0x4AAAAAAF55Uw_W4cZs4Aiw';
+
+    // Separate browser sessions prevent anonymous users from replacing an
+    // administrator's email/password session (and vice versa).
+    const chatClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        storageKey: 'campus-konek-chat-auth',
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false
+      }
+    });
+    const chatDb = CHAT_AUTH_ENABLED ? chatClient : supabaseClient;
+
+    const captchaState = { chat: { id: null, token: null }, admin: { id: null, token: null } };
+    let turnstileScriptPromise = null;
+    function loadTurnstileScript() {
+      if (!TURNSTILE_ENABLED) return Promise.resolve();
+      if (turnstileScriptPromise) return turnstileScriptPromise;
+      turnstileScriptPromise = new Promise((resolve, reject) => {
+        if (window.turnstile) { resolve(); return; }
+        const script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+        script.async = true;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('Could not load Cloudflare Turnstile.'));
+        document.head.appendChild(script);
+      });
+      return turnstileScriptPromise;
+    }
+    async function prepareCaptcha(kind) {
+      if (!TURNSTILE_ENABLED) return;
+      if (!TURNSTILE_SITE_KEY || TURNSTILE_SITE_KEY.startsWith('PASTE_'))
+        throw new Error('Turnstile site key has not been configured.');
+      const element = kind === 'chat' ? 'chatTurnstileWidget' : 'adminTurnstileWidget';
+      const area = document.getElementById(kind === 'chat' ? 'chatCaptchaArea' : 'adminCaptchaArea');
+      area.hidden = false;
+      await loadTurnstileScript();
+      const state = captchaState[kind];
+      if (state.id !== null) return;
+      state.id = window.turnstile.render('#' + element, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: token => { state.token = token; },
+        'expired-callback': () => { state.token = null; },
+        'error-callback': () => { state.token = null; }
+      });
+    }
+    function consumeCaptcha(kind) {
+      if (!TURNSTILE_ENABLED) return null;
+      const state = captchaState[kind];
+      const token = state.token;
+      state.token = null;
+      return token;
+    }
+    function resetCaptcha(kind) {
+      const state = captchaState[kind];
+      state.token = null;
+      if (state.id !== null && window.turnstile) window.turnstile.reset(state.id);
+    }
+    async function ensureChatAuth() {
+      if (!CHAT_AUTH_ENABLED) return true;
+      const { data: sessionResult, error: sessionError } = await chatClient.auth.getSession();
+      if (sessionError) throw sessionError;
+      let user = sessionResult?.session?.user;
+      if (!user) {
+        const captchaToken = consumeCaptcha('chat');
+        if (TURNSTILE_ENABLED && !captchaToken)
+          throw new Error('Complete the human verification first.');
+        const options = captchaToken ? { options: { captchaToken } } : {};
+        let result;
+        try { result = await chatClient.auth.signInAnonymously(options); }
+        finally { if (TURNSTILE_ENABLED) resetCaptcha('chat'); }
+        if (result.error) throw result.error;
+        user = result.data.user;
+      }
+      if (!user?.id) throw new Error('Could not create your anonymous chat session.');
+      // The profile PK must equal auth.uid() for the planned RLS policies.
+      // This also replaces the old unverified localStorage profile ID.
+      profileId = user.id;
+      localStorage.setItem('campusChatProfileId', profileId);
+      return true;
+    }
+
 
     const schools = [
       { name: 'University of the Philippines Diliman', region: 'Metro Manila' },
@@ -1483,34 +1585,11 @@
       try {
         if (expiredProfileId) {
 
-          // End every active room associated with this profile.
-          const { error: roomError } = await supabaseClient
-            .from('chat_rooms')
-            .update({ status: 'ended' })
-            .eq('status', 'active')
-            .or(
-              `user_one.eq.${expiredProfileId},user_two.eq.${expiredProfileId}`
-            );
-
-          if (roomError) {
-            console.error(
-              'Error ending inactive chat:',
-              roomError
-            );
-          }
-
-          // Remove the user from the matching queue.
-          const { error: waitingError } = await supabaseClient
-            .from('waiting_users')
-            .delete()
-            .eq('profile_id', expiredProfileId);
-
-          if (waitingError) {
-            console.error(
-              'Error removing inactive user from queue:',
-              waitingError
-            );
-          }
+          const { error } = await chatDb.rpc('ck_leave_chat', {
+            p_room_id: null,
+            p_skipped: true
+          });
+          if (error) console.error('Idle cleanup failed:', error);
         }
 
       } catch (error) {
@@ -1564,15 +1643,12 @@
       clearTimers();
       const leavingRoom = currentRoom;
       currentRoom = null;
-      if (leavingRoom) {
-        const { error } = await supabaseClient.from('chat_rooms')
-          .update({ status: 'ended' }).eq('id', leavingRoom);
-        if (error) console.error('Could not end chat while returning home:', error);
-      }
       if (profileId) {
-        const { error } = await supabaseClient.from('waiting_users')
-          .delete().eq('profile_id', profileId);
-        if (error) console.error('Could not remove waiting entry:', error);
+        const { error } = await chatDb.rpc('ck_leave_chat', {
+          p_room_id: leavingRoom || null,
+          p_skipped: true
+        });
+        if (error) console.error('Could not leave chat:', error);
       }
       sessionExpired = false;
       terminatingSession = false;
@@ -1625,6 +1701,11 @@
       }
 
       show('setup');
+      if (CHAT_AUTH_ENABLED && TURNSTILE_ENABLED) {
+        chatClient.auth.getSession().then(({data}) => {
+          if (!data?.session?.user) prepareCaptcha('chat').catch(error => alert(error.message));
+        });
+      }
     }
 
     function openTerms(event) {
@@ -1730,6 +1811,15 @@
 
     async function startChat() {
       if (terminatingSession) return;
+      if (CHAT_AUTH_ENABLED) {
+        try {
+          await ensureChatAuth();
+        } catch (error) {
+          console.error('Anonymous authentication failed:', error);
+          alert(error?.message || 'Could not verify your chat session. Please try again.');
+          return;
+        }
+      }
 
       // Begin the inactivity countdown.
       startIdleMonitor();
@@ -1756,9 +1846,10 @@
       if (sessionExpired) return false;
 
       if (!profileId) {
-        const { data, error } = await supabaseClient
+        const { data, error } = await chatDb
           .from('profiles')
           .insert({
+            ...(CHAT_AUTH_ENABLED ? { id: profileId } : {}),
             school: school || null,
             nickname: nickname || null
           })
@@ -1782,13 +1873,10 @@
         return true;
       }
 
-      const { error } = await supabaseClient
-        .from('profiles')
-        .update({
-          school: school || null,
-          nickname: nickname || null
-        })
-        .eq('id', profileId);
+      const profileTable = chatDb.from('profiles');
+      const { error } = CHAT_AUTH_ENABLED
+        ? await profileTable.upsert({ id: profileId, school: school || null, nickname: nickname || null }, { onConflict: 'id' })
+        : await profileTable.update({ school: school || null, nickname: nickname || null }).eq('id', profileId);
 
       if (sessionExpired) return false;
 
@@ -1817,142 +1905,37 @@
 
     async function findMatch() {
       if (!profileId || sessionExpired || terminatingSession) return;
-
       currentRoom = null;
       clearTimers();
-
-      const { data: waiting, error } = await supabaseClient
-        .from('waiting_users')
-        .select('*')
-        .neq('profile_id', profileId)
-        .order('joined_at', { ascending: true })
-        .limit(1);
-
+      // Server-side global advisory lock serializes queue claiming and room creation.
+      const { data, error } = await chatDb.rpc('ck_matchmake', {
+        p_nickname: nickname || null,
+        p_school: school || null
+      });
       if (sessionExpired) return;
-
-      if (error) {
-        console.error(error);
+      if (error || !data?.length) {
+        console.error('Secure matching failed:', error);
         stopIdleMonitor();
-
         show('setup');
-        alert('Unable to search for a match. Please try again.');
+        alert('Unable to find a match. Please try again.');
         return;
       }
-
-      if (waiting && waiting.length > 0) {
-        const otherUser = waiting[0];
-
-        if (sessionExpired) return;
-
-        const { data: claimedUser, error: claimError } =
-          await supabaseClient
-            .from('waiting_users')
-            .delete()
-            .eq('profile_id', otherUser.profile_id)
-            .select()
-            .maybeSingle();
-
-        if (sessionExpired) return;
-
-        if (claimError || !claimedUser) {
-          if (!sessionExpired) {
-            setTimeout(findMatch, 500);
-          }
-          return;
-        }
-
-        const { data: room, error: roomError } = await supabaseClient
-          .from('chat_rooms')
-          .insert({
-            user_one: profileId,
-            user_two: otherUser.profile_id,
-            status: 'active'
-          })
-          .select()
-          .single();
-
-        // If the session expired during room creation,
-        // immediately end the newly created room.
-        if (sessionExpired) {
-          if (room && room.id) {
-            await supabaseClient
-              .from('chat_rooms')
-              .update({ status: 'ended' })
-              .eq('id', room.id);
-          }
-          return;
-        }
-
-        if (roomError || !room) {
-          console.error(roomError);
-
-          await supabaseClient
-            .from('waiting_users')
-            .upsert({
-              profile_id: otherUser.profile_id,
-              school: otherUser.school || null,
-              joined_at: otherUser.joined_at
-            });
-
-          if (!sessionExpired) {
-            setTimeout(findMatch, 1000);
-          }
-          return;
-        }
-
-        currentRoom = room.id;
-
-        await loadPartnerInfo(otherUser.profile_id);
-
-        if (sessionExpired) {
-          await supabaseClient
-            .from('chat_rooms')
-            .update({ status: 'ended' })
-            .eq('id', room.id);
-
-          return;
-        }
-
-        matched();
-        return;
+      const result = data[0];
+      if (result.room_id) {
+        currentRoom = result.room_id;
+        await loadPartnerInfo(result.partner_id);
+        if (!sessionExpired && currentRoom === result.room_id) matched();
+      } else {
+        // Only the caller can see their room; a partner's successful match
+        // appears when it is created by the database transaction.
+        matchTimer = setInterval(checkForRoom, 2000);
       }
-
-      if (sessionExpired) return;
-
-      const { error: waitError } = await supabaseClient
-        .from('waiting_users')
-        .upsert({
-          profile_id: profileId,
-          school: school || null,
-          joined_at: new Date().toISOString()
-        });
-
-      if (sessionExpired) {
-        // Remove the entry if the timeout occurred while joining.
-        await supabaseClient
-          .from('waiting_users')
-          .delete()
-          .eq('profile_id', profileId);
-
-        return;
-      }
-
-      if (waitError) {
-        console.error(waitError);
-        stopIdleMonitor();
-
-        show('setup');
-        alert('Unable to join the matching queue.');
-        return;
-      }
-
-      matchTimer = setInterval(checkForRoom, 2000);
     }
 
     async function checkForRoom() {
       if (!profileId || currentRoom || sessionExpired) return;
 
-      const { data: rooms, error } = await supabaseClient
+      const { data: rooms, error } = await chatDb
         .from('chat_rooms')
         .select('*')
         .eq('status', 'active')
@@ -1981,17 +1964,12 @@
 
         currentRoom = room.id;
 
-        await supabaseClient
-          .from('waiting_users')
-          .delete()
-          .eq('profile_id', profileId);
 
         if (sessionExpired) {
-          await supabaseClient
-            .from('chat_rooms')
-            .update({ status: 'ended' })
-            .eq('id', room.id);
-
+          await chatDb.rpc('ck_leave_chat', {
+            p_room_id: room.id,
+            p_skipped: true
+          });
           return;
         }
 
@@ -2008,7 +1986,7 @@
     // ==========================================
 
     async function loadPartnerInfo(partnerId) {
-      const { data, error } = await supabaseClient
+      const { data, error } = await chatDb
         .from('profiles')
         .select('nickname, school')
         .eq('id', partnerId)
@@ -2076,7 +2054,7 @@ async function checkRoomStatus() {
 
   const roomId = currentRoom;
 
-  const { data: room, error } = await supabaseClient
+  const { data: room, error } = await chatDb
     .from('chat_rooms')
     .select('status')
     .eq('id', roomId)
@@ -2140,7 +2118,7 @@ async function checkRoomStatus() {
 
       const roomId = currentRoom;
 
-      const { data, error } = await supabaseClient
+      const { data, error } = await chatDb
         .from('messages')
         .select('*')
         .eq('room_id', roomId)
@@ -2189,7 +2167,7 @@ async function checkRoomStatus() {
 
       input.value = '';
 
-      const { error } = await supabaseClient
+      const { error } = await chatDb
         .from('messages')
         .insert({
           room_id: roomId,
@@ -2235,28 +2213,11 @@ async function checkRoomStatus() {
       document.getElementById('statusBadge').textContent = 'Disconnected';
 
       try {
-        const { error: roomError } = await supabaseClient
-          .from('chat_rooms')
-          .update({
-            status: 'ended',
-            skipped_by: profileId
-          })
-          .eq('id', oldRoom);
-
-        if (roomError) {
-          console.error('Could not end skipped conversation:', roomError);
-        }
-
-        if (profileId) {
-          const { error: waitingError } = await supabaseClient
-            .from('waiting_users')
-            .delete()
-            .eq('profile_id', profileId);
-
-          if (waitingError) {
-            console.error('Could not remove user from queue:', waitingError);
-          }
-        }
+        const { error } = await chatDb.rpc('ck_leave_chat', {
+          p_room_id: oldRoom,
+          p_skipped: true
+        });
+        if (error) console.error('Could not end skipped conversation:', error);
       } catch (error) {
         console.error('Error ending skipped conversation:', error);
       }
@@ -2309,7 +2270,7 @@ async function checkRoomStatus() {
 
       if (sessionExpired || !currentRoom) return;
 
-      const { error } = await supabaseClient
+      const { error } = await chatDb
         .from('reports')
         .insert({
           reporter_id: profileId,
@@ -2486,6 +2447,9 @@ async function checkRoomStatus() {
       if (adminUser) { show('admin'); switchAdminView('speakers'); refreshAdminDashboard(); return; }
       document.getElementById('adminLoginError').textContent = '';
       document.getElementById('adminLoginModal').classList.add('show');
+      if (TURNSTILE_ENABLED) prepareCaptcha('admin').catch(err => {
+        document.getElementById('adminLoginError').textContent = err.message;
+      });
     }
 
     function closeAdminLogin() {
@@ -2500,7 +2464,22 @@ async function checkRoomStatus() {
       errorBox.textContent = '';
       if (!email || !password) { errorBox.textContent = 'Enter both your email and password.'; return; }
       button.disabled = true; button.textContent = 'Signing in...';
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      const captchaToken = consumeCaptcha('admin');
+      if (TURNSTILE_ENABLED && !captchaToken) {
+        errorBox.textContent = 'Complete the human verification before signing in.';
+        button.disabled = false; button.textContent = 'Sign in';
+        return;
+      }
+      let data, error;
+      try {
+        ({ data, error } = await supabaseClient.auth.signInWithPassword({
+          email, password, ...(captchaToken ? { options: { captchaToken } } : {})
+        }));
+      } catch (signInError) {
+        error = signInError;
+      } finally {
+        if (TURNSTILE_ENABLED) resetCaptcha('admin');
+      }
       button.disabled = false; button.textContent = 'Sign in';
       if (error || !data.user) {
         errorBox.textContent = error?.message || 'Sign-in failed.';
@@ -2913,67 +2892,18 @@ async function saveSpeakerRequest(id) {
    
 async function cleanupPreviousConnection() {
   if (!profileId) return;
-
   try {
-    // When this browser reloads, end its previous active chat.
-    // The OTHER participant will detect this and see "You got ditched!".
-    const { error: roomError } = await supabaseClient
-      .from('chat_rooms')
-      .update({
-        status: 'ended',
-        skipped_by: profileId
-      })
-      .eq('status', 'active')
-      .or(
-        `user_one.eq.${profileId},user_two.eq.${profileId}`
-      );
-
-    if (roomError) {
-      console.error(
-        'Error ending refreshed chat:',
-        roomError
-      );
-
-      // Fallback for databases where skipped_by is unavailable.
-      // The other user will still see "You got ditched!" because
-      // checkRoomStatus no longer depends on skipped_by.
-      const { error: fallbackError } = await supabaseClient
-        .from('chat_rooms')
-        .update({ status: 'ended' })
-        .eq('status', 'active')
-        .or(
-          `user_one.eq.${profileId},user_two.eq.${profileId}`
-        );
-
-      if (fallbackError) {
-        console.error(
-          'Fallback refresh cleanup failed:',
-          fallbackError
-        );
-      }
-    }
-
-    // Remove the refreshing user from the waiting queue.
-    const { error: waitingError } = await supabaseClient
-      .from('waiting_users')
-      .delete()
-      .eq('profile_id', profileId);
-
-    if (waitingError) {
-      console.error(
-        'Could not remove user from waiting queue:',
-        waitingError
-      );
-    }
-
+    // End only rooms owned by the verified authenticated user. The other
+    // participant sees the familiar "You got ditched!" screen.
+    const { error } = await chatDb.rpc('ck_leave_chat', {
+      p_room_id: null,
+      p_skipped: true
+    });
+    if (error) console.error('Refresh cleanup failed:', error);
   } catch (error) {
-    console.error(
-      'Unexpected refresh cleanup error:',
-      error
-    );
+    console.error('Unexpected refresh cleanup error:', error);
   }
 }
-
 
     // ==========================================
     // PUBLIC ANNOUNCEMENTS
@@ -3060,7 +2990,17 @@ async function cleanupPreviousConnection() {
     });
 
     document.addEventListener('DOMContentLoaded', async () => {
-      await cleanupPreviousConnection();
+      // Never trust an old browser-stored profile id as database ownership.
+      // Supabase Auth is the source of truth after this migration.
+      try {
+        const { data } = await chatClient.auth.getSession();
+        profileId = data?.session?.user?.id || null;
+        if (profileId) localStorage.setItem('campusChatProfileId', profileId);
+        else localStorage.removeItem('campusChatProfileId');
+        await cleanupPreviousConnection();
+      } catch (error) {
+        console.error('Chat session recovery failed:', error);
+      }
       await restoreAdminSession();
       subscribeToPublicAnnouncements();
       document.getElementById('copyrightYear').textContent = new Date().getFullYear();
