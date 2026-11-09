@@ -799,23 +799,16 @@
         <span class="note">Promoted announcements for the community.</span>
       </div>
     </div>
-    <div class="seo-intro" aria-label="About anonymous chatting on Campus Konek">
-      <h2>Chat with strangers and make new connections</h2>
-      <p>Campus Konek is a random text chat website designed for adults in the Philippines, especially college students who want to meet new people. You can choose an optional nickname and school, then start looking for a conversation partner.</p>
-      <h2>How does Campus Konek work?</h2>
-      <p>Confirm you are 18 or older, select Start Chatting, and join the matching queue. Once matched, you can exchange text messages. If a conversation is not for you, use Skip to leave. If someone behaves inappropriately, use Report to raise a concern.</p>
-      <h2>Looking for an Omegle alternative in the Philippines?</h2>
-      <p>Campus Konek offers anonymous, random text conversations for people interested in meeting strangers online. It is not affiliated with Omegle or any university. We cannot verify the identity or intentions of chat partners, so avoid sharing private information.</p>
-      <p>Read our <a href="#about" onclick="openInfo('about');return false">About Us</a>, <a href="#guidelines" onclick="openInfo('guidelines');return false">Community Guidelines</a>, and <a href="#studentSafety" onclick="openInfo('studentSafety');return false">online safety tips</a> before chatting.</p>
-    </div>
-
-    <section class="seo-intro" aria-label="Student resource guides">
-      <h2>Student resources and online safety guides</h2>
-      <p>Explore practical guides for chatting safely, starting respectful conversations and protecting personal information online. These guides are available to read without entering a chat.</p>
+    <section id="studentResources" class="seo-intro" aria-label="How Campus Konek works and student resources">
+      <h2>How Campus Konek works</h2>
+      <p>Campus Konek connects adults aged 18 and above in the Philippines through anonymous text chats. Confirm your age, choose an optional nickname and school, and select Start Chatting to find a random partner. You can leave with Skip or report inappropriate behavior.</p>
+      <p>Chat partners are strangers whose identities we cannot verify. Protect your personal information, and read our <a href="#guidelines" onclick="openInfo('guidelines');return false">Community Guidelines</a> before chatting. Campus Konek is independent of Omegle and the universities listed on the site.</p>
+      <h2>Student guides</h2>
+      <p>Practical resources you can read anytime, without entering a chat:</p>
       <ul>
-        <li><a href="/online-safety-guide.html">Online Safety Guide for Anonymous Chats</a> — recognize warning signs and protect your identity.</li>
-        <li><a href="/campus-conversation-starters.html">Conversation Starters for College Students</a> — thoughtful topics to break the ice.</li>
-        <li><a href="/student-digital-privacy.html">Digital Privacy Checklist for Students</a> — reduce accidental oversharing.</li>
+        <li><a href="/online-safety-guide.html">Online Safety Guide</a> — spot red flags and stay safer in anonymous chats.</li>
+        <li><a href="/campus-conversation-starters.html">Conversation Starters</a> — ideas for respectful, engaging conversations.</li>
+        <li><a href="/student-digital-privacy.html">Digital Privacy Checklist</a> — reduce accidental oversharing.</li>
       </ul>
     </section>
   </section>
@@ -1227,10 +1220,7 @@
       <button onclick="openInfo('privacy')">Privacy Policy</button>
       <button onclick="openInfo('guidelines')">Community Guidelines</button>
       <button onclick="openInfo('contact')">Contact</button>
-      <button onclick="openInfo('studentSafety')">Online Safety Tips</button>
-      <a href="/online-safety-guide.html">Online Safety Guide</a>
-      <a href="/campus-conversation-starters.html">Conversation Starters</a>
-      <a href="/student-digital-privacy.html">Digital Privacy</a>
+      <button onclick="goHome().then(() => document.getElementById('studentResources').scrollIntoView({behavior:'smooth'}))">Student Guides</button>
       <button onclick="openTerms()">Terms &amp; Conditions</button>
     </nav>
     <p class="note">© <span id="copyrightYear"></span> Campus Konek · Connect. Chat. Discover. · For adults 18+</p>
