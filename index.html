@@ -746,6 +746,16 @@
     .admin-delete {background:#ad2323;color:white;border:0;border-radius:10px;padding:12px 15px;font-weight:700;}
     .admin-delete:disabled {opacity:.55;cursor:not-allowed;}
     .admin-feedback {margin:10px 0;color:#554c66;overflow-wrap:anywhere;}
+    /* Three separate screens inside the private admin dashboard */
+    .admin-nav { display:flex;flex-wrap:wrap;gap:9px;margin:18px 0 22px; }
+    .admin-nav button { padding:12px 15px;border:1px solid #dad4e9;background:#fff;border-radius:12px;font-weight:700;color:#493b66; }
+    .admin-nav button.active { background:var(--purple);border-color:var(--purple);color:white; }
+    .admin-view { display:none; }
+    .admin-view.active { display:block; }
+    .admin-list-filter { display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:15px 0; }
+    .admin-list-filter select {padding:10px;border:1px solid #ddd8e8;border-radius:10px;background:#fff;max-width:100%;}
+    @media(max-width:600px) { .admin-nav {display:grid;grid-template-columns:1fr;}.admin-nav button {width:100%;} }
+
   </style>
 </head>
 
@@ -1027,7 +1037,7 @@
     <h2>Information you provide</h2><p>When you use chat, you may enter a nickname, school, and messages. When you submit a report, suggestion, or Speaker request, the information you enter is submitted for that purpose. Speaker requests may include your chosen contact method and contact details.</p>
     <h2>How the website works</h2><p>The website uses Supabase for chat-related records, matching, announcements, reports, suggestions, and administrator authentication. A browser storage identifier helps associate your browser with a chat profile. Technical hosting and network providers may process connection information needed to deliver the service.</p>
     <h2>Who can see information</h2><p>Your current chat partner can see messages you send and the optional nickname and school you provide. Authorized administrators may access information needed to review Speaker requests and manage announcements, subject to database permissions. Do not assume chat messages are private from the service operator or technical providers.</p>
-    <h2>Retention and deletion</h2><p>Chat and submission records may remain in the database after a conversation ends. The current website code does not establish a verified automatic deletion period. For access or deletion requests, email <a href="mailto:support@campuskonek.com">support@campuskonek.com</a>.</p>
+    <h2>Retention and deletion</h2><p>Chat and submission records may remain in the database after a conversation ends. For ended, unreported chat rooms with a recorded ending timestamp, a scheduled database job is configured to delete messages after approximately 24–25 hours, subject to successful scheduler execution. Reported chats may be retained for moderation; other records have separate retention practices. For access or deletion requests, email <a href="mailto:support@campuskonek.com">support@campuskonek.com</a>.</p>
     <h2>Advertising and cookies</h2><p>Advertising is not yet enabled in this version. If ads are introduced, this policy will be updated to describe advertising partners, cookies, consent choices, and applicable controls before ads go live.</p>
     <h2>Questions or privacy requests</h2><p><strong>Operator contact:</strong> <a href="mailto:support@campuskonek.com">support@campuskonek.com</a>. Contact this address for privacy questions and requests to access or delete personal data.</p>
     <button class="primary" onclick="goHome()">Back to home</button>
@@ -1157,6 +1167,23 @@
           <button class="outline" onclick="goHome()">Homepage</button>
         </div>
       </div>
+      <nav class="admin-nav" aria-label="Admin dashboard sections">
+        <button type="button" id="adminNavSpeakers" class="active" onclick="switchAdminView('speakers')">📣 Speaker Requests</button>
+        <button type="button" id="adminNavReports" onclick="switchAdminView('reports')">🚩 Reports Management</button>
+        <button type="button" id="adminNavCleanup" onclick="switchAdminView('cleanup')">🧹 Request Cleanup</button>
+      </nav>
+      <div id="adminViewSpeakers" class="admin-view active">
+      <h3>📣 Speaker requests</h3>
+      <p class="note">The default worklist hides approved requests. Use the filter to view the approved archive; hiding does not delete any database records.</p>
+      <div class="admin-list-filter"><label for="speakerListFilter"><b>Show:</b></label>
+        <select id="speakerListFilter" onchange="renderSpeakerRequestList()">
+          <option value="action">Needs attention (default)</option>
+          <option value="approved">Approved archive</option>
+          <option value="all">All requests</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <button class="outline" type="button" onclick="loadSpeakerRequests()">↻ Refresh requests</button>
+      </div>
       <div class="admin-grid">
         <div class="admin-stat"><span class="muted">Total requests</span><strong id="statTotal">0</strong></div>
         <div class="admin-stat"><span class="muted">Awaiting review</span><strong id="statPending">0</strong></div>
@@ -1164,10 +1191,12 @@
       </div>
       <p class="note">Payment arrangement is handled manually outside Campus Konek. Add the amount and instructions here, then contact the applicant using their supplied details. Do not mark a request approved until you have verified payment and reviewed its content.</p>
       <div id="speakerRequests"><div class="card">Loading Speaker requests...</div></div>
+      </div><!-- /adminViewSpeakers -->
 
+      <div id="adminViewCleanup" class="admin-view">
       <section class="admin-section" aria-labelledby="cleanupHeading">
         <h3 id="cleanupHeading">🧹 Clear old announcement requests</h3>
-        <p class="note">Select submission dates (Philippine time), preview the number of eligible Speaker requests, then confirm permanent deletion. Requests linked to a public announcement are always protected. Approved requests with unexpired announcements are also protected.</p>
+        <p class="note">Select submission dates (Philippine time), preview the number of eligible Speaker requests, then confirm permanent deletion. Requests linked to a public announcement are always protected, even if expired. Approved requests with unexpired announcements are also protected. To hide approved records without deleting them, use Speaker Requests → Approved archive.</p>
         <div class="request-fields">
           <label><span class="muted">From date (inclusive)</span><input type="date" id="cleanupFrom" onchange="resetRequestCleanupPreview()"></label>
           <label><span class="muted">To date (inclusive)</span><input type="date" id="cleanupTo" onchange="resetRequestCleanupPreview()"></label>
@@ -1190,6 +1219,9 @@
         </div>
       </section>
 
+      </div><!-- /adminViewCleanup -->
+
+      <div id="adminViewReports" class="admin-view">
       <section class="admin-section" aria-labelledby="reportsHeading">
         <div class="admin-toolbar">
           <div><h3 id="reportsHeading">🚩 Reports management</h3><p class="note">Review submitted user reports and save moderator-only notes.</p></div>
@@ -1202,6 +1234,7 @@
         </div>
         <div id="adminReports"><p class="note">Reports load after admin sign-in.</p></div>
       </section>
+      </div><!-- /adminViewReports -->
     </div>
   </section>
 
@@ -2463,7 +2496,7 @@ async function checkRoomStatus() {
     // ==========================================
 
     function openAdmin() {
-      if (adminUser) { show('admin'); refreshAdminDashboard(); return; }
+      if (adminUser) { show('admin'); switchAdminView('speakers'); refreshAdminDashboard(); return; }
       document.getElementById('adminLoginError').textContent = '';
       document.getElementById('adminLoginModal').classList.add('show');
     }
@@ -2498,6 +2531,7 @@ async function checkRoomStatus() {
       document.getElementById('adminPassword').value = '';
       document.getElementById('adminSignedInAs').textContent = 'Signed in as ' + (adminUser.email || 'admin');
       show('admin');
+      switchAdminView('speakers');
       await refreshAdminDashboard();
     }
 
@@ -2521,6 +2555,8 @@ async function checkRoomStatus() {
       return local.toISOString().slice(0, 16);
     }
 
+    let speakerRequestCache = [];
+
     async function loadSpeakerRequests() {
       const container = document.getElementById('speakerRequests');
       if (!adminUser) { container.innerHTML = '<div class="card">Please sign in as an admin.</div>'; return; }
@@ -2536,7 +2572,26 @@ async function checkRoomStatus() {
       document.getElementById('statTotal').textContent = rows.length;
       document.getElementById('statPending').textContent = rows.filter(r => r.status === 'pending_review').length;
       document.getElementById('statApproved').textContent = rows.filter(r => r.status === 'approved').length;
-      if (!rows.length) { container.innerHTML = '<div class="card">No Speaker requests yet.</div>'; return; }
+      speakerRequestCache = rows;
+      renderSpeakerRequestList();
+    }
+
+    function renderSpeakerRequestList() {
+      const container = document.getElementById('speakerRequests');
+      const filter = document.getElementById('speakerListFilter').value;
+      const rows = speakerRequestCache.filter(r => {
+        if (filter === 'all') return true;
+        if (filter === 'approved') return r.status === 'approved';
+        if (filter === 'rejected') return r.status === 'rejected';
+        return r.status !== 'approved' && r.status !== 'rejected';
+      });
+      if (!rows.length) {
+        const message = filter === 'action'
+          ? 'Nothing needs attention right now. Approved requests are in the Approved archive.'
+          : 'No requests match this filter.';
+        container.innerHTML = '<div class="card">' + message + '</div>';
+        return;
+      }
       container.innerHTML = rows.map(r => `
         <article class="request-card" data-request-id="${escapeHTML(r.id)}">
           <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
@@ -2740,6 +2795,21 @@ async function saveSpeakerRequest(id) {
     // ADMIN REPORTS MANAGEMENT
     // ==========================================
 
+    function switchAdminView(which) {
+      if (!adminUser || !['speakers', 'reports', 'cleanup'].includes(which)) return;
+      const names = {speakers:'Speakers',reports:'Reports',cleanup:'Cleanup'};
+      for (const [key, suffix] of Object.entries(names)) {
+        document.getElementById('adminView' + suffix).classList.toggle('active', key === which);
+        const nav = document.getElementById('adminNav' + suffix);
+        nav.classList.toggle('active', key === which);
+        nav.setAttribute('aria-current', key === which ? 'page' : 'false');
+      }
+      // Each destination is independent; no long scrolling through unrelated sections.
+      if (which === 'reports') loadAdminReports();
+      if (which === 'speakers') loadSpeakerRequests();
+      window.scrollTo({top:0,behavior:'instant'});
+    }
+
     async function refreshAdminDashboard() {
       if (!adminUser) return;
       await Promise.all([loadSpeakerRequests(), loadAdminReports()]);
@@ -2883,6 +2953,9 @@ async function saveSpeakerRequest(id) {
         const deleted = Number(data);
         document.getElementById('cleanupFeedback').textContent = `Deleted ${deleted} eligible Speaker request${deleted === 1 ? '' : 's'}. Published announcements were protected.`;
         await loadSpeakerRequests();
+        if (deleted === 0) {
+          document.getElementById('cleanupFeedback').textContent += ' If old approved requests still appear in the archive, they may be protected because a public announcement is linked to them. The default Speaker worklist hides approved requests.';
+        }
       }
       cleanupPreview = null;
     }
