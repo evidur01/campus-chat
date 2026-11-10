@@ -2175,11 +2175,15 @@ async function checkRoomStatus() {
     // MESSAGES
     // ==========================================
 
+    // Keep the reader's position during message polling. Only follow the latest
+    // messages if they were already at the bottom of the conversation.
+    let lastRenderedMessageRoom = null;
+    let lastRenderedMessageSignature = null;
+
     async function loadMessages() {
       if (!currentRoom || sessionExpired) return;
 
       const roomId = currentRoom;
-
       const { data, error } = await chatDb
         .from('messages')
         .select('*')
@@ -2187,34 +2191,52 @@ async function checkRoomStatus() {
         .order('created_at', { ascending: true });
 
       if (sessionExpired || currentRoom !== roomId) return;
-
       if (error) {
         console.error(error);
         return;
       }
 
       const container = document.getElementById('msgs');
-      container.innerHTML = '';
+      const messages = data || [];
+      const signature = JSON.stringify(messages.map(message => [
+        message.id, message.sender_id, message.content
+      ]));
+      const firstRenderForRoom = lastRenderedMessageRoom !== roomId;
 
-      if (!data || data.length === 0) {
-        container.innerHTML =
-          '<div class="system">You are connected! Say hello 👋</div>';
+      // Polling should never destroy/rebuild the message elements if nothing changed.
+      // This also avoids interrupting text selection and touch scrolling.
+      if (!firstRenderForRoom && signature === lastRenderedMessageSignature) return;
+
+      // Measure AFTER the network request so user scrolling during the request wins.
+      const previousScrollTop = container.scrollTop;
+      const distanceFromBottom = container.scrollHeight - container.clientHeight - previousScrollTop;
+      const wasNearBottom = distanceFromBottom <= 80;
+
+      const fragment = document.createDocumentFragment();
+      if (messages.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'system';
+        empty.textContent = 'You are connected! Say hello 👋';
+        fragment.appendChild(empty);
       } else {
-        data.forEach(message => {
+        messages.forEach(message => {
           const div = document.createElement('div');
-
-          div.className =
-            message.sender_id === profileId
-              ? 'msg me'
-              : 'msg them';
-
+          div.className = message.sender_id === profileId ? 'msg me' : 'msg them';
           div.textContent = message.content;
-
-          container.appendChild(div);
+          fragment.appendChild(div);
         });
       }
 
-      container.scrollTop = container.scrollHeight;
+      container.replaceChildren(fragment);
+      lastRenderedMessageRoom = roomId;
+      lastRenderedMessageSignature = signature;
+
+      if (firstRenderForRoom || wasNearBottom) {
+        container.scrollTop = container.scrollHeight;
+      } else {
+        // Preserve the exact position while the user reads earlier messages.
+        container.scrollTop = previousScrollTop;
+      }
     }
 
     async function send() {
@@ -3074,4 +3096,3 @@ async function cleanupPreviousConnection() {
 
 </body>
 </html>
-
