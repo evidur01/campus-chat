@@ -433,28 +433,6 @@
       margin-top: 8px;
     }
 
-    .suggestion-footer {
-      max-width: 1080px;
-      margin: 0 auto 30px;
-      padding: 0 25px;
-      text-align: center;
-    }
-
-    .suggestion-footer button {
-      width: 100%;
-      background: white;
-      color: var(--purple);
-      border: 1px solid #dcd7e8;
-      border-radius: 12px;
-      padding: 15px;
-      font-weight: 700;
-    }
-
-    .suggestion-footer button:hover { background: #f1eeff; }
-
-    /* The mobile-only suggestion button lives in the bottom action dock. */
-    .mobile-suggestion { display: none; }
-
     .ditched-wrap, .ended-wrap {
       max-width: 600px;
       margin: 70px auto;
@@ -658,7 +636,7 @@
       body.chat-view .composer { padding: 9px; flex-shrink: 0; }
       body.chat-view .composer input { min-width: 0; font-size: 16px; }
 
-      /* Buttons follow the chat input in normal flow, so they cannot
+      /* Skip and Report follow the chat input in normal flow, so they cannot
          float halfway up the page or cover the text composer. */
       body.chat-view .side {
         position: static;
@@ -683,26 +661,38 @@
         margin: 0;
         min-height: 44px;
       }
-      body.chat-view .side .mobile-suggestion {
-        display: block;
-        grid-column: 1 / -1;
-        grid-row: 1;
-        background: #f7f5ff;
-        color: var(--purple);
-        border: 1px solid #dcd7e8;
-        border-radius: 11px;
-        font-size: 12px;
-        font-weight: 700;
-        padding: 8px;
-        line-height: 1.25;
-      }
-      body.chat-view .side .next { grid-column: 1; grid-row: 2; }
-      body.chat-view .side .outline { grid-column: 2; grid-row: 2; }
-      body.chat-view .suggestion-footer,
+      body.chat-view .side .next { grid-column: 1; grid-row: 1; }
+      body.chat-view .side .outline { grid-column: 2; grid-row: 1; }
       body.chat-view .site-footer { display: none; }
 
       .ditched-wrap, .ended-wrap { margin: 35px auto; }
       .ditched-card, .ended-card { padding: 32px 20px; }
+    }
+
+    /* Suggestions appear after either side of a finished conversation, not during chat. */
+    .ended-suggestion {
+      display: block;
+      width: 100%;
+      max-width: 380px;
+      margin: 14px auto 0;
+      color: var(--purple);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    /* Let announcements remain readable without taking over the mobile chat. */
+    @media (max-width: 760px) {
+      .announcement-bar.show {
+        max-height: clamp(90px, 18dvh, 130px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 6px 12px;
+      }
+      .announcement-item { padding: 4px 0; }
+      .announcement-heading { font-size: 11px; margin-bottom: 2px; }
+      .announcement-copy { font-size: 12px; line-height: 1.3; }
+      .announcement-expiry { font-size: 10px; margin-top: 2px; }
     }
 
     /* Public information pages and accessible site footer */
@@ -726,8 +716,7 @@
       body.info-view .site-footer {
         padding-bottom: calc(35px + env(safe-area-inset-bottom));
       }
-      body.info-view .side,
-      body.info-view .suggestion-footer { display: none !important; }
+      body.info-view .side { display: none !important; }
       /* Only show the fixed dock during an active chat page. */
       body:not(.chat-view) .side { display: none !important; }
     }
@@ -949,6 +938,7 @@
         <button class="primary" onclick="findSomeoneElse()">
           🎲 Find Someone New
         </button>
+        <button class="outline ended-suggestion" onclick="openSuggestion()">💡 Got any suggestions? Help us improve Campus Konek</button>
       </div>
     </div>
   </section>
@@ -966,6 +956,7 @@
         <button class="primary" onclick="findSomeoneElse()">
           🎲 New Chat
         </button>
+        <button class="outline ended-suggestion" onclick="openSuggestion()">💡 Got any suggestions? Help us improve Campus Konek</button>
       </div>
     </div>
   </section>
@@ -1021,15 +1012,9 @@
           🚩 Report
         </button>
 
-        <button class="mobile-suggestion" onclick="openSuggestion()">
-          💡 Got any suggestions? Help us improve Campus Konek
-        </button>
       </aside>
     </div>
 
-    <div class="suggestion-footer">
-      <button onclick="openSuggestion()">💡 Got any suggestions? Help us improve Campus Konek</button>
-    </div>
   </section>
 
 
