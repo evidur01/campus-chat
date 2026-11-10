@@ -449,6 +449,35 @@
       overflow: hidden;
     }
 
+
+    /* End-of-chat transcript: read-only and local to the current browser tab. */
+    .ended-history {
+      margin-top: 16px;
+      padding: 18px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      text-align: left;
+      box-shadow: 0 8px 25px #2d21610a;
+    }
+    .ended-history[hidden] { display: none !important; }
+    .ended-history h3 { margin: 0 0 4px; font-size: 16px; }
+    .ended-history .note { margin: 0 0 12px; }
+    .ended-history-messages {
+      max-height: min(40vh, 320px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #faf9fd;
+      border: 1px solid var(--line);
+    }
+    .ended-history-messages .msg { font-size: 14px; }
+    @media (max-width: 760px) {
+      .ended-history { padding: 14px; }
+      .ended-history-messages { max-height: 35dvh; }
+    }
+
     /* Recipient animation: their chat partner runs away. */
     .escape-scene {
       height: 110px;
@@ -940,6 +969,11 @@
         </button>
         <button class="outline ended-suggestion" onclick="openSuggestion()">💡 Got any suggestions? Help us improve Campus Konek</button>
       </div>
+      <div class="ended-history" id="ditchedHistory" hidden>
+        <h3>💬 Your conversation</h3>
+        <p class="note">Read-only history from this chat. It won't be available after you leave this page or refresh.</p>
+        <div class="ended-history-messages" id="ditchedHistoryMessages" aria-label="Ended conversation messages"></div>
+      </div>
     </div>
   </section>
 
@@ -957,6 +991,11 @@
           🎲 New Chat
         </button>
         <button class="outline ended-suggestion" onclick="openSuggestion()">💡 Got any suggestions? Help us improve Campus Konek</button>
+      </div>
+      <div class="ended-history" id="endedHistory" hidden>
+        <h3>💬 Your conversation</h3>
+        <p class="note">Read-only history from this chat. It won't be available after you leave this page or refresh.</p>
+        <div class="ended-history-messages" id="endedHistoryMessages" aria-label="Ended conversation messages"></div>
       </div>
     </div>
   </section>
@@ -1653,6 +1692,49 @@
       }
     }
 
+    // Show the previous conversation after the ending animation has had time
+    // to play. Copy only rendered message text into local page memory: no new
+    // database permissions, saved transcript, or Supabase retention changes.
+    let endedHistoryRevealTimer = null;
+
+    function snapshotVisibleConversation() {
+      return Array.from(document.querySelectorAll('#msgs .msg'), node => ({
+        mine: node.classList.contains('me'),
+        text: node.textContent
+      }));
+    }
+
+    function clearEndedHistory() {
+      clearTimeout(endedHistoryRevealTimer);
+      endedHistoryRevealTimer = null;
+      for (const kind of ['ended', 'ditched']) {
+        const panel = document.getElementById(kind + 'History');
+        const messages = document.getElementById(kind + 'HistoryMessages');
+        if (panel) panel.hidden = true;
+        if (messages) messages.replaceChildren();
+      }
+    }
+
+    function revealEndedHistory(kind, snapshot) {
+      clearEndedHistory();
+      if (!snapshot.length) return;
+      const panel = document.getElementById(kind + 'History');
+      const container = document.getElementById(kind + 'HistoryMessages');
+      if (!panel || !container) return;
+      for (const entry of snapshot) {
+        const message = document.createElement('div');
+        message.className = 'msg ' + (entry.mine ? 'me' : 'them');
+        message.textContent = entry.text;
+        container.appendChild(message);
+      }
+      endedHistoryRevealTimer = setTimeout(() => {
+        if (!document.getElementById(kind).classList.contains('active')) return;
+        panel.hidden = false;
+        container.scrollTop = 0;
+        endedHistoryRevealTimer = null;
+      }, 2100);
+    }
+
     // ==========================================
     // GENERAL NAVIGATION
     // ==========================================
@@ -1704,6 +1786,7 @@
     }
 
     function show(id) {
+      if (id !== 'ended' && id !== 'ditched') clearEndedHistory();
       // Page-specific layout prevents mobile chat controls covering policy pages.
       document.body.classList.toggle('info-view',
         ['about', 'privacy', 'guidelines', 'contact', 'studentSafety'].includes(id));
@@ -2151,9 +2234,11 @@ async function checkRoomStatus() {
         "They didn't say goodbye. They just chose the mysterious exit. 🚪",
         "Maybe the family Wi-Fi got switched off. A tragic ending. 📶"
       ];
+      const conversation = snapshotVisibleConversation();
       const message = jokes[Math.floor(Math.random() * jokes.length)];
       document.getElementById('ditchMessage').textContent = message;
       show('ditched');
+      revealEndedHistory('ditched', conversation);
     }
 
     // ==========================================
@@ -2273,6 +2358,7 @@ async function checkRoomStatus() {
 
       const attemptId = ++chatAttemptId;
       const oldRoom = currentRoom;
+      const conversation = snapshotVisibleConversation();
       closeSkipConfirmation();
       clearTimers();
 
@@ -2300,6 +2386,7 @@ async function checkRoomStatus() {
       // The other participant detects skipped_by in checkRoomStatus() and sees "You got ditched!".
       // Deliberately do not call findMatch() automatically.
       show('ended');
+      revealEndedHistory('ended', conversation);
     }
 
     async function findSomeoneElse() {
