@@ -891,6 +891,7 @@
           <p class="note" id="chatCaptchaHelp">Cloudflare Turnstile helps protect Campus Konek against automated sign-ups.</p>
         </div>
         <button
+          id="findChatButton"
           class="primary"
           style="width:100%; margin-top:24px"
           onclick="startChat()"
@@ -1047,7 +1048,7 @@
     <p><strong>Last updated:</strong> November 10, 2026</p>
     <p>This policy explains how Campus Konek collects, uses, stores, and deletes information based on the website and database processes currently configured. Technical failures or legally required preservation may affect the timing of deletion.</p>
     <h2>Information you provide</h2><p>When you use chat, you may enter a nickname, school, and messages. When you submit a report, suggestion, or Speaker request, the information you enter is submitted for that purpose. Speaker requests may include your chosen contact method and contact details.</p>
-    <h2>How the website works</h2><p>The website uses Supabase for chat-related records, matching, announcements, reports, suggestions, and administrator authentication. A browser storage identifier currently helps associate your browser with a chat profile. A future security update will use a Supabase anonymous authentication identity to protect sessions; this feature is not yet active in this deployment. Technical hosting and network providers may process connection information needed to deliver the service.</p>
+    <h2>How the website works</h2><p>The website uses Supabase for chat-related records, matching, announcements, reports, suggestions, and administrator authentication. Anonymous chat uses a Supabase authentication identity associated with your chat profile, and browser storage maintains that session between visits. Technical hosting and network providers may process connection information needed to deliver the service.</p>
     <h2>Who can see information</h2><p>Your current chat partner can see messages you send and the optional nickname and school you provide. Authorized administrators may access information needed to review Speaker requests and manage announcements, subject to database permissions. Do not assume chat messages are private from the service operator or technical providers.</p>
     <h2>Chat message retention</h2>
     <p>For conversations marked ended with a recorded <code>ended_at</code> timestamp and no associated report, an hourly scheduled database job deletes chat messages once the conversation has been ended for at least 24 hours. Under normal operation this happens approximately 24 to 25 hours after the conversation ends. It does not delete messages from active conversations or automatically cover older rooms missing an ending timestamp. Database backups or technical logs may have separate retention periods.</p>
@@ -1059,10 +1060,10 @@
     <p>Profiles, browser identifiers, matchmaking records, suggestions, and administrator authentication records are not covered by the chat-message and Speaker-request cleanup schedules above. Retention for these categories is still being reviewed. To ask about your data or request access, correction, or deletion, email <a href="mailto:support@campuskonek.com">support@campuskonek.com</a>. We may request reasonable information to verify your request and may retain information when legally required.</p>
     <h2>Cookies, browser storage and anti-abuse services</h2>
     <p>Campus Konek uses browser storage to maintain Supabase authentication sessions and website functionality. Cloudflare Turnstile provides anti-bot checks during sign-in; Cloudflare and Supabase may process technical identifiers, device or connection details and security signals as necessary to provide these services. Refer to the <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare Privacy Policy</a> and <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer">Supabase Privacy Policy</a> for more information.</p>
-    <h2>Advertising and future Google AdSense use</h2>
-    <p>Campus Konek has not activated Google AdSense advertising in this website version. The matching screen may display an advertising placeholder, but a placeholder does not load Google ads or imply any endorsement or approval from Google.</p>
-    <p>If Google advertising is activated later, Google and other participating third-party advertising vendors may use cookies, IP addresses, web beacons or similar identifiers to serve, measure and personalize advertising based on activity on this and other websites, subject to applicable settings and consent requirements. Third parties may place or read cookies from your browser as a result of ad serving. You can learn <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">how Google uses information from partner sites</a> and manage Google ad personalization through <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer">My Ad Center</a>. Some third-party advertising vendors also offer opt-out choices through <a href="https://optout.aboutads.info/" target="_blank" rel="noopener noreferrer">WebChoices</a>.</p>
-    <p>Before enabling advertising, we will review the final ad placement, identify advertising partners as applicable, implement any required consent and privacy controls, and revise this notice if the actual data processing differs. No Google ad script has been added to the current website.</p>
+    <h2>Advertising and Google AdSense</h2>
+    <p>The Campus Konek homepage loads the Google AdSense script. The matching screen also contains an advertising placeholder; that placeholder is not itself a Google ad unit. The presence of the script or placeholder does not imply endorsement or approval from Google.</p>
+    <p>Google and other participating third-party advertising vendors may use cookies, IP addresses, web beacons or similar identifiers to serve, measure and personalize advertising based on activity on this and other websites, subject to applicable settings and consent requirements. Third parties may place or read cookies from your browser as a result of ad serving. You can learn <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">how Google uses information from partner sites</a> and manage Google ad personalization through <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer">My Ad Center</a>. Some third-party advertising vendors also offer opt-out choices through <a href="https://optout.aboutads.info/" target="_blank" rel="noopener noreferrer">WebChoices</a>.</p>
+    <p>This notice will be updated if advertising partners, ad placement, or data processing changes.</p>
     <h2>Questions or privacy requests</h2><p><strong>Operator contact:</strong> <a href="mailto:support@campuskonek.com">support@campuskonek.com</a>. Contact this address for privacy questions and requests to access or delete personal data.</p>
     <button class="primary" onclick="goHome()">Back to home</button>
   </div></div></section>
@@ -1354,15 +1355,19 @@
     let turnstileScriptPromise = null;
     function loadTurnstileScript() {
       if (!TURNSTILE_ENABLED) return Promise.resolve();
+      if (window.turnstile) return Promise.resolve();
       if (turnstileScriptPromise) return turnstileScriptPromise;
+      const script = document.createElement('script');
       turnstileScriptPromise = new Promise((resolve, reject) => {
-        if (window.turnstile) { resolve(); return; }
-        const script = document.createElement('script');
         script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
         script.async = true;
         script.onload = resolve;
         script.onerror = () => reject(new Error('Could not load Cloudflare Turnstile.'));
         document.head.appendChild(script);
+      }).catch(error => {
+        script.remove();
+        turnstileScriptPromise = null;
+        throw error;
       });
       return turnstileScriptPromise;
     }
@@ -1402,8 +1407,10 @@
       let user = sessionResult?.session?.user;
       if (!user) {
         const captchaToken = consumeCaptcha('chat');
-        if (TURNSTILE_ENABLED && !captchaToken)
+        if (TURNSTILE_ENABLED && !captchaToken) {
+          await prepareCaptcha('chat');
           throw new Error('Complete the human verification first.');
+        }
         const options = captchaToken ? { options: { captchaToken } } : {};
         let result;
         try { result = await chatClient.auth.signInAnonymously(options); }
@@ -1487,6 +1494,36 @@
     let messageTimer = null;
     let matchTimer = null;
     let roomStatusTimer = null;
+    let chatAttemptId = 0;
+    let startChatPending = false;
+    let pendingMatchRequest = null;
+    let pendingChatCleanup = Promise.resolve();
+
+    function isCurrentChatAttempt(attemptId) {
+      return attemptId === chatAttemptId && !sessionExpired && !terminatingSession;
+    }
+
+    function leaveChat(roomId = null) {
+      const matching = pendingMatchRequest;
+      // A cancelled match can still create a room or queue entry on the server.
+      // Finish that request before removing it, and finish cleanup before rejoining.
+      const cleanup = pendingChatCleanup.then(async () => {
+        if (matching) {
+          try { await matching; } catch (error) {
+            console.error('Pending match failed while leaving:', error);
+          }
+        }
+        if (!profileId) return;
+        const { error } = await chatDb.rpc('ck_leave_chat', {
+          p_room_id: matching ? null : roomId,
+          p_skipped: true
+        });
+        if (error) throw error;
+      });
+      // Let a later leave attempt retry even if this one fails.
+      pendingChatCleanup = cleanup.catch(() => {});
+      return cleanup;
+    }
 
     // ==========================================
     // INACTIVITY SESSION MANAGEMENT
@@ -1578,6 +1615,7 @@
 
       terminatingSession = true;
       sessionExpired = true;
+      const attemptId = ++chatAttemptId;
 
       stopIdleMonitor();
       clearTimers();
@@ -1594,17 +1632,14 @@
       try {
         if (expiredProfileId) {
 
-          const { error } = await chatDb.rpc('ck_leave_chat', {
-            p_room_id: null,
-            p_skipped: true
-          });
-          if (error) console.error('Idle cleanup failed:', error);
+          await leaveChat();
         }
 
       } catch (error) {
         console.error('Inactivity cleanup error:', error);
 
       } finally {
+        if (attemptId !== chatAttemptId) return;
         currentRoom = null;
 
         // Reset the chat interface.
@@ -1640,7 +1675,11 @@
     function openInfo(id) {
       // Leave an active conversation cleanly before opening a public page.
       if (currentRoom || document.getElementById('matching').classList.contains('active')) {
-        goHome().then(() => show(id));
+        const leaving = goHome();
+        const attemptId = chatAttemptId;
+        leaving.then(() => {
+          if (attemptId === chatAttemptId) show(id);
+        });
       } else {
         show(id);
       }
@@ -1648,22 +1687,21 @@
 
     async function goHome() {
       // Leaving an active match/chat ends it and removes any queue entry.
+      ++chatAttemptId;
       stopIdleMonitor();
       clearTimers();
       const leavingRoom = currentRoom;
       currentRoom = null;
-      if (profileId) {
-        const { error } = await chatDb.rpc('ck_leave_chat', {
-          p_room_id: leavingRoom || null,
-          p_skipped: true
-        });
-        if (error) console.error('Could not leave chat:', error);
-      }
       sessionExpired = false;
       terminatingSession = false;
       document.getElementById('input').disabled = true;
       document.getElementById('sendButton').disabled = true;
       show('home');
+      try {
+        await leaveChat(leavingRoom);
+      } catch (error) {
+        console.error('Could not leave chat:', error);
+      }
     }
 
     // Track the visible iOS Safari viewport, including keyboard/toolbars.
@@ -1819,40 +1857,53 @@
     // ==========================================
 
     async function startChat() {
-      if (terminatingSession) return;
-      if (CHAT_AUTH_ENABLED) {
-        try {
-          await ensureChatAuth();
-        } catch (error) {
-          console.error('Anonymous authentication failed:', error);
-          alert(error?.message || 'Could not verify your chat session. Please try again.');
-          return;
+      if (terminatingSession || startChatPending) return;
+      startChatPending = true;
+      const attemptId = ++chatAttemptId;
+      const button = document.getElementById('findChatButton');
+      button.disabled = true;
+      try {
+        if (CHAT_AUTH_ENABLED) {
+          try {
+            await ensureChatAuth();
+          } catch (error) {
+            if (attemptId === chatAttemptId) {
+              console.error('Anonymous authentication failed:', error);
+              alert(error?.message || 'Could not verify your chat session. Please try again.');
+            }
+            return;
+          }
         }
-      }
+        if (attemptId !== chatAttemptId || terminatingSession) return;
 
-      // Begin the inactivity countdown.
-      startIdleMonitor();
+        // Begin the inactivity countdown.
+        startIdleMonitor();
 
-      nickname = document.getElementById('nicknameInput').value.trim();
-      school = document.getElementById('schoolInput').value.trim();
+        nickname = document.getElementById('nicknameInput').value.trim();
+        school = document.getElementById('schoolInput').value.trim();
 
-      showMatching(
-        'Finding someone to chat with...',
-        'Hang tight while we look for another student.'
-      );
+        showMatching(
+          'Finding someone to chat with...',
+          'Hang tight while we look for another student.'
+        );
 
-      const profileCreated = await createOrUpdateProfile();
+        const profileCreated = await createOrUpdateProfile();
 
-      // Prevent an expired session from continuing.
-      if (sessionExpired) return;
+        // Ignore responses from a search the user has already left.
+        if (!isCurrentChatAttempt(attemptId)) return;
 
-      if (profileCreated) {
-        await findMatch();
+        if (profileCreated) {
+          await findMatch();
+        }
+      } finally {
+        startChatPending = false;
+        button.disabled = false;
       }
     }
 
     async function createOrUpdateProfile() {
       if (sessionExpired) return false;
+      const attemptId = chatAttemptId;
 
       if (!profileId) {
         const { data, error } = await chatDb
@@ -1865,7 +1916,7 @@
           .select()
           .single();
 
-        if (sessionExpired) return false;
+        if (!isCurrentChatAttempt(attemptId)) return false;
 
         if (error) {
           console.error(error);
@@ -1887,7 +1938,7 @@
         ? await profileTable.upsert({ id: profileId, school: school || null, nickname: nickname || null }, { onConflict: 'id' })
         : await profileTable.update({ school: school || null, nickname: nickname || null }).eq('id', profileId);
 
-      if (sessionExpired) return false;
+      if (!isCurrentChatAttempt(attemptId)) return false;
 
       if (error) {
         console.error(error);
@@ -1914,14 +1965,26 @@
 
     async function findMatch() {
       if (!profileId || sessionExpired || terminatingSession) return;
+      const attemptId = ++chatAttemptId;
       currentRoom = null;
       clearTimers();
+      await pendingChatCleanup;
+      if (!isCurrentChatAttempt(attemptId)) return;
       // Server-side global advisory lock serializes queue claiming and room creation.
-      const { data, error } = await chatDb.rpc('ck_matchmake', {
+      const request = Promise.resolve(chatDb.rpc('ck_matchmake', {
         p_nickname: nickname || null,
         p_school: school || null
-      });
-      if (sessionExpired) return;
+      }));
+      pendingMatchRequest = request;
+      let data, error;
+      try {
+        ({ data, error } = await request);
+      } catch (requestError) {
+        error = requestError;
+      } finally {
+        if (pendingMatchRequest === request) pendingMatchRequest = null;
+      }
+      if (!isCurrentChatAttempt(attemptId)) return;
       if (error || !data?.length) {
         console.error('Secure matching failed:', error);
         stopIdleMonitor();
@@ -1932,17 +1995,17 @@
       const result = data[0];
       if (result.room_id) {
         currentRoom = result.room_id;
-        await loadPartnerInfo(result.partner_id);
-        if (!sessionExpired && currentRoom === result.room_id) matched();
+        await loadPartnerInfo(result.partner_id, attemptId);
+        if (currentRoom === result.room_id) matched(attemptId);
       } else {
         // Only the caller can see their room; a partner's successful match
         // appears when it is created by the database transaction.
-        matchTimer = setInterval(checkForRoom, 2000);
+        matchTimer = setInterval(() => checkForRoom(attemptId), 2000);
       }
     }
 
-    async function checkForRoom() {
-      if (!profileId || currentRoom || sessionExpired) return;
+    async function checkForRoom(attemptId = chatAttemptId) {
+      if (!profileId || currentRoom || !isCurrentChatAttempt(attemptId)) return;
 
       const { data: rooms, error } = await chatDb
         .from('chat_rooms')
@@ -1952,7 +2015,7 @@
         .order('created_at', { ascending: false })
         .limit(1);
 
-      if (sessionExpired) return;
+      if (!isCurrentChatAttempt(attemptId) || currentRoom) return;
 
       if (error) {
         console.error(error);
@@ -1974,19 +2037,8 @@
         currentRoom = room.id;
 
 
-        if (sessionExpired) {
-          await chatDb.rpc('ck_leave_chat', {
-            p_room_id: room.id,
-            p_skipped: true
-          });
-          return;
-        }
-
-        await loadPartnerInfo(partnerId);
-
-        if (sessionExpired) return;
-
-        matched();
+        await loadPartnerInfo(partnerId, attemptId);
+        if (currentRoom === room.id) matched(attemptId);
       }
     }
 
@@ -1994,14 +2046,14 @@
     // PARTNER INFORMATION
     // ==========================================
 
-    async function loadPartnerInfo(partnerId) {
+    async function loadPartnerInfo(partnerId, attemptId = chatAttemptId) {
       const { data, error } = await chatDb
         .from('profiles')
         .select('nickname, school')
         .eq('id', partnerId)
         .single();
 
-      if (sessionExpired) return;
+      if (!isCurrentChatAttempt(attemptId)) return;
 
       if (error || !data) {
         document.getElementById('partnerName').textContent =
@@ -2037,8 +2089,8 @@
     // CONNECTED CHAT
     // ==========================================
 
-    function matched() {
-      if (sessionExpired || terminatingSession) return;
+    function matched(attemptId = chatAttemptId) {
+      if (!currentRoom || !isCurrentChatAttempt(attemptId)) return;
 
       clearInterval(matchTimer);
       matchTimer = null;
@@ -2087,6 +2139,7 @@ async function checkRoomStatus() {
 
   if (room.status === 'ended') {
     // The OTHER participant ended or left the conversation.
+    ++chatAttemptId;
     currentRoom = null;
     clearTimers();
 
@@ -2211,6 +2264,7 @@ async function checkRoomStatus() {
     async function confirmSkip() {
       if (sessionExpired || terminatingSession || !currentRoom) return;
 
+      const attemptId = ++chatAttemptId;
       const oldRoom = currentRoom;
       closeSkipConfirmation();
       clearTimers();
@@ -2222,16 +2276,12 @@ async function checkRoomStatus() {
       document.getElementById('statusBadge').textContent = 'Disconnected';
 
       try {
-        const { error } = await chatDb.rpc('ck_leave_chat', {
-          p_room_id: oldRoom,
-          p_skipped: true
-        });
-        if (error) console.error('Could not end skipped conversation:', error);
+        await leaveChat(oldRoom);
       } catch (error) {
         console.error('Error ending skipped conversation:', error);
       }
 
-      if (sessionExpired) return;
+      if (!isCurrentChatAttempt(attemptId)) return;
 
       document.getElementById('msgs').innerHTML =
         '<div class="system">You ended this conversation.</div>';
@@ -2470,13 +2520,20 @@ async function checkRoomStatus() {
       const password = document.getElementById('adminPassword').value;
       const button = document.getElementById('adminLoginButton');
       const errorBox = document.getElementById('adminLoginError');
+      if (button.disabled) return;
       errorBox.textContent = '';
       if (!email || !password) { errorBox.textContent = 'Enter both your email and password.'; return; }
       button.disabled = true; button.textContent = 'Signing in...';
       const captchaToken = consumeCaptcha('admin');
       if (TURNSTILE_ENABLED && !captchaToken) {
-        errorBox.textContent = 'Complete the human verification before signing in.';
-        button.disabled = false; button.textContent = 'Sign in';
+        try {
+          await prepareCaptcha('admin');
+          errorBox.textContent = 'Complete the human verification before signing in.';
+        } catch (captchaError) {
+          errorBox.textContent = captchaError.message;
+        } finally {
+          button.disabled = false; button.textContent = 'Sign in';
+        }
         return;
       }
       let data, error;
@@ -2901,14 +2958,11 @@ async function saveSpeakerRequest(id) {
    
 async function cleanupPreviousConnection() {
   if (!profileId) return;
+  ++chatAttemptId;
   try {
     // End only rooms owned by the verified authenticated user. The other
     // participant sees the familiar "You got ditched!" screen.
-    const { error } = await chatDb.rpc('ck_leave_chat', {
-      p_room_id: null,
-      p_skipped: true
-    });
-    if (error) console.error('Refresh cleanup failed:', error);
+    await leaveChat();
   } catch (error) {
     console.error('Unexpected refresh cleanup error:', error);
   }
@@ -3020,3 +3074,4 @@ async function cleanupPreviousConnection() {
 
 </body>
 </html>
+
