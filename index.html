@@ -2236,11 +2236,9 @@
         // Give a real room one final chance before withdrawing from the queue.
         await checkForRoom(attemptId);
         if (!isCurrentChatAttempt(attemptId) || currentRoom) return;
-        clearInterval(matchTimer);
-        matchTimer = null;
         // The database shares a lock with real matchmaking. It either returns
         // a real match or removes this visitor from the queue atomically.
-        const request = Promise.resolve(chatDb.rpc('ck_claim_chat_fallback', {
+        const request = Promise.resolve(chatDb.rpc('ck_claim_chat_fallback_v2', {
           p_nickname: nickname || null,
           p_school: school || null
         }));
@@ -2250,7 +2248,7 @@
           const { data, error } = await request;
           if (error) throw error;
           result = data?.[0];
-          if (!result || (!result.room_id && result.fallback_ready !== true)) {
+          if (!result || (!result.room_id && typeof result.fallback_ready !== 'boolean')) {
             throw new Error('Invalid fallback claim response');
           }
         } finally {
@@ -2263,6 +2261,16 @@
           if (currentRoom === result.room_id) matched(attemptId);
           return;
         }
+
+        if (result.fallback_ready === false) {
+          // Another real visitor is finishing a bot session or choosing Next.
+          // Keep waiting briefly; the database caps this grace at 60 seconds.
+          if (!matchTimer) matchTimer = setInterval(() => checkForRoom(attemptId), 2000);
+          fallbackTimer = setTimeout(() => startSimulatedFallback(attemptId), 4000);
+          return;
+        }
+        clearInterval(matchTimer);
+        matchTimer = null;
 
         let index = Math.floor(Math.random() * SIMULATED_PROFILES.length);
         if (index === previousSimulatedProfile) index = (index + 1) % SIMULATED_PROFILES.length;
