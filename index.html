@@ -2279,7 +2279,7 @@
         currentRoom = 'simulated:' + attemptId;
         simulatedChat = {
           roomId: currentRoom, messages: [], profile, greetingsScheduled: false,
-          allowRealHandoff: Math.random() < 0.85,
+          allowRealHandoff: Math.random() < 0.60,
           waitForVisitor: shouldSimulatedProfileWait()
         };
         document.getElementById('partnerName').textContent = profile.nickname;
