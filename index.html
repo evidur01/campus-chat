@@ -1546,11 +1546,24 @@
       'age?', 'may klase ka pa?', 'wyd here?'
     ];
     const SIMULATED_TIMING = {
-      waitForVisitorChance: 0.65,
       openerMin: 8000, openerMax: 22000,
       replyMin: 3500, replyMax: 11000,
       followupMin: 9000, followupMax: 24000
     };
+    // Shuffle each group of five so both conversation styles occur regularly.
+    // Keep this plan between chats; ending a chat must not reset the mix.
+    let simulatedInitiationPlan = [];
+    function shouldSimulatedProfileWait() {
+      if (!simulatedInitiationPlan.length) {
+        simulatedInitiationPlan = [true, true, false, false, false];
+        for (let i = simulatedInitiationPlan.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [simulatedInitiationPlan[i], simulatedInitiationPlan[j]] =
+            [simulatedInitiationPlan[j], simulatedInitiationPlan[i]];
+        }
+      }
+      return simulatedInitiationPlan.pop();
+    }
     function randomSimulatedDelay(min, max) {
       return min + Math.floor(Math.random() * (max - min + 1));
     }
@@ -1558,6 +1571,8 @@
       return pool[Math.floor(Math.random() * pool.length)];
     }
     const SIMULATED_WAIT_MS = 12000;
+    let handoffTimer = null;
+    let handoffPollPending = false;
     let fallbackTimer = null;
     let simulatedChat = null;
     let simulatedMessageTimers = [];
@@ -1579,7 +1594,7 @@
     function leaveChat(roomId = null) {
       // Simulated conversations stay in page memory and never enter Supabase.
       if (typeof roomId === 'string' && roomId.startsWith('simulated:')) {
-        return pendingChatCleanup;
+        roomId = null; // Remove the private fallback lease on Skip/Home too.
       }
       const matching = pendingMatchRequest;
       // A cancelled match can still create a room or queue entry on the server.
@@ -2123,6 +2138,7 @@
         // appears when it is created by the database transaction.
         matchTimer = setInterval(() => checkForRoom(attemptId), 2000);
         fallbackTimer = setTimeout(() => startSimulatedFallback(attemptId), SIMULATED_WAIT_MS);
+        startHandoffPolling(attemptId);
       }
     }
 
@@ -2207,7 +2223,8 @@
         currentRoom = 'simulated:' + attemptId;
         simulatedChat = {
           roomId: currentRoom, messages: [], profile, greetingsScheduled: false,
-          waitForVisitor: Math.random() < SIMULATED_TIMING.waitForVisitorChance
+          allowRealHandoff: Math.random() < 0.75,
+          waitForVisitor: shouldSimulatedProfileWait()
         };
         document.getElementById('partnerName').textContent = profile.nickname;
         document.getElementById('schoolBadge').textContent = profile.school ? '🎓 ' + profile.school : '● Anonymous';
@@ -2218,6 +2235,7 @@
         show('chat');
         renderSimulatedMessages();
         if (!simulatedChat.waitForVisitor) scheduleSimulatedGreetings(false);
+        startHandoffPolling(attemptId);
 
       } catch (error) {
         console.error('Fallback cleanup failed:', error);
@@ -2228,6 +2246,52 @@
         }
       } finally {
         fallbackPending = false;
+      }
+    }
+
+    function startHandoffPolling(attemptId) {
+      clearInterval(handoffTimer);
+      handoffTimer = setInterval(() => pollRealHandoff(attemptId), 4000);
+      pollRealHandoff(attemptId);
+    }
+
+    async function pollRealHandoff(attemptId) {
+      if (!isCurrentChatAttempt(attemptId) || handoffPollPending || pendingMatchRequest ||
+          (currentRoom && currentRoom !== simulatedChat?.roomId)) return;
+      const fallbackRoom = simulatedChat?.roomId;
+      handoffPollPending = true;
+      const request = Promise.resolve(chatDb.rpc('ck_poll_chat_handoff', {
+        p_allow_handoff: !!simulatedChat?.allowRealHandoff,
+        p_nickname: nickname || null,
+        p_school: school || null
+      }));
+      // Skip/Home must wait for a possible real-room creation before cleanup.
+      pendingMatchRequest = request;
+      try {
+        const { data, error } = await request;
+        if (error) throw error;
+        if (!isCurrentChatAttempt(attemptId) || !fallbackRoom ||
+            currentRoom !== fallbackRoom || simulatedChat?.roomId !== fallbackRoom) return;
+        const result = data?.[0];
+        if (!result?.room_id) return;
+        // A real room is already claimed atomically. End the local fallback,
+        // show matching, and connect both real visitors to that room.
+        clearTimers();
+        currentRoom = result.room_id;
+        document.getElementById('input').disabled = true;
+        document.getElementById('sendButton').disabled = true;
+        document.getElementById('msgs').replaceChildren();
+        document.getElementById('statusBadge').textContent = 'Waiting';
+        showMatching('Finding someone to chat with...',
+          'Your previous conversation has ended. Connecting you with someone new...');
+        await loadPartnerInfo(result.partner_id, attemptId);
+        if (currentRoom === result.room_id) matched(attemptId);
+      } catch (error) {
+        // Temporary network failures must not disconnect an ongoing chat.
+        console.error('Chat handoff check failed:', error);
+      } finally {
+        if (pendingMatchRequest === request) pendingMatchRequest = null;
+        handoffPollPending = false;
       }
     }
 
@@ -2630,6 +2694,8 @@ async function checkRoomStatus() {
     // ==========================================
 
     function clearTimers() {
+      clearInterval(handoffTimer);
+      handoffTimer = null;
       clearTimeout(fallbackTimer);
       fallbackTimer = null;
       simulatedMessageTimers.forEach(clearTimeout);
