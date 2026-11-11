@@ -1514,6 +1514,29 @@
     let nickname = '';
     let profileId = localStorage.getItem('campusChatProfileId');
 
+    const SIMULATED_PROFILES = [
+      { nickname: 'F', intro: 'Hello F here' },
+      { nickname: 'F19', intro: 'hi' },
+      { nickname: 'M', intro: 'Hello M here' },
+      { nickname: 'M22', intro: 'hi asl' },
+      { nickname: 'Jay', intro: 'hello you there?' },
+      { nickname: 'Mica', intro: 'hi' },
+      { nickname: 'Alex', intro: 'hey' },
+      { nickname: 'Sam', intro: 'hello' },
+      { nickname: 'F21', intro: 'Hello F here' },
+      { nickname: 'M20', intro: 'hi' },
+      { nickname: 'Kai', intro: 'hello you there?' },
+      { nickname: 'Elle', intro: 'hi' },
+      { nickname: 'Nico', intro: 'hey' },
+      { nickname: 'F22', intro: 'hi asl' },
+      { nickname: 'M24', intro: 'Hello M here' }
+    ];
+    const SIMULATED_WAIT_MS = 12000;
+    let fallbackTimer = null;
+    let simulatedChat = null;
+    let simulatedMessageTimers = [];
+    let fallbackPending = false;
+    let previousSimulatedProfile = -1;
     let currentRoom = null;
     let messageTimer = null;
     let matchTimer = null;
@@ -1528,6 +1551,10 @@
     }
 
     function leaveChat(roomId = null) {
+      // Simulated conversations stay in page memory and never enter Supabase.
+      if (typeof roomId === 'string' && roomId.startsWith('simulated:')) {
+        return pendingChatCleanup;
+      }
       const matching = pendingMatchRequest;
       // A cancelled match can still create a room or queue entry on the server.
       // Finish that request before removing it, and finish cleanup before rejoining.
@@ -2069,6 +2096,7 @@
         // Only the caller can see their room; a partner's successful match
         // appears when it is created by the database transaction.
         matchTimer = setInterval(() => checkForRoom(attemptId), 2000);
+        fallbackTimer = setTimeout(() => startSimulatedFallback(attemptId), SIMULATED_WAIT_MS);
       }
     }
 
@@ -2108,6 +2136,98 @@
         await loadPartnerInfo(partnerId, attemptId);
         if (currentRoom === room.id) matched(attemptId);
       }
+    }
+
+    async function startSimulatedFallback(attemptId) {
+      fallbackTimer = null;
+      if (!isCurrentChatAttempt(attemptId) || currentRoom || fallbackPending) return;
+      fallbackPending = true;
+      try {
+        // Give a real room one final chance before withdrawing from the queue.
+        await checkForRoom(attemptId);
+        if (!isCurrentChatAttempt(attemptId) || currentRoom) return;
+        clearInterval(matchTimer);
+        matchTimer = null;
+        // The database shares a lock with real matchmaking. It either returns
+        // a real match or removes this visitor from the queue atomically.
+        const request = Promise.resolve(chatDb.rpc('ck_claim_chat_fallback', {
+          p_nickname: nickname || null,
+          p_school: school || null
+        }));
+        pendingMatchRequest = request;
+        let result;
+        try {
+          const { data, error } = await request;
+          if (error) throw error;
+          result = data?.[0];
+          if (!result || (!result.room_id && result.fallback_ready !== true)) {
+            throw new Error('Invalid fallback claim response');
+          }
+        } finally {
+          if (pendingMatchRequest === request) pendingMatchRequest = null;
+        }
+        if (!isCurrentChatAttempt(attemptId) || currentRoom) return;
+        if (result.room_id) {
+          currentRoom = result.room_id;
+          await loadPartnerInfo(result.partner_id, attemptId);
+          if (currentRoom === result.room_id) matched(attemptId);
+          return;
+        }
+
+        let index = Math.floor(Math.random() * SIMULATED_PROFILES.length);
+        if (index === previousSimulatedProfile) index = (index + 1) % SIMULATED_PROFILES.length;
+        previousSimulatedProfile = index;
+        const profile = SIMULATED_PROFILES[index];
+        currentRoom = 'simulated:' + attemptId;
+        simulatedChat = { roomId: currentRoom, messages: [] };
+        document.getElementById('partnerName').textContent = profile.nickname;
+        document.getElementById('schoolBadge').textContent = '● Anonymous';
+        document.getElementById('avatar').textContent = profile.nickname.charAt(0);
+        document.getElementById('statusBadge').textContent = 'Connected';
+        document.getElementById('input').disabled = false;
+        document.getElementById('sendButton').disabled = false;
+        show('chat');
+        renderSimulatedMessages();
+        const greetings = [profile.intro];
+        if (Math.random() < 0.5) greetings.push('wyd here?');
+        greetings.forEach((content, i) => {
+          simulatedMessageTimers.push(setTimeout(() => {
+            if (!isCurrentChatAttempt(attemptId) || !simulatedChat ||
+                currentRoom !== simulatedChat.roomId) return;
+            simulatedChat.messages.push({ mine: false, content });
+            renderSimulatedMessages();
+          }, 1500 + i * 4500));
+        });
+      } catch (error) {
+        console.error('Fallback cleanup failed:', error);
+        if (isCurrentChatAttempt(attemptId) && !currentRoom) {
+          stopIdleMonitor();
+          show('setup');
+          alert('Unable to finish matching. Please try again.');
+        }
+      } finally {
+        fallbackPending = false;
+      }
+    }
+
+    function renderSimulatedMessages() {
+      if (!simulatedChat || currentRoom !== simulatedChat.roomId) return;
+      const container = document.getElementById('msgs');
+      const follow = container.scrollHeight - container.clientHeight - container.scrollTop <= 80;
+      const previousTop = container.scrollTop;
+      const fragment = document.createDocumentFragment();
+      const notice = document.createElement('div');
+      notice.className = 'system';
+      notice.textContent = 'You are connected! Say hello 👋';
+      fragment.appendChild(notice);
+      simulatedChat.messages.forEach(message => {
+        const div = document.createElement('div');
+        div.className = message.mine ? 'msg me' : 'msg them';
+        div.textContent = message.content;
+        fragment.appendChild(div);
+      });
+      container.replaceChildren(fragment);
+      container.scrollTop = follow ? container.scrollHeight : previousTop;
     }
 
     // ==========================================
@@ -2162,6 +2282,8 @@
 
       clearInterval(matchTimer);
       matchTimer = null;
+      clearTimeout(fallbackTimer);
+      fallbackTimer = null;
 
       show('chat');
 
@@ -2251,6 +2373,10 @@ async function checkRoomStatus() {
     let lastRenderedMessageSignature = null;
 
     async function loadMessages() {
+      if (simulatedChat && currentRoom === simulatedChat.roomId) {
+        renderSimulatedMessages();
+        return;
+      }
       if (!currentRoom || sessionExpired) return;
 
       const roomId = currentRoom;
@@ -2317,6 +2443,12 @@ async function checkRoomStatus() {
 
       if (!content || !currentRoom) return;
 
+      if (simulatedChat && currentRoom === simulatedChat.roomId) {
+        simulatedChat.messages.push({ mine: true, content });
+        input.value = '';
+        renderSimulatedMessages();
+        return;
+      }
       const roomId = currentRoom;
 
       input.value = '';
@@ -2415,6 +2547,10 @@ async function checkRoomStatus() {
         return;
       }
 
+      if (simulatedChat && currentRoom === simulatedChat.roomId) {
+        alert('For concerns about this conversation, contact support@campuskonek.com. You can press Skip to end this chat.');
+        return;
+      }
       const reason = prompt(
         'Briefly tell us why you are reporting this user:'
       );
@@ -2447,6 +2583,11 @@ async function checkRoomStatus() {
     // ==========================================
 
     function clearTimers() {
+      clearTimeout(fallbackTimer);
+      fallbackTimer = null;
+      simulatedMessageTimers.forEach(clearTimeout);
+      simulatedMessageTimers = [];
+      simulatedChat = null;
       if (messageTimer) clearInterval(messageTimer);
       if (matchTimer) clearInterval(matchTimer);
       if (roomStatusTimer) clearInterval(roomStatusTimer);
