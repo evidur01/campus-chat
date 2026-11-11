@@ -1515,10 +1515,10 @@
     let profileId = localStorage.getItem('campusChatProfileId');
 
     const SIMULATED_PROFILES = [
-      { nickname: 'F', intro: 'Hello F here', school: '' },
-      { nickname: 'F19', intro: 'F here', school: 'University of Santo Tomas' },
-      { nickname: 'M', intro: 'Hello M here', school: '' },
-      { nickname: 'M22', intro: 'M here', school: 'Polytechnic University of the Philippines' },
+      { nickname: 'F', school: '' },
+      { nickname: 'F19', school: 'University of Santo Tomas' },
+      { nickname: 'M', school: '' },
+      { nickname: 'M22', school: 'Polytechnic University of the Philippines' },
       { nickname: 'Jay', school: '' },
       { nickname: 'Mica', school: 'Cebu Normal University' },
       { nickname: 'qwerty', school: '' },
@@ -1529,7 +1529,14 @@
       { nickname: 'Kai', school: 'Central Philippine University' },
       { nickname: 'yow', school: '' },
       { nickname: 'anon', school: '' },
-      { nickname: 'sleepy', school: 'Silliman University' }
+      { nickname: 'sleepy', school: 'Silliman University' },
+      { nickname: 'F23', school: 'University of Santo Tomas' },
+      { nickname: 'M28', school: '' },
+      { nickname: 'f20 qc', school: 'Polytechnic University of the Philippines' },
+      { nickname: 'wlw', school: '' },
+      { nickname: 'MLM', school: 'Silliman University' },
+      { nickname: 'here for fun', school: '' },
+      { nickname: 'just vibing', school: '' },
     ];
     const SIMULATED_OPENERS = [
       'hi', 'yow', 'hello', 'halu', 'oyyyy', 'hey', 'hellooo', 'hiii',
@@ -2264,7 +2271,7 @@
         currentRoom = 'simulated:' + attemptId;
         simulatedChat = {
           roomId: currentRoom, messages: [], profile, greetingsScheduled: false,
-          allowRealHandoff: Math.random() < 0.60,
+          allowRealHandoff: Math.random() < 0.85,
           waitForVisitor: shouldSimulatedProfileWait()
         };
         document.getElementById('partnerName').textContent = profile.nickname;
