@@ -1515,22 +1515,48 @@
     let profileId = localStorage.getItem('campusChatProfileId');
 
     const SIMULATED_PROFILES = [
-      { nickname: 'F', intro: 'Hello F here' },
-      { nickname: 'F19', intro: 'hi' },
-      { nickname: 'M', intro: 'Hello M here' },
-      { nickname: 'M22', intro: 'hi asl' },
-      { nickname: 'Jay', intro: 'hello you there?' },
-      { nickname: 'Mica', intro: 'hi' },
-      { nickname: 'Alex', intro: 'hey' },
-      { nickname: 'Sam', intro: 'hello' },
-      { nickname: 'F21', intro: 'Hello F here' },
-      { nickname: 'M20', intro: 'hi' },
-      { nickname: 'Kai', intro: 'hello you there?' },
-      { nickname: 'Elle', intro: 'hi' },
-      { nickname: 'Nico', intro: 'hey' },
-      { nickname: 'F22', intro: 'hi asl' },
-      { nickname: 'M24', intro: 'Hello M here' }
+      { nickname: 'F', intro: 'Hello F here', school: '' },
+      { nickname: 'F19', intro: 'F here', school: 'University of Santo Tomas' },
+      { nickname: 'M', intro: 'Hello M here', school: '' },
+      { nickname: 'M22', intro: 'M here', school: 'Polytechnic University of the Philippines' },
+      { nickname: 'Jay', school: '' },
+      { nickname: 'Mica', school: 'Cebu Normal University' },
+      { nickname: 'qwerty', school: '' },
+      { nickname: 'shshshshs', school: '' },
+      { nickname: 'hahahaha', school: 'University of Mindanao' },
+      { nickname: 'hello', school: '' },
+      { nickname: 'heqhwqdnhqwdja', school: '' },
+      { nickname: 'Kai', school: 'Central Philippine University' },
+      { nickname: 'yow', school: '' },
+      { nickname: 'anon', school: '' },
+      { nickname: 'sleepy', school: 'Silliman University' }
     ];
+    const SIMULATED_OPENERS = [
+      'hi', 'yow', 'hello', 'halu', 'oyyyy', 'hey', 'hellooo', 'hiii',
+      'heyy', 'hallo', 'uy', 'yo', 'sup', 'hello hello', 'hiiii',
+      'henlo', 'eyyy', 'heya', 'hey age and from?', 'hi asl',
+      'hello you there?', 'anyone here?', 'hii kumusta', 'yooo'
+    ];
+    const SIMULATED_FOLLOWUPS = [
+      'hey age and from?', 'asl?', 'kamusta?', 'how are you?',
+      'anong ganap?', 'what are you up to?', 'bored din?', 'you still there?',
+      'how was your day?', 'what brings you here?', 'anong course mo?',
+      'kumusta araw mo?', 'tambay lang?', 'whats up?', 'hello pa',
+      'from where?', 'how is your night going?', 'uy kamusta',
+      'age?', 'may klase ka pa?', 'wyd here?'
+    ];
+    const SIMULATED_TIMING = {
+      waitForVisitorChance: 0.65,
+      openerMin: 8000, openerMax: 22000,
+      replyMin: 3500, replyMax: 11000,
+      followupMin: 9000, followupMax: 24000
+    };
+    function randomSimulatedDelay(min, max) {
+      return min + Math.floor(Math.random() * (max - min + 1));
+    }
+    function pickSimulatedMessage(pool) {
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
     const SIMULATED_WAIT_MS = 12000;
     let fallbackTimer = null;
     let simulatedChat = null;
@@ -2179,25 +2205,20 @@
         previousSimulatedProfile = index;
         const profile = SIMULATED_PROFILES[index];
         currentRoom = 'simulated:' + attemptId;
-        simulatedChat = { roomId: currentRoom, messages: [] };
+        simulatedChat = {
+          roomId: currentRoom, messages: [], profile, greetingsScheduled: false,
+          waitForVisitor: Math.random() < SIMULATED_TIMING.waitForVisitorChance
+        };
         document.getElementById('partnerName').textContent = profile.nickname;
-        document.getElementById('schoolBadge').textContent = '● Anonymous';
+        document.getElementById('schoolBadge').textContent = profile.school ? '🎓 ' + profile.school : '● Anonymous';
         document.getElementById('avatar').textContent = profile.nickname.charAt(0);
         document.getElementById('statusBadge').textContent = 'Connected';
         document.getElementById('input').disabled = false;
         document.getElementById('sendButton').disabled = false;
         show('chat');
         renderSimulatedMessages();
-        const greetings = [profile.intro];
-        if (Math.random() < 0.5) greetings.push('wyd here?');
-        greetings.forEach((content, i) => {
-          simulatedMessageTimers.push(setTimeout(() => {
-            if (!isCurrentChatAttempt(attemptId) || !simulatedChat ||
-                currentRoom !== simulatedChat.roomId) return;
-            simulatedChat.messages.push({ mine: false, content });
-            renderSimulatedMessages();
-          }, 1500 + i * 4500));
-        });
+        if (!simulatedChat.waitForVisitor) scheduleSimulatedGreetings(false);
+
       } catch (error) {
         console.error('Fallback cleanup failed:', error);
         if (isCurrentChatAttempt(attemptId) && !currentRoom) {
@@ -2208,6 +2229,31 @@
       } finally {
         fallbackPending = false;
       }
+    }
+
+    function scheduleSimulatedGreetings(visitorStarted) {
+      const chat = simulatedChat;
+      if (!chat || chat.roomId !== currentRoom || chat.greetingsScheduled) return;
+      // Schedule once per conversation; typing repeatedly cannot add extra replies.
+      chat.greetingsScheduled = true;
+      const attemptId = chatAttemptId;
+      const opener = chat.profile.intro && Math.random() < 0.3
+        ? chat.profile.intro : pickSimulatedMessage(SIMULATED_OPENERS);
+      const greetings = [opener];
+      if (Math.random() < 0.45) {
+        greetings.push(pickSimulatedMessage(SIMULATED_FOLLOWUPS.filter(text => text !== opener)));
+      }
+      let delay = visitorStarted
+        ? randomSimulatedDelay(SIMULATED_TIMING.replyMin, SIMULATED_TIMING.replyMax)
+        : randomSimulatedDelay(SIMULATED_TIMING.openerMin, SIMULATED_TIMING.openerMax);
+      greetings.forEach((content, index) => {
+        if (index) delay += randomSimulatedDelay(SIMULATED_TIMING.followupMin, SIMULATED_TIMING.followupMax);
+        simulatedMessageTimers.push(setTimeout(() => {
+          if (!isCurrentChatAttempt(attemptId) || simulatedChat !== chat || currentRoom !== chat.roomId) return;
+          chat.messages.push({ mine: false, content });
+          renderSimulatedMessages();
+        }, delay));
+      });
     }
 
     function renderSimulatedMessages() {
@@ -2445,6 +2491,7 @@ async function checkRoomStatus() {
 
       if (simulatedChat && currentRoom === simulatedChat.roomId) {
         simulatedChat.messages.push({ mine: true, content });
+        scheduleSimulatedGreetings(true);
         input.value = '';
         renderSimulatedMessages();
         return;
