@@ -1564,6 +1564,29 @@
       }
       return simulatedInitiationPlan.pop();
     }
+    let simulatedVocabularyState;
+    try {
+      simulatedVocabularyState = JSON.parse(sessionStorage.getItem('ck_vocabulary_v2') || '{}');
+      if (!simulatedVocabularyState || typeof simulatedVocabularyState !== 'object') simulatedVocabularyState = {};
+    } catch (_) { simulatedVocabularyState = {}; }
+
+    function nextSimulatedMessage(profile, kind, exclude = '') {
+      const pool = [...new Set(kind === 'opener'
+        ? [...SIMULATED_OPENERS, ...(profile.intro ? [profile.intro] : [])]
+        : SIMULATED_FOLLOWUPS)];
+      const key = profile.nickname + ':' + kind;
+      let state = simulatedVocabularyState[key];
+      if (!state || !Array.isArray(state.remaining)) state = { remaining: [], last: '' };
+      let available = state.remaining.filter(text => pool.includes(text) && text !== exclude && text !== state.last);
+      if (!available.length) available = pool.filter(text => text !== exclude && text !== state.last);
+      const selected = pickSimulatedMessage(available);
+      // Use every available line before refilling this profile's vocabulary.
+      state.remaining = available.filter(text => text !== selected);
+      state.last = selected;
+      simulatedVocabularyState[key] = state;
+      try { sessionStorage.setItem('ck_vocabulary_v2', JSON.stringify(simulatedVocabularyState)); } catch (_) {}
+      return selected;
+    }
     function randomSimulatedDelay(min, max) {
       return min + Math.floor(Math.random() * (max - min + 1));
     }
@@ -1623,6 +1646,8 @@
 
     const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
+    let visitorHeartbeatTimer = null;
+    let visitorPresenceUpdates = Promise.resolve();
     let idleTimer = null;
     let idleMonitorActive = false;
     let sessionExpired = false;
@@ -1635,12 +1660,25 @@
       Any interaction resets the five-minute countdown.
     */
 
+    function updateVisitorPresence(active) {
+      if (!profileId) return Promise.resolve();
+      visitorPresenceUpdates = visitorPresenceUpdates.then(async () => {
+        const { error } = await chatDb.rpc('ck_touch_chat_visitor', { p_active: active });
+        if (error) throw error;
+      }).catch(error => console.error('Visitor activity update failed:', error));
+      return visitorPresenceUpdates;
+    }
+
     function startIdleMonitor() {
       stopIdleMonitor();
 
       sessionExpired = false;
       terminatingSession = false;
       idleMonitorActive = true;
+      updateVisitorPresence(true);
+      visitorHeartbeatTimer = setInterval(() => {
+        if (idleMonitorActive && !sessionExpired && !terminatingSession) updateVisitorPresence(true);
+      }, 10000);
 
       resetIdleTimer();
     }
@@ -1658,6 +1696,9 @@
     }
 
     function stopIdleMonitor() {
+      clearInterval(visitorHeartbeatTimer);
+      visitorHeartbeatTimer = null;
+      if (idleMonitorActive) updateVisitorPresence(false);
       clearTimeout(idleTimer);
       idleTimer = null;
       idleMonitorActive = false;
@@ -2223,7 +2264,7 @@
         currentRoom = 'simulated:' + attemptId;
         simulatedChat = {
           roomId: currentRoom, messages: [], profile, greetingsScheduled: false,
-          allowRealHandoff: Math.random() < 0.75,
+          allowRealHandoff: Math.random() < 0.40,
           waitForVisitor: shouldSimulatedProfileWait()
         };
         document.getElementById('partnerName').textContent = profile.nickname;
@@ -2260,7 +2301,7 @@
           (currentRoom && currentRoom !== simulatedChat?.roomId)) return;
       const fallbackRoom = simulatedChat?.roomId;
       handoffPollPending = true;
-      const request = Promise.resolve(chatDb.rpc('ck_poll_chat_handoff', {
+      const request = Promise.resolve(chatDb.rpc('ck_poll_chat_handoff_v2', {
         p_allow_handoff: !!simulatedChat?.allowRealHandoff,
         p_nickname: nickname || null,
         p_school: school || null
@@ -2273,19 +2314,16 @@
         if (!isCurrentChatAttempt(attemptId) || !fallbackRoom ||
             currentRoom !== fallbackRoom || simulatedChat?.roomId !== fallbackRoom) return;
         const result = data?.[0];
-        if (!result?.room_id) return;
-        // A real room is already claimed atomically. End the local fallback,
-        // show matching, and connect both real visitors to that room.
+        if (!result?.disconnect_now) return;
+        // The server ended only the fallback. Do not create a real room until
+        // this visitor presses Next person on the existing animation screen.
+        ++chatAttemptId;
+        currentRoom = null;
         clearTimers();
-        currentRoom = result.room_id;
         document.getElementById('input').disabled = true;
         document.getElementById('sendButton').disabled = true;
-        document.getElementById('msgs').replaceChildren();
-        document.getElementById('statusBadge').textContent = 'Waiting';
-        showMatching('Finding someone to chat with...',
-          'Your previous conversation has ended. Connecting you with someone new...');
-        await loadPartnerInfo(result.partner_id, attemptId);
-        if (currentRoom === result.room_id) matched(attemptId);
+        document.getElementById('statusBadge').textContent = 'Disconnected';
+        showDitchedMessage();
       } catch (error) {
         // Temporary network failures must not disconnect an ongoing chat.
         console.error('Chat handoff check failed:', error);
@@ -2301,11 +2339,10 @@
       // Schedule once per conversation; typing repeatedly cannot add extra replies.
       chat.greetingsScheduled = true;
       const attemptId = chatAttemptId;
-      const opener = chat.profile.intro && Math.random() < 0.3
-        ? chat.profile.intro : pickSimulatedMessage(SIMULATED_OPENERS);
+      const opener = nextSimulatedMessage(chat.profile, 'opener');
       const greetings = [opener];
       if (Math.random() < 0.45) {
-        greetings.push(pickSimulatedMessage(SIMULATED_FOLLOWUPS.filter(text => text !== opener)));
+        greetings.push(nextSimulatedMessage(chat.profile, 'followup', opener));
       }
       let delay = visitorStarted
         ? randomSimulatedDelay(SIMULATED_TIMING.replyMin, SIMULATED_TIMING.replyMax)
