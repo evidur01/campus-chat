@@ -1514,44 +1514,140 @@
     let nickname = '';
     let profileId = localStorage.getItem('campusChatProfileId');
 
-    const SIMULATED_PROFILES = [
-      { nickname: 'F', school: '' },
-      { nickname: 'F19', school: 'University of Santo Tomas' },
-      { nickname: 'M', school: '' },
-      { nickname: 'M22', school: 'Polytechnic University of the Philippines' },
-      { nickname: 'Jay', school: '' },
-      { nickname: 'Mica', school: 'Cebu Normal University' },
-      { nickname: 'qwerty', school: '' },
-      { nickname: 'shshshshs', school: '' },
-      { nickname: 'hahahaha', school: 'University of Mindanao' },
-      { nickname: 'hello', school: '' },
-      { nickname: 'heqhwqdnhqwdja', school: '' },
-      { nickname: 'Kai', school: 'Central Philippine University' },
-      { nickname: 'yow', school: '' },
-      { nickname: 'anon', school: '' },
-      { nickname: 'sleepy', school: 'Silliman University' },
-      { nickname: 'F23', school: 'University of Santo Tomas' },
-      { nickname: 'M28', school: '' },
-      { nickname: 'f20 qc', school: 'Polytechnic University of the Philippines' },
-      { nickname: 'wlw', school: '' },
-      { nickname: 'MLM', school: 'Silliman University' },
-      { nickname: 'here for fun', school: '' },
-      { nickname: 'just vibing', school: '' },
+    // Seeds are combined into new display names; they are not fixed profiles.
+    const SIMULATED_NAME_WORDS = [
+      'qwerty', 'shshshshs', 'hahahaha', 'hello', 'heqhwqdnhqwdja',
+      'wlw', 'MLM', 'anon', 'sleepy', 'lowbat', 'lowkey', 'yow',
+      'halu', 'pssst', 'heyy', 'chill', 'coffee', 'matcha', 'taho',
+      'besh', 'random', 'potato', 'moon', 'cloud', 'huhu', 'hehe',
+      'lol', 'hihi', 'hoy', 'uy', 'shy', 'chika', 'kwento', 'vibes',
+      'mango', 'tinapay', 'sinigang', 'sunflower', 'miming', 'meow'
     ];
+    const SIMULATED_NAME_ALIASES = [
+      'Jay', 'Mica', 'Kai', 'Alex', 'Sam', 'Elle', 'Nico', 'Jules',
+      'Dani', 'Lou', 'Ace', 'Kris', 'Ash', 'Max', 'Rei', 'Ren',
+      'Yuki', 'Zee', 'Lex', 'Milo', 'Ari', 'Nami', 'Chai', 'Jo'
+    ];
+    const SIMULATED_NAME_PHRASES = [
+      'here for fun', 'just vibing', 'usap lang', 'tambay lang',
+      'random lang', 'wala lang', 'chika muna', 'kwento tayo',
+      'hello ulit', 'new here', 'quiet lang', 'looking for chika',
+      'just here', 'bored lang', 'chill muna', 'hi stranger'
+    ];
+    // Same nine named-school slots and thirteen anonymous slots as before.
+    const SIMULATED_SCHOOL_SLOTS = [
+      'University of Santo Tomas', 'Polytechnic University of the Philippines',
+      'Cebu Normal University', 'University of Mindanao',
+      'Central Philippine University', 'Silliman University',
+      'University of Santo Tomas', 'Polytechnic University of the Philippines',
+      'Silliman University', '', '', '', '', '', '', '', '', '', '', '', '', ''
+    ];
+    const SIMULATED_NAME_STYLES = ['word', 'alias', 'age', 'keyboard', 'phrase'];
+    const SIMULATED_NAME_RECENT_LIMIT = 80;
     const SIMULATED_OPENERS = [
-      'hi', 'yow', 'hello', 'halu', 'oyyyy', 'hey', 'hellooo', 'hiii',
-      'heyy', 'hallo', 'uy', 'yo', 'sup', 'hello hello', 'hiiii',
-      'henlo', 'eyyy', 'heya', 'hey age and from?', 'hi asl',
-      'hello you there?', 'anyone here?', 'hii kumusta', 'yooo'
+      'hi', 'hello', 'halu', 'psssst', 'heyy', 'lowwww', 'yow', 'oyyyy',
+      'hey', 'hellooo', 'hiii', 'hallo', 'uy', 'yo', 'sup', 'hello hello',
+      'henlo', 'eyyy', 'heya', 'hi asl?', 'hello you there?', 'anyone here?',
+      'hii kumusta', 'yooo', 'here for?', 'hanap mo dito besh?',
+      'age and from?', 'age?', 'gawa mo here?', 'hellow', 'heyyy',
+      'hi hi', 'uy hello', 'hai', 'helloooo', 'kumusta?', 'usap?',
+      'hi there', 'hiii there', 'ano hanap?'
     ];
     const SIMULATED_FOLLOWUPS = [
-      'hey age and from?', 'asl?', 'kamusta?', 'how are you?',
-      'anong ganap?', 'what are you up to?', 'bored din?', 'you still there?',
-      'how was your day?', 'what brings you here?', 'anong course mo?',
-      'kumusta araw mo?', 'tambay lang?', 'whats up?', 'hello pa',
-      'from where?', 'how is your night going?', 'uy kamusta',
-      'age?', 'may klase ka pa?', 'wyd here?'
+      'asl?', 'age and from?', 'age?', 'here for?', 'hanap mo dito besh?',
+      'gawa mo here?', 'kamusta?', 'how are you?', 'anong ganap?',
+      'what are you up to?', 'you still there?', 'what brings you here?',
+      'tambay lang?', 'whats up?', 'from where?', 'uy kamusta',
+      'wyd here?', 'usap tayo?', 'anong trip mo?', 'may kwento ka?',
+      'chika?', 'ano hanap mo?', 'g ba magchat?', 'hey you there?',
+      'kwentuhan?', 'anything on your mind?', 'anong balita?',
+      'just chatting?', 'how is it going?', 'hello pa', 'gawa mo?',
+      'naghahanap ka rin kausap?'
     ];
+
+    function shuffleSimulatedChoices(items) {
+      const shuffled = items.slice();
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    function loadSimulatedNicknameState(fallback = {}) {
+      let saved;
+      try { saved = JSON.parse(localStorage.getItem('ck_simulated_names_v1') || 'null'); } catch (_) {}
+      if (!saved || typeof saved !== 'object') saved = fallback;
+      return {
+        recent: Array.isArray(saved.recent)
+          ? [...new Set(saved.recent.filter(name => typeof name === 'string' && name.trim() && name.length <= 30)
+            .map(name => name.trim().toLowerCase()))].slice(-SIMULATED_NAME_RECENT_LIMIT) : [],
+        styles: Array.isArray(saved.styles)
+          ? [...new Set(saved.styles.filter(style => SIMULATED_NAME_STYLES.includes(style)))].slice(-5) : [],
+        schoolSlots: Array.isArray(saved.schoolSlots) && saved.schoolSlots.length <= 22 &&
+          saved.schoolSlots.every(index => Number.isInteger(index) && index >= 0 && index < 22) &&
+          new Set(saved.schoolSlots).size === saved.schoolSlots.length ? saved.schoolSlots.slice() : [],
+        serial: Number.isSafeInteger(saved.serial) && saved.serial >= 0 ? saved.serial : 0
+      };
+    }
+    let simulatedNicknameState = loadSimulatedNicknameState();
+
+    function generateSimulatedNickname(style) {
+      const number = () => String(Math.floor(Math.random() * 100));
+      if (style === 'alias') {
+        return pickSimulatedMessage(SIMULATED_NAME_ALIASES) + pickSimulatedMessage(['', '', '.', '_', ' ']) +
+          (Math.random() < 0.45 ? number() : '');
+      }
+      if (style === 'age') {
+        return pickSimulatedMessage(['F', 'M', 'f', 'm', 'wlw', 'MLM']) +
+          String(18 + Math.floor(Math.random() * 18)) +
+          pickSimulatedMessage(['', '', ' qc', ' mnl', ' cebu', ' dvo', '...']);
+      }
+      if (style === 'keyboard') {
+        const chunks = ['qw', 'ert', 'ty', 'asd', 'fgh', 'jkl', 'zxc', 'vbn', 'sh', 'hehe', 'haha'];
+        let name = '';
+        const count = 3 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < count; i++) name += pickSimulatedMessage(chunks);
+        return name;
+      }
+      if (style === 'phrase') {
+        return pickSimulatedMessage(SIMULATED_NAME_PHRASES) + pickSimulatedMessage(['', '', ' hehe', '...', '?', ' :)']);
+      }
+      const word = pickSimulatedMessage(SIMULATED_NAME_WORDS);
+      if (Math.random() < 0.4) return word;
+      return word + pickSimulatedMessage(['', '_', '.', ' ']) +
+        (Math.random() < 0.5 ? number() : pickSimulatedMessage(SIMULATED_NAME_WORDS));
+    }
+
+    function createSimulatedProfile() {
+      // Refresh persisted history so already-open tabs do not use stale lists.
+      simulatedNicknameState = loadSimulatedNicknameState(simulatedNicknameState);
+      const state = simulatedNicknameState;
+      if (!state.styles.length) state.styles = shuffleSimulatedChoices(SIMULATED_NAME_STYLES);
+      const style = state.styles.pop();
+      const recent = new Set(state.recent);
+      let name = '';
+      // Bound random retries; repeated or unusual randomness cannot freeze chat.
+      for (let attempt = 0; attempt < 32; attempt++) {
+        const candidate = generateSimulatedNickname(style).trim().slice(0, 30);
+        if (candidate && !recent.has(candidate.toLowerCase())) { name = candidate; break; }
+      }
+      if (!name) {
+        for (let attempt = 0; attempt <= SIMULATED_NAME_RECENT_LIMIT; attempt++) {
+          state.serial = state.serial >= Number.MAX_SAFE_INTEGER ? 0 : state.serial + 1;
+          const candidate = 'anon_' + state.serial.toString(36);
+          if (!recent.has(candidate.toLowerCase())) { name = candidate; break; }
+        }
+      }
+      state.recent.push(name.toLowerCase());
+      state.recent = state.recent.slice(-SIMULATED_NAME_RECENT_LIMIT);
+      if (!state.schoolSlots.length) {
+        state.schoolSlots = shuffleSimulatedChoices(SIMULATED_SCHOOL_SLOTS.map((_, index) => index));
+      }
+      const school = SIMULATED_SCHOOL_SLOTS[state.schoolSlots.pop()];
+      try { localStorage.setItem('ck_simulated_names_v1', JSON.stringify(state)); } catch (_) {}
+      return { nickname: name, school };
+    }
     const SIMULATED_TIMING = {
       openerMin: 8000, openerMax: 22000,
       replyMin: 3500, replyMax: 11000,
@@ -1571,27 +1667,53 @@
       }
       return simulatedInitiationPlan.pop();
     }
-    let simulatedVocabularyState;
-    try {
-      simulatedVocabularyState = JSON.parse(sessionStorage.getItem('ck_vocabulary_v2') || '{}');
-      if (!simulatedVocabularyState || typeof simulatedVocabularyState !== 'object') simulatedVocabularyState = {};
-    } catch (_) { simulatedVocabularyState = {}; }
+    function loadSimulatedVocabularyState() {
+      let saved;
+      try { saved = JSON.parse(sessionStorage.getItem('ck_vocabulary_v3') || '{}'); } catch (_) {}
+      if (!saved || typeof saved !== 'object') saved = {};
+      const clean = {};
+      for (const kind of ['opener', 'followup']) {
+        const pool = kind === 'opener' ? SIMULATED_OPENERS : SIMULATED_FOLLOWUPS;
+        const bucket = saved[kind];
+        clean[kind] = {
+          remaining: bucket && Array.isArray(bucket.remaining)
+            ? [...new Set(bucket.remaining.filter(text => pool.includes(text)))].slice(0, pool.length) : [],
+          last: bucket && pool.includes(bucket.last) ? bucket.last : ''
+        };
+      }
+      const all = [...SIMULATED_OPENERS, ...SIMULATED_FOLLOWUPS];
+      clean.recent = Array.isArray(saved.recent) ? saved.recent.filter(text => all.includes(text)).slice(-8) : [];
+      return clean;
+    }
+    let simulatedVocabularyState = loadSimulatedVocabularyState();
+
+    function simulatedMessageTopic(text) {
+      if (/\b(asl|age|from)\b/i.test(text)) return 'introduction';
+      if (/you there|anyone here|you still|hello pa/i.test(text)) return 'availability';
+      if (/kumusta|kamusta|how are you|how is it going/i.test(text)) return 'wellbeing';
+      if (/here for|hanap|gawa|what brings|wyd|anong trip|anong ganap|up to/i.test(text)) return 'purpose';
+      return '';
+    }
 
     function nextSimulatedMessage(profile, kind, exclude = '') {
-      const pool = [...new Set(kind === 'opener'
-        ? [...SIMULATED_OPENERS, ...(profile.intro ? [profile.intro] : [])]
-        : SIMULATED_FOLLOWUPS)];
-      const key = profile.nickname + ':' + kind;
-      let state = simulatedVocabularyState[key];
-      if (!state || !Array.isArray(state.remaining)) state = { remaining: [], last: '' };
-      let available = state.remaining.filter(text => pool.includes(text) && text !== exclude && text !== state.last);
-      if (!available.length) available = pool.filter(text => text !== exclude && text !== state.last);
+      const pool = kind === 'opener' ? SIMULATED_OPENERS : SIMULATED_FOLLOWUPS;
+      const state = simulatedVocabularyState[kind];
+      const topic = simulatedMessageTopic(exclude);
+      const allowed = text => text !== exclude && (!topic || simulatedMessageTopic(text) !== topic);
+      let remaining = state.remaining.filter(text => pool.includes(text));
+      let available = remaining.filter(text => allowed(text) && text !== state.last &&
+        !simulatedVocabularyState.recent.includes(text));
+      if (!available.length) {
+        remaining = pool.slice();
+        available = remaining.filter(text => allowed(text) && text !== state.last &&
+          !simulatedVocabularyState.recent.includes(text));
+      }
       const selected = pickSimulatedMessage(available);
-      // Use every available line before refilling this profile's vocabulary.
-      state.remaining = available.filter(text => text !== selected);
+      state.remaining = remaining.filter(text => text !== selected);
       state.last = selected;
-      simulatedVocabularyState[key] = state;
-      try { sessionStorage.setItem('ck_vocabulary_v2', JSON.stringify(simulatedVocabularyState)); } catch (_) {}
+      simulatedVocabularyState.recent.push(selected);
+      simulatedVocabularyState.recent = simulatedVocabularyState.recent.slice(-8);
+      try { sessionStorage.setItem('ck_vocabulary_v3', JSON.stringify(simulatedVocabularyState)); } catch (_) {}
       return selected;
     }
     function randomSimulatedDelay(min, max) {
@@ -1607,7 +1729,6 @@
     let simulatedChat = null;
     let simulatedMessageTimers = [];
     let fallbackPending = false;
-    let previousSimulatedProfile = -1;
     let currentRoom = null;
     let messageTimer = null;
     let matchTimer = null;
@@ -2272,10 +2393,7 @@
         clearInterval(matchTimer);
         matchTimer = null;
 
-        let index = Math.floor(Math.random() * SIMULATED_PROFILES.length);
-        if (index === previousSimulatedProfile) index = (index + 1) % SIMULATED_PROFILES.length;
-        previousSimulatedProfile = index;
-        const profile = SIMULATED_PROFILES[index];
+        const profile = createSimulatedProfile();
         currentRoom = 'simulated:' + attemptId;
         simulatedChat = {
           roomId: currentRoom, messages: [], profile, greetingsScheduled: false,
