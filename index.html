@@ -1534,14 +1534,14 @@
       'hello ulit', 'new here', 'quiet lang', 'looking for chika',
       'just here', 'bored lang', 'chill muna', 'hi stranger'
     ];
-    // Same nine named-school slots and thirteen anonymous slots as before.
+    // Keep nine school-visible slots and thirteen anonymous slots per cycle.
     const SIMULATED_SCHOOL_SLOTS = [
-      'University of Santo Tomas', 'Polytechnic University of the Philippines',
-      'Cebu Normal University', 'University of Mindanao',
-      'Central Philippine University', 'Silliman University',
-      'University of Santo Tomas', 'Polytechnic University of the Philippines',
-      'Silliman University', '', '', '', '', '', '', '', '', '', '', '', '', ''
+      true, true, true, true, true, true, true, true, true,
+      false, false, false, false, false, false, false,
+      false, false, false, false, false, false
     ];
+    // All existing choices: 29 Luzon/Metro Manila, 14 Visayas, 10 Mindanao.
+    const SIMULATED_SCHOOL_NAMES = schools.map(item => item.name);
     const SIMULATED_NAME_STYLES = ['word', 'alias', 'age', 'keyboard', 'phrase'];
     const SIMULATED_NAME_RECENT_LIMIT = 80;
     const SIMULATED_OPENERS = [
@@ -1587,20 +1587,22 @@
         schoolSlots: Array.isArray(saved.schoolSlots) && saved.schoolSlots.length <= 22 &&
           saved.schoolSlots.every(index => Number.isInteger(index) && index >= 0 && index < 22) &&
           new Set(saved.schoolSlots).size === saved.schoolSlots.length ? saved.schoolSlots.slice() : [],
+        schoolNames: Array.isArray(saved.schoolNames)
+          ? [...new Set(saved.schoolNames.filter(name => SIMULATED_SCHOOL_NAMES.includes(name)))].slice(-SIMULATED_SCHOOL_NAMES.length) : [],
         serial: Number.isSafeInteger(saved.serial) && saved.serial >= 0 ? saved.serial : 0
       };
     }
     let simulatedNicknameState = loadSimulatedNicknameState();
 
     function generateSimulatedNickname(style) {
-      const number = () => String(Math.floor(Math.random() * 100));
+      const number = () => String(17 + Math.floor(Math.random() * 14));
       if (style === 'alias') {
         return pickSimulatedMessage(SIMULATED_NAME_ALIASES) + pickSimulatedMessage(['', '', '.', '_', ' ']) +
           (Math.random() < 0.45 ? number() : '');
       }
       if (style === 'age') {
         return pickSimulatedMessage(['F', 'M', 'f', 'm', 'wlw', 'MLM']) +
-          String(18 + Math.floor(Math.random() * 18)) +
+          number() +
           pickSimulatedMessage(['', '', ' qc', ' mnl', ' cebu', ' dvo', '...']);
       }
       if (style === 'keyboard') {
@@ -1630,12 +1632,20 @@
       // Bound random retries; repeated or unusual randomness cannot freeze chat.
       for (let attempt = 0; attempt < 32; attempt++) {
         const candidate = generateSimulatedNickname(style).trim().slice(0, 30);
-        if (candidate && !recent.has(candidate.toLowerCase())) { name = candidate; break; }
+        const validNumbers = (candidate.match(/\d+/g) || []).every(value => /^(?:1[7-9]|2[0-9]|30)$/.test(value));
+        if (candidate && validNumbers && !recent.has(candidate.toLowerCase())) { name = candidate; break; }
       }
       if (!name) {
         for (let attempt = 0; attempt <= SIMULATED_NAME_RECENT_LIMIT; attempt++) {
           state.serial = state.serial >= Number.MAX_SAFE_INTEGER ? 0 : state.serial + 1;
-          const candidate = 'anon_' + state.serial.toString(36);
+          // Letters-only suffix: a fallback counter must never resemble an age.
+          let value = state.serial;
+          let suffix = '';
+          do {
+            suffix = 'abcdefghijklmnopqrstuvwxyz'[value % 26] + suffix;
+            value = Math.floor(value / 26);
+          } while (value > 0);
+          const candidate = 'anon_' + suffix;
           if (!recent.has(candidate.toLowerCase())) { name = candidate; break; }
         }
       }
@@ -1644,7 +1654,11 @@
       if (!state.schoolSlots.length) {
         state.schoolSlots = shuffleSimulatedChoices(SIMULATED_SCHOOL_SLOTS.map((_, index) => index));
       }
-      const school = SIMULATED_SCHOOL_SLOTS[state.schoolSlots.pop()];
+      let school = '';
+      if (SIMULATED_SCHOOL_SLOTS[state.schoolSlots.pop()]) {
+        if (!state.schoolNames.length) state.schoolNames = shuffleSimulatedChoices(SIMULATED_SCHOOL_NAMES);
+        school = state.schoolNames.pop();
+      }
       try { localStorage.setItem('ck_simulated_names_v1', JSON.stringify(state)); } catch (_) {}
       return { nickname: name, school };
     }
